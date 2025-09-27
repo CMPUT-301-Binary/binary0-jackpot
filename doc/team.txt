@@ -1,4 +1,4 @@
-<Name: Github username>
+<Name>: <Github username>
 Hatem Almasri: hatem-al
 Hooman Raffieipour: HRY47
 Liam Parrell: parallelXYZ
