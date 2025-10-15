@@ -4,7 +4,7 @@
 
 ## Student Details
 
-<Student Name> : <ccid>
+<<Student Name>> : <<ccid>>
 
 ## References and Resources
 
