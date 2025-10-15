@@ -1,6 +1,6 @@
 # binary0-jackpot
 
-# CMPUT 301 
+# CMPUT 301 : Project
 
 ## Student Details
 
