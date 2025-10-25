@@ -1,4 +1,4 @@
-package com.example.jackpot.ui;
+package com.example.jackpot;
 
 import java.util.UUID;
 
