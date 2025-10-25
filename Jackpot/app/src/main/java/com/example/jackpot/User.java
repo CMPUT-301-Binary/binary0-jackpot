@@ -5,13 +5,13 @@ import java.util.UUID;
 public class User {
     private final UUID id;
     private String name;
-    private String role;
+    private Role role;
     private String email;
     private String phone; //Could be NULL
     private String password;
     private String deviceID;
 
-    public User(String name, String role, String email, String phone, String password, String deviceID) {
+    public User(String name, Role role, String email, String phone, String password, String deviceID) {
         this.id = java.util.UUID.randomUUID();
         this.name = name;
         this.role = role;
@@ -19,6 +19,12 @@ public class User {
         this.phone = phone;
         this.password = password;
         this.deviceID = deviceID;
+    }
+
+    public enum Role {
+        ENTRANT,
+        ORGANIZER,
+        ADMIN
     }
 
     public UUID getId() {
@@ -29,7 +35,7 @@ public class User {
         return name;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
@@ -53,7 +59,7 @@ public class User {
         this.name = name;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
