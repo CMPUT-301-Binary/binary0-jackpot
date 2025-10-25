@@ -104,7 +104,7 @@ public class Event {
     public void setGeoRequired(boolean geoRequired) {
         this.geoRequired = geoRequired;
     }
-    public schedule(List<Event> events){
+    public void schedule(List<Event> events){
 //        for(Event event : events){
 //
 //        }
