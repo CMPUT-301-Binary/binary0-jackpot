@@ -13,5 +13,3 @@ WEBHOOK TEST 2
 
 List any resources used here, or simply put `N/A` if not applicable.
 
-
-Test
