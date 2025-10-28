@@ -104,9 +104,54 @@ public class Event {
     public void setGeoRequired(boolean geoRequired) {
         this.geoRequired = geoRequired;
     }
-    public void schedule(List<Event> events){
+    public void schedule(List<Event> events) {
 //        for(Event event : events){
 //
 //        }
+    }
+    public void setRegistrationWindow(Instant openAt, Instant closeAt){
+
+    }
+    public void attachPoster(Image posterImage) {
+
+    }
+    public void attachQRCode(UUID qrCodeId){
+
+    }
+    public void removePoster() {
+
+    }
+    public void toggleGeoRequirement() {
+
+    }
+    public boolean isRegistrationOpen(Instant now) {
+        return true;
+    }
+    public int remainingSeats() {
+        return 0;
+    }
+    public int totalEntrants() {
+        return 0;
+    }
+    public boolean hasEntrant(Entrant entrant) {
+        return false;
+    }
+    public void addEntrantWaitingList(Entrant entrant) {
+
+    }
+    public void removeEntrantWaitingList(Entrant entrant) {
+
+    }
+    public void recordInvitation(Invitation invitation) {
+
+    }
+    public void recordEnrolment(Enrolment enrolment) {
+
+    }
+    public Cancellation cancelEnrollment(UUID enrolID, String reason) {
+        return new Cancellation();
+    }
+    public FinalRef exportFinalCSV(){
+        return new FinalRef();
     }
 }
