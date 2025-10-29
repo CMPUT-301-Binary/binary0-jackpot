@@ -142,16 +142,16 @@ public class Event {
     public void removeEntrantWaitingList(Entrant entrant) {
 
     }
-    public void recordInvitation(Invitation invitation) {
+    public void recordInvitation(Notification invitation) {
 
     }
-    public void recordEnrolment(Enrolment enrolment) {
+    public void recordEnrolment(Notification enrolment) {
 
     }
-    public Cancellation cancelEnrollment(UUID enrolID, String reason) {
-        return new Cancellation();
+    public Notification cancelEnrollment(UUID enrolID, String reason) {
+        return new Notification();
     }
-    public FinalRef exportFinalCSV(){
-        return new FinalRef();
-    }
+//    public FinalRef exportFinalCSV(){
+//        return new FinalRef();
+//    }
 }
