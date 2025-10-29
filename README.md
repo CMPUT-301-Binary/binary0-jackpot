@@ -4,10 +4,12 @@
 
 ## Student Details
 
-Liam Parrell : lparrell
-
-TESTING MERGE CONFLICTS
-WEBHOOK TEST 2
+Liam Parrell : lparrell  
+Hooman Raffieipour : raffieip  
+Syed Reza Ali Abdi: syedreza  
+Syed Ibrahim Mansoor : syedibr1  
+Jesse Muotoh: jmuotoh  
+Hatem Almasri: haalmasr
 
 ## References and Resources
 
