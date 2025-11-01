@@ -16,46 +16,33 @@ public class Entrant extends User {
     /**
      * Entrant joins a waiting list for an event.
      * @param event The event to join the waiting list for.
-     *              If the waiting list is full,
-     *              the entrant is not added to the event's waiting list.
-     *              If the waiting list is not full,
-     *              the entrant is added to the waiting list.
-     *              If the waiting list is null,
-     *              throw an exception.
-     *              If the waiting list is not null,
-     *              but the capacity is null, the entrant is added to the waiting list.
+     * @throws NullPointerException If event is null.
+     * @throws IllegalArgumentException If event already has entrant.
      */
     public void joinWaitingList(Event event) {
-        EntrantList waitingList = event.getWaitingList();
-        if (waitingList == null) {
-            throw  new NullPointerException("Waiting list is null");
+        if (event==null) {
+            throw new NullPointerException("Event is null");
         }
-        if (waitingList.getCapacity() == null || waitingList.size() < waitingList.getCapacity()) {
-            waitingList.add(this);
-        } else {
-            // TODO: handle full waiting list
-            // Probably an user prompt on screen or something like that
+        if (event.hasEntrant(this)) {
+            throw new IllegalArgumentException("Event already has entrant");
         }
+        event.addEntrantWaitingList(this);
     }
 
     /**
      * Entrant leaves a waiting list for an event.
-     * @param event The event to leave the waiting list for.
-     *              If the waiting list is null,
-     *              throw an exception.
-     *              If the waiting list is not null,
-     *              remove the entrant from the waiting list if they are in it.
+     * @param event The event to leave the waiting list.
+     * @throws NullPointerException If event is null.
+     * @throws IllegalArgumentException If event does not have entrant.
      */
     public void leaveWaitingList(Event event) {
-        EntrantList waitingList = event.getWaitingList();
-        if (waitingList == null) {
-            throw  new NullPointerException("Waiting list is null");
+        if (event==null) {
+            throw new NullPointerException("Event is null");
         }
-        if (waitingList.contains(this)) {
-            waitingList.remove(this);
+        if (event.hasEntrant(this)) {
+            event.removeEntrantWaitingList(this);
         } else {
-            // TODO: handle entrant not in waiting list
-            // Probably an user prompt on screen or something like that
+            throw new IllegalArgumentException("Event does not have entrant");
         }
     }
 
