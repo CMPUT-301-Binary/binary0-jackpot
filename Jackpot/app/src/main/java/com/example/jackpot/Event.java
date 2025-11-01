@@ -1,5 +1,6 @@
 package com.example.jackpot;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,6 +9,7 @@ public class Event {
     private UUID organizerId;
     private String title;
     private String description;
+    private EntrantList waitingList;
     private String locationAddress;
     private Double lat;
     private Double lng;
@@ -43,6 +45,12 @@ public class Event {
     }
     public void setDescription(String description) {
         this.description = description;
+    }
+    public EntrantList getWaitingList() {
+        return waitingList;
+    }
+    public void setWaitingList(EntrantList waitingList) {
+        this.waitingList = waitingList;
     }
     public String getLocationAddress() {
         return locationAddress;

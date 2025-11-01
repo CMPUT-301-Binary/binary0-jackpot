@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class EntrantList {
     private ArrayList<Entrant> entrants;
+    private Integer capacity;
     public EntrantList() {
         entrants = new ArrayList<Entrant>();;
     }
@@ -27,5 +28,11 @@ public class EntrantList {
     }
     public boolean contains(Entrant e) {
         return entrants.contains(e);
+    }
+    public void setCapacity(int cap) {
+        capacity = cap;
+    }
+    public Integer getCapacity() {
+        return capacity;
     }
 }
