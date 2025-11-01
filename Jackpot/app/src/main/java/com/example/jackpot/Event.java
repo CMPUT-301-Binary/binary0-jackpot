@@ -1,5 +1,6 @@
 package com.example.jackpot;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,6 +9,7 @@ public class Event {
     private UUID organizerId;
     private String title;
     private String description;
+    private EntrantList waitingList;
     private String locationAddress;
     private Double lat;
     private Double lng;
@@ -43,6 +45,12 @@ public class Event {
     }
     public void setDescription(String description) {
         this.description = description;
+    }
+    public EntrantList getWaitingList() {
+        return waitingList;
+    }
+    public void setWaitingList(EntrantList waitingList) {
+        this.waitingList = waitingList;
     }
     public String getLocationAddress() {
         return locationAddress;
@@ -134,13 +142,45 @@ public class Event {
         return 0;
     }
     public boolean hasEntrant(Entrant entrant) {
-        return false;
+        return waitingList.contains(entrant);
     }
+
+    /**
+     * Adds an entrant to the waiting list.
+     * @param entrant The entrant to add to the waiting list.
+     * @throws NullPointerException If the waiting list is null.
+     * @throws IllegalStateException If the waiting list is full.
+     * @throws IllegalArgumentException If the entrant is null.
+     */
     public void addEntrantWaitingList(Entrant entrant) {
-
+        if (entrant == null) {
+            throw new IllegalArgumentException("Entrant is null");
+        }
+        if (waitingList == null) {
+            throw  new NullPointerException("Waiting list is null");
+        }
+        if (waitingList.size() < waitingList.getCapacity()) {
+            waitingList.add(entrant);
+        } else {
+            throw new IllegalStateException("Waiting list is full");
+        }
     }
-    public void removeEntrantWaitingList(Entrant entrant) {
 
+    /**
+     * Removes an entrant from the waiting list.
+     * @param entrant The entrant to remove from the waiting list.
+     * @throws NullPointerException If the waiting list is null.
+     * @throws IllegalArgumentException If the entrant is null.
+     */
+    public void removeEntrantWaitingList(Entrant entrant) {
+        if (entrant == null) {
+            throw new IllegalArgumentException("Entrant is null");
+        }
+        if (waitingList == null) {
+            throw  new NullPointerException("Waiting list is null");
+        } else {
+            waitingList.remove(entrant);
+        }
     }
     public void recordInvitation(Notification invitation) {
 

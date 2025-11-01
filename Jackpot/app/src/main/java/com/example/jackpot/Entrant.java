@@ -13,13 +13,37 @@ public class Entrant extends User {
         //this.notificationsOptOut = false;
         this.historyEventIds = new ArrayList<>();
     }
-
-    public void joinWaitingList(String eventId) {
-        // TODO: add entrant to waiting list
+    /**
+     * Entrant joins a waiting list for an event.
+     * @param event The event to join the waiting list for.
+     * @throws NullPointerException If event is null.
+     * @throws IllegalArgumentException If event already has entrant.
+     */
+    public void joinWaitingList(Event event) {
+        if (event==null) {
+            throw new NullPointerException("Event is null");
+        }
+        if (event.hasEntrant(this)) {
+            throw new IllegalArgumentException("Event already has entrant");
+        }
+        event.addEntrantWaitingList(this);
     }
 
-    public void leaveWaitingList(String eventId) {
-        // TODO: remove entrant from waiting list
+    /**
+     * Entrant leaves a waiting list for an event.
+     * @param event The event to leave the waiting list.
+     * @throws NullPointerException If event is null.
+     * @throws IllegalArgumentException If event does not have entrant.
+     */
+    public void leaveWaitingList(Event event) {
+        if (event==null) {
+            throw new NullPointerException("Event is null");
+        }
+        if (event.hasEntrant(this)) {
+            event.removeEntrantWaitingList(this);
+        } else {
+            throw new IllegalArgumentException("Event does not have entrant");
+        }
     }
 
     public void acceptInvitation(String eventId) {

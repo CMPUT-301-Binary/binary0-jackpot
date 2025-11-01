@@ -4,7 +4,7 @@ import java.util.UUID;
 
 
 
-public class User {
+public abstract class User {
     protected final UUID id;
     protected String name;
     protected Role role;
