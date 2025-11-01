@@ -2,13 +2,14 @@ package com.example.jackpot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Entrant extends User {
     //private boolean notificationsOptOut;
     private List<String> historyEventIds; //Should be in database
 
-    public Entrant(String name, String id, Role role, String email, String phone, String password, String deviceID) {
-        super( "Entrant", Role.ENTRANT, email, phone, password, deviceID);
+    public Entrant(String name, UUID id, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
+        super(UUID.randomUUID(), "TestEntrant",Role.ENTRANT, email, phone, password, notificationPreferences, device);
         //this.notificationsOptOut = false;
         this.historyEventIds = new ArrayList<>();
     }

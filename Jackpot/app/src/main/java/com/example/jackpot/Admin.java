@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class Admin extends User {
     public Admin(String name, UUID id, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
-        super(UUID.randomUUID(), "TestAdmin",Role.ENTRANT, email, phone, password, notificationPreferences, device);
+        super(UUID.randomUUID(), "TestAdmin",Role.ADMIN, email, phone, password, notificationPreferences, device);
     }
 
     public void removeEvent(String eventId) {
