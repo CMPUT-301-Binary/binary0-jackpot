@@ -12,5 +12,8 @@ public class AuthorizationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 //        setContentView(R.layout.activity_authorization);
 
+//        if (savedInstanceState == null) {
+
+
     }
 }
