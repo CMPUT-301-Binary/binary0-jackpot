@@ -7,13 +7,13 @@ public class Notification {
     private UUID notificationID;
     private UUID recipientID;
     private UUID eventID;
-    //    private String notificationType;
+    private String notifType;
     private String payload;
     private Instant sentAt;
     private boolean deliverStatus;
     private String providerMsgID;
     private String error;
-    public Notification( UUID recipientID, UUID eventID, String payload){
+    public Notification( UUID recipientID, UUID eventID, String notifType, String payload){
         notificationID = UUID.randomUUID();
         sentAt = Instant.now();
         deliverStatus = false;
