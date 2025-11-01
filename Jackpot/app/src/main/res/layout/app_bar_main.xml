@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <!-- Top app bar -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,27 +19,22 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/Theme.Jackpot.PopupOverlay" />
-
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- Main content (holds the fragments) -->
     <include
         android:id="@+id/content_main"
-        layout="@layout/content_main" />
+        layout="@layout/content_main"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <!-- This CoordinatorLayout is to dodge the BottomNavigationView when the Snackbar is shown -->
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="56dp"
-        android:background="@android:color/transparent">
+    <!-- Floating Action Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:contentDescription="@string/fab_content_description"
+        app:srcCompat="@android:drawable/ic_dialog_email" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
-            android:contentDescription="@string/fab_content_description"
-            app:srcCompat="@android:drawable/ic_dialog_email" />
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

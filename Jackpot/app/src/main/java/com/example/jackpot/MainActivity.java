@@ -38,28 +38,50 @@ public class MainActivity extends AppCompatActivity {
             binding.appBarMain.fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).setAnchorView(R.id.fab).show());
         }
-        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_content_main);
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment_content_main);
         assert navHostFragment != null;
         NavController navController = navHostFragment.getNavController();
 
         NavigationView navigationView = binding.navView;
-        if (navigationView != null) {
-            mAppBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.nav_transform, R.id.nav_reflow, R.id.nav_slideshow, R.id.nav_settings)
-                    .setOpenableLayout(binding.drawerLayout)
-                    .build();
-            NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-            NavigationUI.setupWithNavController(navigationView, navController);
-        }
-
         BottomNavigationView bottomNavigationView = binding.appBarMain.contentMain.bottomNavView;
-        if (bottomNavigationView != null) {
-            mAppBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.nav_transform, R.id.nav_reflow, R.id.nav_slideshow)
-                    .build();
-            NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-            NavigationUI.setupWithNavController(bottomNavigationView, navController);
-        }
+
+// Combine all top-level destinations (both bottom & side)
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home, R.id.nav_events, R.id.nav_notification,
+                R.id.nav_settings, R.id.nav_privacy_policy, R.id.nav_home_location)
+                .setOpenableLayout(binding.drawerLayout)
+                .build();
+
+// Top bar & drawer setup
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
+
+// Bottom nav setup
+        NavigationUI.setupWithNavController(bottomNavigationView, navController);
+
+//        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_content_main);
+//        assert navHostFragment != null;
+//        NavController navController = navHostFragment.getNavController();
+//
+//        NavigationView navigationView = binding.navView;
+//        if (navigationView != null) {
+//            mAppBarConfiguration = new AppBarConfiguration.Builder(
+//                    R.id.nav_home, R.id.nav_reflow, R.id.nav_slideshow, R.id.nav_settings)
+//                    .setOpenableLayout(binding.drawerLayout)
+//                    .build();
+//            NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+//            NavigationUI.setupWithNavController(navigationView, navController);
+//        }
+
+//        BottomNavigationView bottomNavigationView = binding.appBarMain.contentMain.bottomNavView;
+//        if (bottomNavigationView != null) {
+//            mAppBarConfiguration = new AppBarConfiguration.Builder(
+//                    R.id.nav_transform, R.id.nav_reflow, R.id.nav_slideshow)
+//                    .build();
+//            NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+//            NavigationUI.setupWithNavController(bottomNavigationView, navController);
+//        }
     }
 
     @Override

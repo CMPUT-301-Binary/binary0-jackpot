@@ -3,29 +3,44 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_transform">
+    app:startDestination="@+id/nav_home">
+
+    <!-- Bottom bar fragments -->
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.jackpot.ui.home.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_transform"
-        android:name="com.example.jackpot.ui.transform.TransformFragment"
-        android:label="@string/menu_transform"
-        tools:layout="@layout/fragment_transform" />
+        android:id="@+id/nav_events"
+        android:name="com.example.jackpot.ui.events.EventsFragment"
+        android:label="Events"
+        tools:layout="@layout/fragment_events" />
 
     <fragment
-        android:id="@+id/nav_reflow"
-        android:name="com.example.jackpot.ui.reflow.ReflowFragment"
-        android:label="@string/menu_reflow"
-        tools:layout="@layout/fragment_reflow" />
+        android:id="@+id/nav_notification"
+        android:name="com.example.jackpot.ui.notification.NotificationFragment"
+        android:label="Notification"
+        tools:layout="@layout/fragment_notification" />
 
-    <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.example.jackpot.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
-
+    <!-- Sidebar fragments -->
     <fragment
         android:id="@+id/nav_settings"
         android:name="com.example.jackpot.ui.settings.SettingsFragment"
         android:label="@string/menu_settings"
         tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/nav_privacy_policy"
+        android:name="com.example.jackpot.ui.privacy.PrivacyPolicyFragment"
+        android:label="Privacy Policy"
+        tools:layout="@layout/fragment_privacy_policy" />
+
+    <fragment
+        android:id="@+id/nav_home_location"
+        android:name="com.example.jackpot.ui.location.LocationFragment"
+        android:label="Location"
+        tools:layout="@layout/fragment_location" />
+
 </navigation>
