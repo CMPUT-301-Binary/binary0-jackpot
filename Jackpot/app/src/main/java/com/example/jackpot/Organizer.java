@@ -2,13 +2,14 @@ package com.example.jackpot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Organizer extends User {
     private String organizationName;
     private List<String> managedEventIds;
 
-    public Organizer(String name, String id, Role role, String email, String phone, String password, String deviceID) {
-        super( "Entrant", Role.ENTRANT, email, phone, password, deviceID);
+    public Organizer(String name, UUID id, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
+        super(UUID.randomUUID(), "TestOrganizer",Role.ENTRANT, email, phone, password, notificationPreferences, device);
         this.managedEventIds = new ArrayList<>();
     }
 
