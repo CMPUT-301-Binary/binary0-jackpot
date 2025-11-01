@@ -145,7 +145,7 @@ public class Event {
     public void recordInvitation(Notification invitation) {
 
     }
-    public void recordEnrolment(Notification enrolment) {
+    public void recordEnrolment(Enrollment enrollment) {
 
     }
     public Notification cancelEnrollment(UUID enrolID, String reason) {
