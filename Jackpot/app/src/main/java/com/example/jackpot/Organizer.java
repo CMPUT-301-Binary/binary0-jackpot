@@ -9,7 +9,7 @@ public class Organizer extends User {
     private List<String> managedEventIds;
 
     public Organizer(String name, UUID id, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
-        super(UUID.randomUUID(), "TestOrganizer",Role.ENTRANT, email, phone, password, notificationPreferences, device);
+        super(UUID.randomUUID(), "TestOrganizer",Role.ORGANIZER, email, phone, password, notificationPreferences, device);
         this.managedEventIds = new ArrayList<>();
     }
 
