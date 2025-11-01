@@ -1,11 +1,7 @@
 package com.example.jackpot;
 
-import java.util.UUID;
-
-
-
-public abstract class User {
-    protected final UUID id;
+public class User {
+    protected String id;  // Changed from UUID to String
     protected String name;
     protected Role role;
     protected String email;
@@ -14,7 +10,12 @@ public abstract class User {
     protected String notificationPreferences;
     protected Device device;
 
-    public User(UUID id, String name, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
+    // Required no-argument constructor for Firestore
+    public User() {
+        // Firestore will populate fields using setters
+    }
+
+    public User(String id, String name, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
         this.id = id;
         this.name = name;
         this.role = role;
@@ -25,8 +26,12 @@ public abstract class User {
         this.device = device;
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {

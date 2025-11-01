@@ -1,6 +1,7 @@
 package com.example.jackpot;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
 
@@ -17,6 +18,8 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.jackpot.databinding.ActivityMainBinding;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
@@ -45,6 +48,24 @@ public class MainActivity extends AppCompatActivity {
 
         NavigationView navigationView = binding.navView;
         BottomNavigationView bottomNavigationView = binding.appBarMain.contentMain.bottomNavView;
+        if (bottomNavigationView != null) {
+            mAppBarConfiguration = new AppBarConfiguration.Builder(
+                    R.id.nav_transform, R.id.nav_reflow, R.id.nav_slideshow)
+                    .build();
+            NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+            NavigationUI.setupWithNavController(bottomNavigationView, navController);
+        }
+
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null) {
+            String uid = firebaseUser.getUid();
+            db.collection("users").document(uid).get()
+                    .addOnSuccessListener(doc -> {
+                        User user = doc.toObject(User.class);
+                        Log.d("Firestore", "User name: " + user.getName());
+                    });
+        }
+
 
 // Combine all top-level destinations (both bottom & side)
         mAppBarConfiguration = new AppBarConfiguration.Builder(
@@ -60,28 +81,7 @@ public class MainActivity extends AppCompatActivity {
 // Bottom nav setup
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
 
-//        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_content_main);
-//        assert navHostFragment != null;
-//        NavController navController = navHostFragment.getNavController();
-//
-//        NavigationView navigationView = binding.navView;
-//        if (navigationView != null) {
-//            mAppBarConfiguration = new AppBarConfiguration.Builder(
-//                    R.id.nav_home, R.id.nav_reflow, R.id.nav_slideshow, R.id.nav_settings)
-//                    .setOpenableLayout(binding.drawerLayout)
-//                    .build();
-//            NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-//            NavigationUI.setupWithNavController(navigationView, navController);
-//        }
 
-//        BottomNavigationView bottomNavigationView = binding.appBarMain.contentMain.bottomNavView;
-//        if (bottomNavigationView != null) {
-//            mAppBarConfiguration = new AppBarConfiguration.Builder(
-//                    R.id.nav_transform, R.id.nav_reflow, R.id.nav_slideshow)
-//                    .build();
-//            NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-//            NavigationUI.setupWithNavController(bottomNavigationView, navController);
-//        }
     }
 
     @Override
