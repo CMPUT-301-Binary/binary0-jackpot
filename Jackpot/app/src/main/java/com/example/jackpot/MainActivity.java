@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 // Combine all top-level destinations (both bottom & side)
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_events, R.id.nav_notification,
-                R.id.nav_settings, R.id.nav_privacy_policy, R.id.nav_home_location)
+                R.id.nav_settings, R.id.nav_privacy_policy, R.id.nav_location)
                 .setOpenableLayout(binding.drawerLayout)
                 .build();
 

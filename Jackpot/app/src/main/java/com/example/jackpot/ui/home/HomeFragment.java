@@ -4,8 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,10 +24,7 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View root = inflater.inflate(R.layout.fragment_home, container, false);
 
-        Button cameraButton = root.findViewById(R.id.btn_open_camera);
-        cameraButton.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Camera feature coming soon!", Toast.LENGTH_SHORT).show()
-        );
+
 
         return root;
     }

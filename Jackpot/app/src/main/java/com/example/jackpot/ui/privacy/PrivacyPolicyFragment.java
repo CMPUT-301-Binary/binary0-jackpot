@@ -11,16 +11,17 @@ import androidx.fragment.app.Fragment;
 import com.example.jackpot.R;
 
 public class PrivacyPolicyFragment extends Fragment {
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_privacy_policy, container, false);
-        TextView tv = new TextView(getContext());
-        tv.setText("Privacy & Policy Page");
-        ((ViewGroup) root).addView(tv);
+        TextView textView = root.findViewById(R.id.text_privacy);
+        textView.setText("Privacy Policy:\n\nWe respect your privacy. Your data is used only to improve your experience within the app. No personal data is shared with third parties.");
         return root;
     }
 }
+
 
