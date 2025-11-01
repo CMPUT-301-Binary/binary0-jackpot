@@ -2,19 +2,17 @@ package com.example.jackpot;
 
 import java.util.UUID;
 
-public class Enrollment {
-    private int enrollmentId;
+public class Enrollment extends Notification{
+    private UUID enrollmentId;
     private UUID userID;
     private UUID eventID;
     private String enrollmentStatus;
 
-    public Enrollment(int enrollmentId, UUID userID, UUID eventID, String enrollmentDate) {
-        this.enrollmentId = enrollmentId;
-        this.userID = userID;
-        this.eventID = eventID;
+    public Enrollment(UUID userID, UUID eventID, String enrollmentDate) {
+        super(userID, eventID, enrollmentDate);
     }
 
-    public int getEnrollmentId() {
+    public UUID getEnrollmentId() {
         return enrollmentId;
     }
 
@@ -34,7 +32,7 @@ public class Enrollment {
         this.enrollmentStatus = enrollmentStatus;
     }
 
-    public void setEnrollmentId(int enrollmentId) {
+    public void setEnrollmentId(UUID enrollmentId) {
         this.enrollmentId = enrollmentId;
     }
 

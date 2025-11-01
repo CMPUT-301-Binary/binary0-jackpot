@@ -188,8 +188,17 @@ public class Event {
     public void recordEnrolment(Enrollment enrollment) {
 
     }
-    public Notification cancelEnrollment(UUID enrolID, String reason) {
-        return new Notification();
+    /**
+     * Cancels an enrollment.
+     * @param enrollment The enrollment to cancel.
+     * @param reason The reason for the cancellation.
+     * @throws IllegalArgumentException If the enrollment is null.
+     */
+    public Notification cancelEnrollment(Enrollment enrollment, String reason) {
+        if (enrollment == null) {
+            throw new IllegalArgumentException("Enrollment is null");
+        }
+        return new Notification(enrollment.getUserID(), enrollment.getEventID(), reason);
     }
 //    public FinalRef exportFinalCSV(){
 //        return new FinalRef();

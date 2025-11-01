@@ -13,8 +13,11 @@ public class Notification {
     private boolean deliverStatus;
     private String providerMsgID;
     private String error;
-
-
+    public Notification( UUID recipientID, UUID eventID, String payload){
+        notificationID = UUID.randomUUID();
+        sentAt = Instant.now();
+        deliverStatus = false;
+    }
     public UUID getNotificationID() {
         return notificationID;
     }
