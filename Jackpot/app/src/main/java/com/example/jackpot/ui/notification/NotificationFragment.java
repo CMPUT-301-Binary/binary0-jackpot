@@ -16,7 +16,7 @@ public class NotificationFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_notification, container, false);
+        View root = inflater.inflate(R.layout.fragment_notification_entrant, container, false);
         TextView tv = new TextView(getContext());
         tv.setText("Notifications Page");
         ((ViewGroup) root).addView(tv);

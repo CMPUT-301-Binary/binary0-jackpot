@@ -10,19 +10,19 @@
         android:id="@+id/nav_home"
         android:name="com.example.jackpot.ui.home.HomeFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home_entrant" />
 
     <fragment
         android:id="@+id/nav_events"
         android:name="com.example.jackpot.ui.events.EventsFragment"
         android:label="Events"
-        tools:layout="@layout/fragment_events" />
+        tools:layout="@layout/fragment_events_entrant" />
 
     <fragment
         android:id="@+id/nav_notification"
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
-        tools:layout="@layout/fragment_notification" />
+        tools:layout="@layout/fragment_notification_entrant" />
 
     <!-- Sidebar fragments -->
     <fragment
