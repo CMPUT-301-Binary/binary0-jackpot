@@ -6,7 +6,11 @@ public class EntrantList {
     private ArrayList<Entrant> entrants;
     private Integer capacity;
     public EntrantList() {
-        entrants = new ArrayList<Entrant>();;
+        entrants = new ArrayList<>();
+    }
+    public EntrantList(Integer cap) {
+        entrants = new ArrayList<>();
+        capacity = cap;
     }
     public void add(Entrant e) {
         entrants.add(e);
