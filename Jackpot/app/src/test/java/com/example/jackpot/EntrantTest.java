@@ -40,4 +40,18 @@ public class EntrantTest {
         assertThrows(IllegalStateException.class, () -> entrant.joinWaitingList(event3));
         assertFalse(waitingList3.contains(entrant));
     }
+    @Test
+    public void testLeaveWaitingList(){
+        UUID id = UUID.randomUUID();
+        Entrant entrant = new Entrant("John Doe", id.toString(), User.Role.ENTRANT,
+                "", "", "", "", new Device());
+        EntrantList waitingList = new EntrantList(5);
+        Event event = new Event(UUID.randomUUID(), "Test", "", waitingList,
+                "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
+                UUID.randomUUID(), UUID.randomUUID(), true);
+        waitingList.add(entrant);
+        entrant.leaveWaitingList(event);
+        assertFalse(waitingList.contains(entrant));
+        assertThrows(IllegalArgumentException.class , () -> entrant.leaveWaitingList(event));
+    }
 }
