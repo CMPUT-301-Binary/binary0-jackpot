@@ -220,6 +220,26 @@ public class Event {
         }
         return new Notification(enrollment.getRecipientID(), enrollment.getEventID(), "Cancellation", reason);
     }
+
+    /**
+     * Draws a random sample of entrants from the waiting list.
+     * @param amountEntrants The number of entrants to draw.
+     * @throws IllegalArgumentException If there are not enough entrants in the waiting list.
+     * @return A list of entrants.
+     */
+    public ArrayList<Entrant> drawEvent(int amountEntrants){
+        if(amountEntrants>waitingList.size()){
+            throw new IllegalArgumentException("Too few entrants in waiting list");
+        }
+        ArrayList<Entrant> list = new ArrayList<>();
+        for(int i = 0; i < amountEntrants; i++){
+            int index = (int)(Math.random()*waitingList.size());
+            Entrant e = waitingList.get(index);
+            list.add(e);
+            waitingList.remove(e);
+        }
+        return list;
+    }
 //    public FinalRef exportFinalCSV(){
 //        return new FinalRef();
 //    }

@@ -13,6 +13,9 @@ public class EntrantList {
         capacity = cap;
     }
     public void add(Entrant e) {
+        if (entrants.size() >= capacity) {
+            throw new IllegalStateException("Entrant list is full");
+        }
         entrants.add(e);
     }
     public void remove(Entrant e) {
