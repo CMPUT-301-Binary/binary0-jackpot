@@ -181,6 +181,18 @@
             android:text=" Enable Geo-Location Option" />
 
         <Button
+            android:id="@+id/uploadImageButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Upload Image" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No Image Selected" />
+
+        <Button
             android:id="@+id/buttonSubmit"
             android:text="Submit"
             android:layout_marginTop="24dp"
