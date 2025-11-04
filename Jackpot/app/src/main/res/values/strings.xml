@@ -29,4 +29,6 @@
     <string name="menu_logs">Logs</string>
     <string name="events">Events</string>
     <string name="notification">Notification</string>
+    <string name="map">Map</string>
+    <string name="location">Location</string>
 </resources>

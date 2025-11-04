@@ -9,12 +9,16 @@
             android:icon="@drawable/ic_home_black_24dp"
             android:title="@string/menu_home" />
         <item
-            android:id="@+id/nav_events"
-            android:icon="@drawable/ic_gallery_black_24dp"
-            android:title="@string/events" />
+            android:id="@+id/nav_profile"
+            android:icon="@drawable/ic_stick_figure_black_24dp"
+            android:title="Profiles" />
         <item
             android:id="@+id/nav_notification"
             android:icon="@drawable/ic_notification_black_24dp"
             android:title="@string/notification" />
+        <item
+            android:id="@+id/nav_image"
+            android:icon="@drawable/ic_gallery_black_24dp"
+            android:title="Image" />
     </group>
 </menu>

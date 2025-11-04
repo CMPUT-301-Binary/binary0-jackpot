@@ -12,7 +12,7 @@
         android:id="@+id/text_home"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome Home!"
+        android:text="Welcome Home Entrant!"
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_marginBottom="20dp" />
