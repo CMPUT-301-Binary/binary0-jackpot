@@ -5,40 +5,72 @@
     android:id="@+id/mobile_navigation"
     app:startDestination="@+id/nav_home">
 
-    <!-- Bottom bar fragments -->
+    <!-- Bottom bar fragments entrant-->
     <fragment
         android:id="@+id/nav_home"
         android:name="com.example.jackpot.ui.home.HomeFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home_entrant" />
 
     <fragment
         android:id="@+id/nav_events"
         android:name="com.example.jackpot.ui.events.EventsFragment"
         android:label="Events"
-        tools:layout="@layout/fragment_events" />
+        tools:layout="@layout/fragment_events_entrant" />
 
     <fragment
         android:id="@+id/nav_notification"
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
-        tools:layout="@layout/fragment_notification" />
+        tools:layout="@layout/fragment_notification_entrant" />
+
+    <!-- Bottom bar fragments organizer-->
+    <fragment
+        android:id="@+id/nav_map"
+        android:name="com.example.jackpot.ui.map.MapFragment"
+        android:label="@string/map"
+        tools:layout="@layout/fragment_map_organizer" />
+
+    <fragment
+        android:id="@+id/nav_notification"
+        android:name="com.example.jackpot.ui.notification.NotificationFragment"
+        android:label="Notification"
+        tools:layout="@layout/fragment_notification_organizer" />
+
+    <!-- Bottom bar fragments admin-->
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.jackpot.ui.profile.ProfileListAdmin"
+        android:label="Profiles"
+        tools:layout="@layout/fragment_profile_list_admin" />
+
+    <fragment
+        android:id="@+id/nav_image"
+        android:name="com.example.jackpot.ui.image.ImageListAdmin"
+        android:label="Image"
+        tools:layout="@layout/fragment_image_list_admin" />
+
+    <fragment
+        android:id="@+id/nav_notification"
+        android:name="com.example.jackpot.ui.notification.NotificationFragment"
+        android:label="Notification"
+        tools:layout="@layout/fragment_notification_admin" />
 
     <!-- Sidebar fragments -->
     <fragment
-        android:id="@+id/nav_settings"
+        android:id="@+id/drawer_settings"
         android:name="com.example.jackpot.ui.settings.SettingsFragment"
         android:label="@string/menu_settings"
         tools:layout="@layout/fragment_settings" />
 
     <fragment
-        android:id="@+id/nav_privacy_policy"
+        android:id="@+id/drawer_privacy_policy"
         android:name="com.example.jackpot.ui.privacy.PrivacyPolicyFragment"
         android:label="Privacy Policy"
         tools:layout="@layout/fragment_privacy_policy" />
 
     <fragment
-        android:id="@+id/nav_location"
+        android:id="@+id/drawer_location"
         android:name="com.example.jackpot.ui.location.LocationFragment"
         android:label="Location"
         tools:layout="@layout/fragment_location" />

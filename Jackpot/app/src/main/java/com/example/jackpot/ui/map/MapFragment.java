@@ -1,4 +1,4 @@
-package com.example.jackpot.ui.events;
+package com.example.jackpot.ui.map;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,17 +10,17 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.example.jackpot.R;
 
-public class EventsFragment extends Fragment {
+public class MapFragment extends Fragment {
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
+        View root = inflater.inflate(R.layout.fragment_map_organizer, container, false);
         TextView tv = new TextView(getContext());
-        tv.setText("Events Page");
+        tv.setText("Map Page");
         ((ViewGroup) root).addView(tv);
         return root;
     }
 }
-
