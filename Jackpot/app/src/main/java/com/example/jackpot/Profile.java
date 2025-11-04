@@ -45,8 +45,9 @@ public class Profile {
         this.avatarUrl = url;
     }
 
-    public void delete() {
-
-    }
+//    public void delete() { // likely want to handle on UI interaction
+//        // remove from all lists
+//        // remove from db
+//    }
 
 }
