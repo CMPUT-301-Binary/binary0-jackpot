@@ -160,6 +160,7 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("qrCode", qrCode);
         eventDoc.put("posterUri", posterUri);
         eventDoc.put("createdBy", userId);
+        // MARK: can remove this createdAt field if we don't need it
         eventDoc.put("createdAt", FieldValue.serverTimestamp());
 
         // Write to Firestore - collection "events" with ID
