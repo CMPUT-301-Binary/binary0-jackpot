@@ -90,22 +90,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="*Location"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/editLocation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="top"
-            android:hint="Address"
-            android:inputType="textMultiLine"
-            android:minLines="1" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:text="*Description"
             android:textSize="16sp" />
 
@@ -169,7 +153,7 @@
         <!-- Add more fields as needed -->
 
         <CheckBox
-            android:id="@+id/checkBox"
+            android:id="@+id/qrCodeBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Generate QR Code" />
@@ -187,7 +171,7 @@
             android:text="Upload Image" />
 
         <TextView
-            android:id="@+id/textView3"
+            android:id="@+id/selectedPhotoText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="No Image Selected" />
