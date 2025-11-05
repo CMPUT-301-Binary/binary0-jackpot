@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.jackpot.FDatabase;
 import com.example.jackpot.MainActivity;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
@@ -18,6 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class SignupEntrantActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
+    private FDatabase fDatabase;
     private FirebaseFirestore db;
 
     private EditText nameField, emailField, passwordField, phoneField;
@@ -27,7 +29,7 @@ public class SignupEntrantActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup_entrant);
-
+        fDatabase = FDatabase.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
         // CRITICAL: Disable app verification for development/grading
@@ -70,18 +72,17 @@ public class SignupEntrantActivity extends AppCompatActivity {
                     .addOnSuccessListener(authResult -> {
                         String uid = mAuth.getCurrentUser().getUid();
 
-                        User user = new User(uid, name, User.Role.ENTRANT, email, phone, password, "default", null);
+                        User user = new User(uid, name, User.Role.ENTRANT, email, phone, "", "default", null);
 
-                        db.collection("users").document(uid).set(user)
+                        fDatabase.getDb().collection("users").document(uid).set(user)
                                 .addOnSuccessListener(aVoid -> {
-                                    showToast("Entrant account created!");
+                                    showToast("Account created!");
                                     startActivity(new Intent(this, MainActivity.class));
                                     finish();
                                 })
                                 .addOnFailureListener(e -> {
                                     signupBtn.setEnabled(true);
-                                    showToast("Firestore error: " + e.getMessage());
-                                    Log.e("SignupEntrant", "Firestore error", e);
+                                    showToast("Error: " + e.getMessage());
                                 });
                     })
                     .addOnFailureListener(e -> {

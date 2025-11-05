@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.jackpot.FDatabase;
 import com.example.jackpot.MainActivity;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
@@ -20,10 +21,12 @@ public class SignupOrganizerActivity extends AppCompatActivity {
     private FirebaseFirestore db;
 
     private EditText nameField, emailField, passwordField, phoneField;
+    private Toast currentToast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FDatabase fDatabase = FDatabase.getInstance();
         setContentView(R.layout.activity_signup_organizer);
 
         mAuth = FirebaseAuth.getInstance();
@@ -50,19 +53,27 @@ public class SignupOrganizerActivity extends AppCompatActivity {
                     .addOnSuccessListener(authResult -> {
                         String uid = mAuth.getCurrentUser().getUid();
 
-                        User user = new User(uid, name, User.Role.ORGANIZER, email, phone, password, "default", null);
+                        User user = new User(uid, name, User.Role.ORGANIZER, email, phone, "", "default", null);
 
-                        db.collection("users").document(uid).set(user)
+                        fDatabase.getDb().collection("users").document(uid).set(user)
                                 .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(this, "Organizer account created!", Toast.LENGTH_SHORT).show();
-                                    startActivity(new Intent(this, MainActivity.class));
+                                    showToast("Account created!");
+                                    startActivity(new Intent(SignupOrganizerActivity.this, MainActivity.class));
                                     finish();
                                 })
-                                .addOnFailureListener(e ->
-                                        Toast.makeText(this, "Firestore error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                    })
-                    .addOnFailureListener(e ->
-                            Toast.makeText(this, "Auth error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                .addOnFailureListener(e -> {
+                                    signupBtn.setEnabled(true);
+                                    showToast("Error: " + e.getMessage());
+                                });
+                    });
         });
+    }
+
+    private void showToast(String message) {
+        if (currentToast != null) {
+            currentToast.cancel();
+        }
+        currentToast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        currentToast.show();
     }
 }
