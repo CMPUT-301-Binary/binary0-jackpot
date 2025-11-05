@@ -1,11 +1,9 @@
 package com.example.jackpot;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class EventList {
     private ArrayList<Event> events;
-
     public EventList(ArrayList<Event> events) {
         this.events = events;
     }
@@ -15,7 +13,7 @@ public class EventList {
     public void removeEvent(Event event) {
         events.remove(event);
     }
-    public List<Event> getEvents() {
+    public ArrayList<Event> getEvents() {
         return events;
     }
     public int countEvents() {

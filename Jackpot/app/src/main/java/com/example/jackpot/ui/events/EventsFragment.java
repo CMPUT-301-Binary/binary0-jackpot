@@ -16,7 +16,7 @@ public class EventsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_events, container, false);
+        View root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
         TextView tv = new TextView(getContext());
         tv.setText("Events Page");
         ((ViewGroup) root).addView(tv);
