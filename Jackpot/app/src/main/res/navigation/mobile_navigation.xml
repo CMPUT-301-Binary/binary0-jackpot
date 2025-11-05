@@ -93,4 +93,10 @@
         android:label="Location"
         tools:layout="@layout/fragment_location" />
 
+    <fragment
+        android:id="@+id/eventCreationFragment"
+        android:name="com.example.jackpot.ui.event_creation.EventCreationFragment"
+        android:label="EventCreationFragment"
+        tools:layout="@layout/fragment_event_creation"/>
+
 </navigation>
