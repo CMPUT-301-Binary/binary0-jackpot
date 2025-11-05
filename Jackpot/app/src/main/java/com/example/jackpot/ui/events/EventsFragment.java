@@ -9,11 +9,19 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.example.jackpot.Event;
+import com.example.jackpot.EventArrayAdapter;
+import com.example.jackpot.EventList;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.util.ArrayList;
 
 public class EventsFragment extends Fragment {
     private ListView eventList;
+    private EventArrayAdapter eventAdapter;
 
     @Nullable
     @Override
@@ -42,6 +50,36 @@ public class EventsFragment extends Fragment {
         }
 
         return root;
+    }
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        EventList dataList = new EventList(new ArrayList<>());
+
+        assert getView() != null;
+        eventList = getView().findViewById(R.id.event_list);
+        eventAdapter = new EventArrayAdapter(getActivity(), dataList.getEvents());
+        eventList.setAdapter(eventAdapter);
+
+        getView().findViewById(R.id.joined_events_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // joined tab
+            }
+        });
+        getView().findViewById(R.id.wishlist_events_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // joined tab
+            }
+        });
+        getView().findViewById(R.id.invits_events_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // joined tap
+            }
+        });
     }
 }
 
