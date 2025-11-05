@@ -45,13 +45,9 @@ public class EventCreationFragment extends Fragment {
 
     private Uri selectedImageUri;
 
-
-    public EventCreationFragment(){
-        ;
+    public EventCreationFragment() {
+        // Required empty public constructor
     }
-
-
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,

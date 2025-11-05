@@ -3,7 +3,7 @@ package com.example.jackpot;
 import java.net.URL;
 import java.util.UUID;
 
-public abstract class Image {
+public class Image {
     private UUID imageID;
     //private URL url;
     private UUID uploadedBy;
