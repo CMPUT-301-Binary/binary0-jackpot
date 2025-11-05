@@ -19,11 +19,15 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.jackpot.Event;
 import com.example.jackpot.R;
 
-class EventCreationFragment extends Fragment {
+public class EventCreationFragment extends Fragment {
 
     private Button selectPhotoButton;
 
     private Uri selectedImageUri;
+
+    public EventCreationFragment() {
+        // Required empty public constructor
+    }
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
