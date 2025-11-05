@@ -36,4 +36,11 @@
     <string name="invitations">Invitations</string>
     <string name="event">Event</string>
     <string name="leave_lottery">Leave Lottery</string>
+    <string name="categories">Categories</string>
+    <string name="time">Time</string>
+    <string name="history">History</string>
+    <string name="party">Party</string>
+    <string name="concert">Concert</string>
+    <string name="charity">Charity</string>
+    <string name="fair">Fair</string>
 </resources>
