@@ -18,9 +18,6 @@ public class MapFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_map_organizer, container, false);
-        TextView tv = new TextView(getContext());
-        tv.setText("Map Page");
-        ((ViewGroup) root).addView(tv);
         return root;
     }
 }

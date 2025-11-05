@@ -49,6 +49,12 @@
         android:label="Notification"
         tools:layout="@layout/fragment_notification_organizer" />
 
+    <fragment
+        android:id="@+id/nav_event_creation"
+        android:name="com.example.jackpot.ui.event_creation.EventCreationFragment"
+        android:label="Event Creation"
+        tools:layout="@layout/fragment_event_creation" />
+
     <!-- Bottom bar fragments admin-->
     <fragment
         android:id="@+id/nav_profile"
@@ -86,5 +92,11 @@
         android:name="com.example.jackpot.ui.location.LocationFragment"
         android:label="Location"
         tools:layout="@layout/fragment_location" />
+
+    <fragment
+        android:id="@+id/eventCreationFragment"
+        android:name="com.example.jackpot.ui.event_creation.EventCreationFragment"
+        android:label="EventCreationFragment"
+        tools:layout="@layout/fragment_event_creation"/>
 
 </navigation>
