@@ -13,6 +13,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -35,30 +36,27 @@ public class FDatabase {
 
     /**
      * retrieves events from the database based on the given parameters
-     * @param param parameter to compare
+     * @param field parameter to compare
      * @param value value to check in parameter
      * @return ArrayList of Event objects
      */
-    public ArrayList<Event> queryEvents(String param, String value) {
+    public ArrayList<Event> queryEvents(String field, Object value) {
         ArrayList<Event> results = new ArrayList<>();
-        Query query = db.collection("events").orderBy(param).whereEqualTo(value);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        Query query = db.collection("events").whereEqualTo(field, value);
+        query.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        Event event = dataSnapshot.getValue(Event.class);
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                if (!queryDocumentSnapshots.isEmpty()) {
+                    for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                        Event event = documentSnapshot.toObject(Event.class);
                         results.add(event);
                     }
                 }
             }
-
+        }).addOnFailureListener(new OnFailureListener() {
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                error.toException().printStackTrace();
-                // handle error
-                // int errorCode = error.getCode();
-                // act accordingly
+            public void onFailure(@NonNull Exception e) {
+                e.printStackTrace();
             }
         });
         return results;
