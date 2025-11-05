@@ -13,15 +13,17 @@
         android:theme="@style/Theme.Jackpot">
 
         <!-- 🔹 Launch this first -->
-        <activity
-            android:name=".activities.ui.AuthorizationActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Jackpot.NoActionBar">
+        <activity android:name=".activities.ui.LoginActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".activities.ui.SignupRoleActivity" />
+        <activity android:name=".activities.ui.SignupEntrantActivity" />
+        <activity android:name=".activities.ui.SignupOrganizerActivity" />
 
         <!-- 🔹 Main screen after login -->
         <activity

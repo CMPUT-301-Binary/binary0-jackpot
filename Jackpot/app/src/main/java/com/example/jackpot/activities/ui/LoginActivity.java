@@ -17,6 +17,16 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private EditText emailField, passwordField;
 
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Check if user is already logged in
+        if (mAuth != null && mAuth.getCurrentUser() != null) {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
