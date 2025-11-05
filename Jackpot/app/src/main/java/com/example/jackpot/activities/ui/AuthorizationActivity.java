@@ -1,32 +1,27 @@
 package com.example.jackpot.activities.ui;
 
-import android.app.AppComponentFactory;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.jackpot.FDatabase;
 import com.example.jackpot.MainActivity;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
-import com.google.api.Authentication;
-import com.google.firebase.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.UUID;
 
 
 public class AuthorizationActivity extends AppCompatActivity {
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private EditText emailField, passwordField, nameField;
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    FDatabase fDatabase = FDatabase.getInstance();
 
     @Override
     protected void onStart() {
@@ -56,7 +51,7 @@ public class AuthorizationActivity extends AppCompatActivity {
             FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
             if (firebaseUser != null) {
                 String uid = firebaseUser.getUid();
-                db.collection("users").document(uid).get()
+                fDatabase.getDb().collection("users").document(uid).get()
                         .addOnSuccessListener(doc -> {
                             if (doc.exists()) {
                                 User user = doc.toObject(User.class);
@@ -97,7 +92,7 @@ public class AuthorizationActivity extends AppCompatActivity {
                         );
 
                         // Save user in Firestore using Firebase UID as doc ID
-                        db.collection("users").document(firebaseUid).set(user)
+                        fDatabase.getDb().collection("users").document(firebaseUid).set(user)
                                 .addOnSuccessListener(aVoid -> {
                                     Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
                                     startActivity(new Intent(this, MainActivity.class));

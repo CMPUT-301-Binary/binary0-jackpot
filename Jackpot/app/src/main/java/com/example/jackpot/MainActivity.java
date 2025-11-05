@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                         if (user != null && user.getRole() != null) {
                             currentRole = user.getRole();
                             Log.d("Firestore", "Logged in as: " + currentRole);
-                            currentRole = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+//                            currentRole = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 
                             // Inflate menus based on role
                             setupMenusAndFab(currentRole, bottomNav, drawerNav);
