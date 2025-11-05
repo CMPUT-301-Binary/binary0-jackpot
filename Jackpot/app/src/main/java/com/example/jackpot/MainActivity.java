@@ -25,7 +25,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private FirebaseFirestore db;
+    private FDatabase fDatabase = FDatabase.getInstance();
     private User.Role currentRole = User.Role.ENTRANT;
     private ActivityMainBinding binding;
 
@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        db = FirebaseFirestore.getInstance();
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -54,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
             String uid = firebaseUser.getUid();
-            db.collection("users").document(uid).get()
+            fDatabase.getDb().collection("users").document(uid).get()
                     .addOnSuccessListener(doc -> {
                         User user = doc.toObject(User.class);
                         if (user != null && user.getRole() != null) {
