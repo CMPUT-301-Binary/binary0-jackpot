@@ -8,15 +8,18 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
     public EventArrayAdapter(Context context, ArrayList<Event> events) {
         super(context, 0, events);
     }
-
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         View view;
         if (convertView == null) {
             view = LayoutInflater.from(getContext()).inflate(R.layout.entrant_event_content, parent, false);
