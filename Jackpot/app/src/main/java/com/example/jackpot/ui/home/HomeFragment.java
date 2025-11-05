@@ -20,7 +20,7 @@ public class HomeFragment extends Fragment {
     public static HomeFragment newInstance() {
         HomeFragment fragment = new HomeFragment();
         Bundle args = new Bundle();
-        args.putSerializable();
+//        args.putSerializable();
         // fragment.arguments = args
         return fragment;
     }
