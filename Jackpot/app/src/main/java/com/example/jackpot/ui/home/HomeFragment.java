@@ -10,12 +10,20 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.jackpot.R;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.jackpot.User;
 
 public class HomeFragment extends Fragment {
 
     public HomeFragment() {
         // Required empty public constructor
+    }
+    public static HomeFragment newInstance() {
+        HomeFragment fragment = new HomeFragment();
+        Bundle args = new Bundle();
+//        args.putSerializable();
+        // fragment.arguments = args
+        return fragment;
     }
 
     @Nullable
@@ -52,5 +60,11 @@ public class HomeFragment extends Fragment {
 
         return root;
     }
+//    @Override
+//    public void onCreate(@Nullable Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//
+//
+//    }
 }
 
