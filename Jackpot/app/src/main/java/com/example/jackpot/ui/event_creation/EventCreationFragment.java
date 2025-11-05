@@ -22,6 +22,14 @@ public class EventCreationFragment extends Fragment {
     private Button selectPhotoButton;
 
     private Uri selectedImageUri;
+
+
+    public EventCreationFragment(){
+        ;
+    }
+
+
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
