@@ -48,38 +48,38 @@ public class EventsFragment extends Fragment {
                 root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
                 break;
         }
-
-        return root;
-    }
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
         EventList dataList = new EventList(new ArrayList<>());
-
-        assert getView() != null;
-        eventList = getView().findViewById(R.id.event_list);
+        assert root != null;
+        eventList = root.findViewById(R.id.event_list);
         eventAdapter = new EventArrayAdapter(getActivity(), dataList.getEvents());
         eventList.setAdapter(eventAdapter);
 
-        getView().findViewById(R.id.joined_events_button).setOnClickListener(new View.OnClickListener() {
+        root.findViewById(R.id.joined_events_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // joined tab
             }
         });
-        getView().findViewById(R.id.wishlist_events_button).setOnClickListener(new View.OnClickListener() {
+        root.findViewById(R.id.wishlist_events_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // joined tab
             }
         });
-        getView().findViewById(R.id.invits_events_button).setOnClickListener(new View.OnClickListener() {
+        root.findViewById(R.id.invits_events_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // joined tap
             }
         });
+
+        return root;
     }
+//    @Override
+//    public void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//
+//
+//    }
 }
 
