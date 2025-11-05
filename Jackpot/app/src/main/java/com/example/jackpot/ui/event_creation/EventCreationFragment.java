@@ -14,12 +14,10 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.navigation.fragment.NavHostFragment;
 
-import com.example.jackpot.Event;
 import com.example.jackpot.R;
 
-class EventCreationFragment extends Fragment {
+public class EventCreationFragment extends Fragment {
 
     private Button selectPhotoButton;
 
@@ -50,17 +48,13 @@ class EventCreationFragment extends Fragment {
 
         selectPhotoButton = view.findViewById(R.id.uploadImageButton);
         //THIS IS TO BE MODIFIED IF THE FAB BUTTON'S ID HAS CHANGED
-        selectPhotoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //If the button is clicked, open up the photo picker
-                // Launch the photo picker and let the user choose only images.
-                pickMedia.launch(new PickVisualMediaRequest.Builder()
-                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                        .build());
+        selectPhotoButton.setOnClickListener(v -> {
+            //If the button is clicked, open up the photo picker
+            // Launch the photo picker and let the user choose only images.
+            pickMedia.launch(new PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                    .build());
 
-
-            }
 
         });
 
