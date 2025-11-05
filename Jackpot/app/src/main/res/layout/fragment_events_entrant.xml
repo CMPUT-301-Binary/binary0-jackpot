@@ -18,27 +18,30 @@
 
         <Button
             android:id="@+id/joined_events_button"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="75dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/joined" />
+            android:backgroundTint="@color/white"
+            android:text="@string/joined"
+            android:textColor="@color/black" />
 
         <Button
             android:id="@+id/wishlist_events_button"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/wishlist" />
+            android:backgroundTint="@color/black"
+            android:text="@string/wishlist"
+            android:textColor="@color/white" />
 
         <Button
             android:id="@+id/invits_events_button"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/invitations" />
+            android:backgroundTint="@color/white"
+            android:text="@string/invitations"
+            android:textColor="@color/black" />
     </LinearLayout>
 
     <ListView

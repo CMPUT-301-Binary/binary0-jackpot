@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +13,8 @@ import com.example.jackpot.R;
 import com.example.jackpot.User;
 
 public class EventsFragment extends Fragment {
+    private ListView eventList;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,

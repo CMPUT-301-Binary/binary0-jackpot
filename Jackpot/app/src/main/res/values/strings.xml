@@ -34,4 +34,6 @@
     <string name="joined">Joined</string>
     <string name="wishlist">Wishlist</string>
     <string name="invitations">Invitations</string>
+    <string name="event">Event</string>
+    <string name="leave_lottery">Leave Lottery</string>
 </resources>

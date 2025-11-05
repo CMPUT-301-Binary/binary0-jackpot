@@ -21,17 +21,17 @@ public class EntrantTest {
         EntrantList waitingList = new EntrantList(5);
         Event event = new Event(UUID.randomUUID(), "Test", "", waitingList,
                 "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
-                UUID.randomUUID(), UUID.randomUUID(), true);
+                new Image(UUID.randomUUID()), UUID.randomUUID(), true);
 
         EntrantList waitingList2 = new EntrantList();
         Event event2 = new Event(UUID.randomUUID(), "Test", "", waitingList2,
                 "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
-                UUID.randomUUID(), UUID.randomUUID(), true);
+                new Image(UUID.randomUUID()), UUID.randomUUID(), true);
 
         EntrantList waitingList3 = new EntrantList(0);
         Event event3 = new Event(UUID.randomUUID(), "Test", "", waitingList3,
                 "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
-                UUID.randomUUID(), UUID.randomUUID(), true);
+                new Image(UUID.randomUUID()), UUID.randomUUID(), true);
 
         entrant.joinWaitingList(event);
         assertTrue(waitingList.contains(entrant));
@@ -48,7 +48,7 @@ public class EntrantTest {
         EntrantList waitingList = new EntrantList(5);
         Event event = new Event(UUID.randomUUID(), "Test", "", waitingList,
                 "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
-                UUID.randomUUID(), UUID.randomUUID(), true);
+                new Image(UUID.randomUUID()), UUID.randomUUID(), true);
         waitingList.add(entrant);
         entrant.leaveWaitingList(event);
         assertFalse(waitingList.contains(entrant));
