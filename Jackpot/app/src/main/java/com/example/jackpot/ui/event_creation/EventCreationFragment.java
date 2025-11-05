@@ -47,8 +47,12 @@ public class EventCreationFragment extends Fragment {
     private CheckBox qrCodeBox;
     private Button submitButton;
     private FirebaseFirestore db;
-
     private Uri selectedImageUri;
+
+    // for pickers / selection materials
+    private Long selectedDateUtcMs = null;
+    private Integer selectedHour = null, selectedMinute = null;
+
 
     public EventCreationFragment() {
         // Required empty public constructor
@@ -79,6 +83,13 @@ public class EventCreationFragment extends Fragment {
         });
         db = FirebaseFirestore.getInstance();
 
+        editTextEventDate.setFocusable(false);
+        editTextEventDate.setClickable(true);
+        editTextEventTime.setFocusable(false);
+        editTextEventTime.setClickable(true);
+
+        editTextEventDate.setOnClickListener(v -> openDatePicker());
+        editTextEventTime.setOnClickListener(v -> openTimePicker());
 
 
         super.onViewCreated(view, savedInstanceState);
@@ -160,6 +171,7 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("qrCode", qrCode);
         eventDoc.put("posterUri", posterUri);
         eventDoc.put("createdBy", userId);
+        // MARK: can remove this createdAt field if we don't need it
         eventDoc.put("createdAt", FieldValue.serverTimestamp());
 
         // Write to Firestore - collection "events" with ID
@@ -176,4 +188,30 @@ public class EventCreationFragment extends Fragment {
                 });
     }
 
+
+    private void openDatePicker() {
+        var picker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
+                .setTitleText("Select event date")
+                .build();
+        picker.addOnPositiveButtonClickListener(utcMs -> {
+            selectedDateUtcMs = utcMs;
+            editTextEventDate.setText(picker.getHeaderText());
+        });
+        picker.show(getParentFragmentManager(), "event_date_picker");
+    }
+
+    private void openTimePicker() {
+        var picker = new com.google.android.material.timepicker.MaterialTimePicker.Builder()
+                .setTitleText("Select event time")
+                .setTimeFormat(com.google.android.material.timepicker.TimeFormat.CLOCK_24H)
+                .setHour(selectedHour == null ? 18 : selectedHour)
+                .setMinute(selectedMinute == null ? 0 : selectedMinute)
+                .build();
+        picker.addOnPositiveButtonClickListener(v -> {
+            selectedHour = picker.getHour();
+            selectedMinute = picker.getMinute();
+            editTextEventTime.setText(String.format("%02d:%02d", selectedHour, selectedMinute));
+        });
+        picker.show(getParentFragmentManager(), "event_time_picker");
+    }
 }
