@@ -13,15 +13,23 @@ import androidx.fragment.app.Fragment;
 import com.example.jackpot.Event;
 import com.example.jackpot.EventArrayAdapter;
 import com.example.jackpot.EventList;
+import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class EventsFragment extends Fragment {
     private ListView eventList;
     private EventArrayAdapter eventAdapter;
+    private FDatabase fDatabase = FDatabase.getInstance();
 
     @Nullable
     @Override
@@ -37,7 +45,7 @@ public class EventsFragment extends Fragment {
             // Default to ENTRANT or whatever makes sense
             role = User.Role.ENTRANT;
         }
-        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+//        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         // Inflate correct home layout
         View root;
         switch (role) {
@@ -49,6 +57,8 @@ public class EventsFragment extends Fragment {
                 break;
         }
         EventList dataList = new EventList(new ArrayList<>());
+        db = FirebaseFirestore.getInstance();
+
         assert root != null;
         eventList = root.findViewById(R.id.event_list);
         eventAdapter = new EventArrayAdapter(getActivity(), dataList.getEvents());
