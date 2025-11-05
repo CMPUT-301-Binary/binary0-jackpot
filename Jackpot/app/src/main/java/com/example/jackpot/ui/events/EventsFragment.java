@@ -13,15 +13,23 @@ import androidx.fragment.app.Fragment;
 import com.example.jackpot.Event;
 import com.example.jackpot.EventArrayAdapter;
 import com.example.jackpot.EventList;
+import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class EventsFragment extends Fragment {
     private ListView eventList;
     private EventArrayAdapter eventAdapter;
+    private FDatabase fDatabase = FDatabase.getInstance();
 
     @Nullable
     @Override
@@ -37,7 +45,7 @@ public class EventsFragment extends Fragment {
             // Default to ENTRANT or whatever makes sense
             role = User.Role.ENTRANT;
         }
-        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+//        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         // Inflate correct home layout
         View root;
         switch (role) {
@@ -48,38 +56,38 @@ public class EventsFragment extends Fragment {
                 root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
                 break;
         }
-
-        return root;
-    }
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
         EventList dataList = new EventList(new ArrayList<>());
-
-        assert getView() != null;
-        eventList = getView().findViewById(R.id.event_list);
+        assert root != null;
+        eventList = root.findViewById(R.id.event_list);
         eventAdapter = new EventArrayAdapter(getActivity(), dataList.getEvents());
         eventList.setAdapter(eventAdapter);
 
-        getView().findViewById(R.id.joined_events_button).setOnClickListener(new View.OnClickListener() {
+        root.findViewById(R.id.joined_events_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // joined tab
             }
         });
-        getView().findViewById(R.id.wishlist_events_button).setOnClickListener(new View.OnClickListener() {
+        root.findViewById(R.id.wishlist_events_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // joined tab
             }
         });
-        getView().findViewById(R.id.invits_events_button).setOnClickListener(new View.OnClickListener() {
+        root.findViewById(R.id.invits_events_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // joined tap
             }
         });
+
+        return root;
     }
+//    @Override
+//    public void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//
+//
+//    }
 }
 
