@@ -6,57 +6,55 @@ import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class FDatabase {
     private static FDatabase instance = null;
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+
     private FDatabase() {}
+
     public static FDatabase getInstance() {
         if (instance == null) {
             instance = new FDatabase();
         }
         return instance;
     }
+
     public FirebaseFirestore getDb() {
         return db;
     }
 
-
-    public interface EventCallback {
-        void onSuccess(ArrayList<Event> events);
+    // Generic callback interface
+    public interface DataCallback<T> {
+        void onSuccess(ArrayList<T> data);
         void onFailure(Exception e);
     }
 
     /**
-     * retrieves events from the database based on the given parameters
+     * Queries documents from any collection based on field and value
+     * @param collectionName name of the collection to query
      * @param field parameter to compare
      * @param value value to check in parameter
-     * @return ArrayList of Event objects
+     * @param classType the class type to convert documents to
+     * @param callback callback to handle results
      */
-
-    // Modified queryEvents with callback
-    public void queryEvents(String field, Object value, EventCallback callback) {
-        db.collection("events").whereEqualTo(field, value)
+    public <T> void queryCollection(String collectionName, String field, Object value,
+                                    Class<T> classType, DataCallback<T> callback) {
+        db.collection(collectionName).whereEqualTo(field, value)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    ArrayList<Event> results = new ArrayList<>();
+                    ArrayList<T> results = new ArrayList<>();
                     if (!queryDocumentSnapshots.isEmpty()) {
                         for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                            Event event = documentSnapshot.toObject(Event.class);
-                            results.add(event);
+                            T item = documentSnapshot.toObject(classType);
+                            if (item != null) {
+                                results.add(item);
+                            }
                         }
                     }
                     callback.onSuccess(results);
@@ -67,17 +65,25 @@ public class FDatabase {
                 });
     }
 
-    // Fixed getAllEvents with callback
-    public void getAllEvents(EventCallback callback) {
-        db.collection("events").get()
+    /**
+     * Gets all documents from any collection
+     * @param collectionName name of the collection
+     * @param classType the class type to convert documents to
+     * @param callback callback to handle results
+     */
+    public <T> void getAllFromCollection(String collectionName, Class<T> classType,
+                                         DataCallback<T> callback) {
+        db.collection(collectionName).get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    ArrayList<Event> results = new ArrayList<>();
+                    ArrayList<T> results = new ArrayList<>();
                     if (queryDocumentSnapshots.isEmpty()) {
-                        Log.d("FDatabase", "No data found");
+                        Log.d("FDatabase", "No data found in " + collectionName);
                     } else {
                         for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                            Event event = documentSnapshot.toObject(Event.class);
-                            results.add(event);
+                            T item = documentSnapshot.toObject(classType);
+                            if (item != null) {
+                                results.add(item);
+                            }
                         }
                     }
                     callback.onSuccess(results);
@@ -86,5 +92,14 @@ public class FDatabase {
                     e.printStackTrace();
                     callback.onFailure(e);
                 });
+    }
+
+    // Convenience methods for Events (backward compatibility)
+    public void queryEvents(String field, Object value, DataCallback<Event> callback) {
+        queryCollection("events", field, value, Event.class, callback);
+    }
+
+    public void getAllEvents(DataCallback<Event> callback) {
+        getAllFromCollection("events", Event.class, callback);
     }
 }
