@@ -34,57 +34,57 @@ public class FDatabase {
         return db;
     }
 
+
+    public interface EventCallback {
+        void onSuccess(ArrayList<Event> events);
+        void onFailure(Exception e);
+    }
+
     /**
      * retrieves events from the database based on the given parameters
      * @param field parameter to compare
      * @param value value to check in parameter
      * @return ArrayList of Event objects
      */
-    public ArrayList<Event> queryEvents(String field, Object value) {
-        ArrayList<Event> results = new ArrayList<>();
-        Query query = db.collection("events").whereEqualTo(field, value);
-        query.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                if (!queryDocumentSnapshots.isEmpty()) {
-                    for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                        Event event = documentSnapshot.toObject(Event.class);
-                        results.add(event);
-                    }
-                }
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                e.printStackTrace();
-            }
-        });
-        return results;
-    }
-    public ArrayList<Event> getAllEvents() {
-        ArrayList<Event> results = new ArrayList<>();
-        db.collection("events").get()
-                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                    @Override
-                    public void onSuccess(QuerySnapshot dataDocumentSnapshots) {
-                        if (!dataDocumentSnapshots.isEmpty()) {
-                            // Handle no data
-                            Log.d("FDatabase", "No data found");
-                        } else {
-                            for (DataSnapshot dataSnapshot : dataDocumentSnapshots.getChildren()) {
-                                Event event = dataSnapshot.getValue(Event.class);
-                                results.add(event);
-                            }
+
+    // Modified queryEvents with callback
+    public void queryEvents(String field, Object value, EventCallback callback) {
+        db.collection("events").whereEqualTo(field, value)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    ArrayList<Event> results = new ArrayList<>();
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                            Event event = documentSnapshot.toObject(Event.class);
+                            results.add(event);
                         }
                     }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // Handle failure
-                        e.printStackTrace();
-                    }
+                    callback.onSuccess(results);
+                })
+                .addOnFailureListener(e -> {
+                    e.printStackTrace();
+                    callback.onFailure(e);
                 });
-        return results;
     }
 
+    // Fixed getAllEvents with callback
+    public void getAllEvents(EventCallback callback) {
+        db.collection("events").get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    ArrayList<Event> results = new ArrayList<>();
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        Log.d("FDatabase", "No data found");
+                    } else {
+                        for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                            Event event = documentSnapshot.toObject(Event.class);
+                            results.add(event);
+                        }
+                    }
+                    callback.onSuccess(results);
+                })
+                .addOnFailureListener(e -> {
+                    e.printStackTrace();
+                    callback.onFailure(e);
+                });
+    }
 }

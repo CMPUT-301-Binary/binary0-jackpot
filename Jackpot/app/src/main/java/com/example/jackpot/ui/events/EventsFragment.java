@@ -57,8 +57,6 @@ public class EventsFragment extends Fragment {
                 break;
         }
         EventList dataList = new EventList(new ArrayList<>());
-        db = FirebaseFirestore.getInstance();
-
         assert root != null;
         eventList = root.findViewById(R.id.event_list);
         eventAdapter = new EventArrayAdapter(getActivity(), dataList.getEvents());
