@@ -16,6 +16,11 @@ public class EventList {
     public ArrayList<Event> getEvents() {
         return events;
     }
+
+    public void setEvents(ArrayList<Event> events) {
+        this.events = events;
+    }
+
     public int countEvents() {
         return events.size();
     }
