@@ -338,7 +338,7 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
         eventDoc.put("category", category);
         //Put an empty list of Entrants as a waitinglist.
-        UserList waitingList = new UserList();
+        UserList waitingList = new UserList(waitLimitVal);
         eventDoc.put("waitingList", waitingList);
 
         // Canonical timestamps for queries/sorting (Future use in this project)
