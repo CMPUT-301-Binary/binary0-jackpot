@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -25,14 +26,20 @@ import com.example.jackpot.R;
 import com.example.jackpot.activities.ui.LoginActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProfileFragment extends Fragment {
 
     private ImageView profileImage;
+    private EditText nameField, emailField, phoneField, bioField;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private Button deleteAccountButton;
     private Button logoutButton;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
     @Nullable
     @Override
@@ -42,11 +49,24 @@ public class ProfileFragment extends Fragment {
         // Inflate once
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // Initialize Firebase & Views
+        // Firebase setup
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
+        // UI references
         profileImage = root.findViewById(R.id.profile_image);
-        deleteAccountButton = root.findViewById(R.id.delete_account_button);
+        nameField = root.findViewById(R.id.profile_name);
+        emailField = root.findViewById(R.id.profile_email);
+        phoneField = root.findViewById(R.id.profile_phone);
+        bioField = root.findViewById(R.id.profile_bio);
         logoutButton = root.findViewById(R.id.logout_button);
+        deleteAccountButton = root.findViewById(R.id.delete_account_button);
+        Button saveProfileButton = root.findViewById(R.id.save_profile_button);
+        saveProfileButton.setOnClickListener(v -> saveUserProfile());
+
+
+        // Load user info
+        loadUserProfile();
 
         // Image picker setup
         imagePickerLauncher = registerForActivityResult(
@@ -68,6 +88,28 @@ public class ProfileFragment extends Fragment {
         return root;
     }
 
+    // 🔹 Fetch data from Firestore
+    private void loadUserProfile() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) return;
+
+        db.collection("users")
+                .document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        nameField.setText(snapshot.getString("name"));
+                        emailField.setText(snapshot.getString("email"));
+                        phoneField.setText(snapshot.getString("phone"));
+                        bioField.setText(snapshot.getString("notificationPreferences")); // reuse as bio if needed
+                    } else {
+                        Toast.makeText(requireContext(), "User data not found", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(requireContext(), "Failed to load profile: " + e.getMessage(), Toast.LENGTH_LONG).show());
+    }
+
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         imagePickerLauncher.launch(intent);
@@ -82,6 +124,25 @@ public class ProfileFragment extends Fragment {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         requireActivity().finish();
+    }
+
+    private void saveUserProfile() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) return;
+
+        String uid = currentUser.getUid();
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("name", nameField.getText().toString());
+        updates.put("email", emailField.getText().toString());
+        updates.put("phone", phoneField.getText().toString());
+        updates.put("notificationPreferences", bioField.getText().toString());
+
+        db.collection("users").document(uid)
+                .update(updates)
+                .addOnSuccessListener(aVoid ->
+                        Toast.makeText(requireContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e ->
+                        Toast.makeText(requireContext(), "Failed to update profile: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
     private void showDeleteAccountDialog() {
