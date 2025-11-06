@@ -8,26 +8,30 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
     private final int layoutResource;
-    private FirebaseUser currentUser;
-    private User.Role userRole;
-
-    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User.Role role) {
+    private User currentUser;
+    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, @Nullable User currentUser) {
         super(context, 0, events);
         this.layoutResource = layoutResource;
-        this.userRole = role;
+        this.currentUser = null;
     }
-
+//    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User user) {
+//        super(context, 0, events);
+//        this.layoutResource = layoutResource;
+//        this.currentUser = user;
+//    }
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+    }
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -38,91 +42,111 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             view = convertView;
         }
 
-
-
         Event event = getItem(position);
         if (event == null) {
+            Toast.makeText(getContext(), "Event is null", Toast.LENGTH_SHORT).show();
             return view; // Return the recycled view as-is if there's no data
         }
 
-        // Check if we are using the new entrant_event_content.xml layout
-        // by looking for a view ID that is unique to it.
+        // Handle the new layout (entrant_event_content.xml)
         TextView eventDetails = view.findViewById(R.id.event_details);
         if (eventDetails != null) {
-            // New layout (`entrant_event_content.xml`)
-            ImageView eventImage = view.findViewById(R.id.eventPic);
-            TextView eventTitle = view.findViewById(R.id.event_text);
-
-            // TODO: Use a library like Glide or Picasso to load the image from a URL
-            // if (event.getPosterImage() != null) {
-            //     Glide.with(getContext()).load(event.getPosterImage().getUrl()).into(eventImage);
-            // }
-
-            eventTitle.setText(event.getName());
-
-            String priceString = "Free";
-            if (event.getPrice() != null && event.getPrice() > 0) {
-                priceString = String.format(Locale.getDefault(), "$%.2f", event.getPrice());
-            }
-
-            int waitingCount = 0;
-            if (event.getWaitingList() != null) {
-                waitingCount = event.getWaitingList().size();
-            }
-
-            String details = String.format(Locale.getDefault(), "Location: %s\nSpots: %d | Waiting: %d | Price: %s",
-                    event.getLocationAddress() != null ? event.getLocationAddress() : "N/A",
-                    event.getCapacity(),
-                    waitingCount,
-                    priceString);
-            eventDetails.setText(details);
-
+            // This is the entrant_event_content.xml layout
+            setupEntrantEventView(view, event);
         } else {
-            // Fallback to the old layout logic
-            TextView eventCategory = view.findViewById(R.id.event_category);
-            TextView eventName = view.findViewById(R.id.event_name);
-            TextView eventPrice = view.findViewById(R.id.event_price);
-            TextView eventSpots = view.findViewById(R.id.event_spots);
-            TextView eventWaiting = view.findViewById(R.id.event_waiting);
-            Button joinButton = view.findViewById(R.id.join_button);
+            // This is the event_list_item.xml layout
+            setupEventListItemView(view, event);
+        }
 
-            // TODO: Use a library like Glide or Picasso to load the image from a URL
-            // if (event.getPosterImage() != null) { ... }
+        return view;
+    }
 
-            if (eventCategory != null) {
-                eventCategory.setText(event.getCategory());
-            }
-            if (eventName != null) {
-                eventName.setText(event.getName());
-            }
+    private void setupEntrantEventView(View view, Event event) {
+        ImageView eventImage = view.findViewById(R.id.eventPic);
+        TextView eventTitle = view.findViewById(R.id.event_text);
+        TextView eventDetails = view.findViewById(R.id.event_details);
 
-            if (eventPrice != null) {
-                if (event.getPrice() != null && event.getPrice() > 0) {
-                    eventPrice.setText(String.format(Locale.getDefault(), "$%.2f", event.getPrice()));
-                } else {
-                    eventPrice.setText("Free");
-                }
-            }
+        eventTitle.setText(event.getName());
 
-            if (eventSpots != null) {
-                String spotsText = String.format(Locale.getDefault(), "%d spots", event.getCapacity());
-                eventSpots.setText(spotsText);
-            }
-            if (eventWaiting != null) {
-                String waiting;
-                if (event.getWaitingList() != null) {
-                    waiting = String.format(Locale.getDefault(), "%d waiting", event.getWaitingList().size());
-                } else {
-                    waiting = "0 waiting";
-                }
-                eventWaiting.setText(waiting);
-            }
-            if (userRole == User.Role.ORGANIZER || userRole == User.Role.ADMIN) {
-                joinButton.setVisibility(View.GONE);
+        String priceString = "Free";
+        if (event.getPrice() != null && event.getPrice() > 0) {
+            priceString = String.format(Locale.getDefault(), "$%.2f", event.getPrice());
+        }
+
+        int waitingCount = 0;
+        if (event.getWaitingList() != null) {
+            waitingCount = event.getWaitingList().size();
+        }
+
+        String details = String.format(Locale.getDefault(), "Location: %s\nSpots: %d | Waiting: %d | Price: %s",
+                event.getLocation() != null ? event.getLocation() : "N/A",
+                event.getCapacity(),
+                waitingCount,
+                priceString);
+        eventDetails.setText(details);
+    }
+
+    private void setupEventListItemView(View view, Event event) {
+        TextView eventName = view.findViewById(R.id.event_name);
+        if (eventName != null) {
+            eventName.setText(event.getName());
+        }
+
+        TextView eventCategory = view.findViewById(R.id.event_category);
+        if (eventCategory != null) {
+            eventCategory.setText(event.getCategory());
+        }
+
+        TextView eventPrice = view.findViewById(R.id.event_price);
+        if (eventPrice != null) {
+            if (event.getPrice() != null && event.getPrice() > 0) {
+                eventPrice.setText(String.format(Locale.getDefault(), "$%.2f", event.getPrice()));
             } else {
-                joinButton.setVisibility(View.VISIBLE);
+                eventPrice.setText("Free");
             }
         }
-        return view;
+
+        TextView eventSpots = view.findViewById(R.id.event_spots);
+        if (eventSpots != null) {
+            String spotsText = String.format(Locale.getDefault(), "%d spots", event.getCapacity());
+            eventSpots.setText(spotsText);
+        }
+
+        TextView eventWaiting = view.findViewById(R.id.event_waiting);
+        if (eventWaiting != null) {
+            String waiting = (event.getWaitingList() != null) ? String.format(Locale.getDefault(), "%d waiting", event.getWaitingList().size()) : "0 waiting";
+            eventWaiting.setText(waiting);
+        }
+
+        Button joinButton = view.findViewById(R.id.join_button);
+        if (joinButton != null) {
+            joinButton.setOnClickListener(v -> {
+                if (currentUser.getRole()==User.Role.ENTRANT) {
+                    Entrant entrant = new Entrant(
+                            currentUser.getId(),
+                            currentUser.getName(),
+                            currentUser.getRole(),
+                            currentUser.getEmail(),
+                            currentUser.getPhone(),
+                            currentUser.getPassword(),
+                            currentUser.getNotificationPreferences(),
+                            currentUser.getDevice()
+                    );
+                    try {
+                        entrant.joinWaitingList(event);
+                        FDatabase.getInstance().updateEvent(event);
+                        Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
+                        notifyDataSetChanged(); // To update the waiting count
+                    } catch (Exception e) {
+//                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                } else if (currentUser != null) {
+                    Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 }

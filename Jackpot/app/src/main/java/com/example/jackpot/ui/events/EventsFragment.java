@@ -25,7 +25,7 @@ public class EventsFragment extends Fragment {
     private ListView eventList;
     private EventArrayAdapter eventAdapter;
     private FDatabase fDatabase = FDatabase.getInstance();
-    private FirebaseUser currentUser;
+    private User currentUser;
     public EventsFragment() {
         // Required empty public constructor
     }
@@ -44,8 +44,6 @@ public class EventsFragment extends Fragment {
         String roleName = getArguments() != null ? getArguments().getString("role") : User.Role.ENTRANT.name();
         User.Role role = User.Role.valueOf(roleName);
 
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
 //        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         // Inflate correct home layout
         View root;
@@ -63,16 +61,17 @@ public class EventsFragment extends Fragment {
         EventList dataList = new EventList(new ArrayList<>());
         assert root != null;
         eventList = root.findViewById(R.id.entrant_events);
-        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, role);
+        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, null);
         eventList.setAdapter(eventAdapter);
 
-        if (currentUser != null) {
-            fDatabase.getUserById(currentUser.getUid(), new FDatabase.DataCallback<User>() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null) {
+            fDatabase.getUserById(firebaseUser.getUid(), new FDatabase.DataCallback<User>() {
                 @Override
                 public void onSuccess(ArrayList<User> data) {
                     if (!data.isEmpty()) {
-                        User user = data.get(0);
-                        fDatabase.queryEventsWithArrayContains("waitingList", user, new FDatabase.DataCallback<Event>() {
+                        currentUser = data.get(0);
+                        fDatabase.queryEventsWithArrayContains("waitingList", currentUser, new FDatabase.DataCallback<Event>() {
                             @Override
                             public void onSuccess(ArrayList<Event> events) {
                                 dataList.getEvents().clear();

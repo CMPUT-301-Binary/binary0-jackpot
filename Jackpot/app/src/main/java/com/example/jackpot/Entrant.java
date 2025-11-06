@@ -9,7 +9,7 @@ public class Entrant extends User {
     private List<String> historyEventIds; //Should be in database
 
     public Entrant(String name, String id, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
-        super(id, "TestEntrant",Role.ENTRANT, email, phone, password, notificationPreferences, device);
+        super(id, name, role, email, phone, password, notificationPreferences, device);
         //this.notificationsOptOut = false;
         this.historyEventIds = new ArrayList<>();
     }
