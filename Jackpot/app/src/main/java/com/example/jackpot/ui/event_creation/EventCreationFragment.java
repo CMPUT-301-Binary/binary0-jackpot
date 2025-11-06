@@ -51,6 +51,7 @@ public class EventCreationFragment extends Fragment {
     private Button submitButton;
     private FirebaseFirestore db;
     private Uri selectedImageUri;
+    private EditText editWaitingListLimit;
     // UI refs
     private EditText editRegOpenDate, editRegOpenTime, editRegCloseDate, editRegCloseTime;
 
@@ -94,6 +95,8 @@ public class EventCreationFragment extends Fragment {
         editRegOpenTime  = view.findViewById(R.id.editRegOpenTime);
         editRegCloseDate = view.findViewById(R.id.editRegCloseDate);
         editRegCloseTime = view.findViewById(R.id.editRegCloseTime);
+        editWaitingListLimit = view.findViewById(R.id.editWaitingListLimit);
+
         submitButton.setOnClickListener(v -> {
             createEvent();
         });
@@ -147,31 +150,52 @@ public class EventCreationFragment extends Fragment {
 
     }
     public void createEvent() {
-        // Gather form data
-        String eventName = editTextEventName.getText().toString().trim();
-        String eventDescription = editTextEventDescription.getText().toString().trim();
-        String eventLocation = editTextEventLocation.getText().toString().trim();
-        String eventDate = editTextEventDate.getText().toString().trim();
-        String eventTime = editTextEventTime.getText().toString().trim();
-        String capacityStr = editTextEventCapacity.getText().toString().trim();
-        String priceStr = editTextEventPrice.getText().toString().trim();
-        boolean geoLocation = geoLocationBox.isChecked();
-        boolean qrCode = qrCodeBox.isChecked();
+        // region Validation
 
-        com.google.firebase.Timestamp regOpenTs  =
-                toTimestamp(regOpenDateUtcMs,  regOpenHour,  regOpenMinute);
-        com.google.firebase.Timestamp regCloseTs =
-                toTimestamp(regCloseDateUtcMs, regCloseHour, regCloseMinute);
+        // region Required text fields (ensure they are entered)
+        if (!requireText(editTextEventName, "Required")) return;
+        if (!requireText(editTextEventPrice, "Required")) return;
+        if (!requireText(editTextEventLocation, "Required")) return;
+        if (!requireText(editTextEventDate, "Pick a date")) return;
+        if (!requireText(editTextEventTime, "Pick a time")) return;
+        if (!requireText(editTextEventDescription, "Required")) return;
+        if (!requireText(editTextEventCapacity, "Required")) return;
+        // endregion
+
+        // region checking for Numerical fields
+        // Price: required, numeric, >= 0
+        Double priceVal = parseDoubleOrNull(editTextEventPrice.getText().toString());
+        if (priceVal == null) { editTextEventPrice.setError("Enter a number"); editTextEventPrice.requestFocus(); return; }
+        if (priceVal < 0)      { editTextEventPrice.setError("Must be ≥ 0");   editTextEventPrice.requestFocus(); return; }
+
+        // Capacity: required, integer, >= 1
+        Integer capacityVal = parseIntOrNull(editTextEventCapacity.getText().toString());
+        if (capacityVal == null) { editTextEventCapacity.setError("Enter an integer"); editTextEventCapacity.requestFocus(); return; }
+        if (capacityVal < 1)     { editTextEventCapacity.setError("Must be ≥ 1");       editTextEventCapacity.requestFocus(); return; }
+
+        // Waiting List Limit: optional, but if entered must be integer >= 0
+        Integer waitLimitVal = null;
+        String waitStr = editWaitingListLimit.getText().toString().trim();
+        if (!waitStr.isEmpty()) {
+            waitLimitVal = parseIntOrNull(waitStr);
+            if (waitLimitVal == null) { editWaitingListLimit.setError("Enter an integer"); editWaitingListLimit.requestFocus(); return; }
+            if (waitLimitVal < 0)     { editWaitingListLimit.setError("Must be ≥ 0");      editWaitingListLimit.requestFocus(); return; }
+        } else {
+            editWaitingListLimit.setError(null);
+        }
+        // endregion
+
+        // endregion
+
+        // region Build canonical timestamps from pickers
         com.google.firebase.Timestamp eventTs =
                 toTimestamp(selectedDateUtcMs, selectedHour, selectedMinute);
+        com.google.firebase.Timestamp regOpenTs =
+                toTimestamp(regOpenDateUtcMs, regOpenHour, regOpenMinute);
+        com.google.firebase.Timestamp regCloseTs =
+                toTimestamp(regCloseDateUtcMs, regCloseHour, regCloseMinute);
 
-        // region Basic validation
-        // TODO: validate all other inputs
-        if (eventName.isEmpty()) {
-            Toast.makeText(requireContext(), "Event name is required", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        // Validate presence
+        // region Validation for canonical timestamps
         if (eventTs == null) {
             editTextEventDate.setError("Pick event date");
             editTextEventTime.setError("Pick event time");
@@ -182,58 +206,67 @@ public class EventCreationFragment extends Fragment {
             editTextEventTime.setError(null);
         }
 
-
-        if (regOpenTs == null) {
-            editRegOpenDate.setError("Pick open date");
-            editRegOpenTime.setError("Pick open time");
-            editRegOpenDate.requestFocus();
-            return;
-        }
-        if (regCloseTs == null) {
-            editRegCloseDate.setError("Pick close date");
-            editRegCloseTime.setError("Pick close time");
-            editRegCloseDate.requestFocus();
-            return;
-        }
-
-        // Validate ordering (open < close) and that close is before event start
-        if (regOpenTs.compareTo(regCloseTs) >= 0) {
-            editRegCloseDate.setError("Close must be after open");
-            editRegCloseTime.setError("Close must be after open");
-            editRegCloseDate.requestFocus();
-            return;
-        }
-        if (eventTs.compareTo(regCloseTs) <= 0) {
-            editRegCloseDate.setError("Registration must end before event starts");
-            editRegCloseTime.setError("Registration must end before event starts");
-            editRegCloseDate.requestFocus();
-            return;
-        }
-
-        // Ensure the event is in the future
+        // ensure event is in the future
         if (eventTs.compareTo(com.google.firebase.Timestamp.now()) <= 0) {
             editTextEventDate.setError("Event must be in the future");
             editTextEventTime.setError("Event must be in the future");
             editTextEventDate.requestFocus();
             return;
         }
+
+        // Registration presence
+        if (regOpenTs == null) {
+            editRegOpenDate.setError("Pick open date");
+            editRegOpenTime.setError("Pick open time");
+            editRegOpenDate.requestFocus();
+            return;
+        } else { editRegOpenDate.setError(null); editRegOpenTime.setError(null); }
+
+        if (regCloseTs == null) {
+            editRegCloseDate.setError("Pick close date");
+            editRegCloseTime.setError("Pick close time");
+            editRegCloseDate.requestFocus();
+            return;
+        } else { editRegCloseDate.setError(null); editRegCloseTime.setError(null); }
+
+        // Registration ordering
+        if (regOpenTs.compareTo(regCloseTs) >= 0) {
+            editRegCloseDate.setError("Close must be after open");
+            editRegCloseTime.setError("Close must be after open");
+            editRegCloseDate.requestFocus();
+            return;
+        }
+
+        // Registration must end before event starts
+        if (eventTs.compareTo(regCloseTs) <= 0) {
+            editRegCloseDate.setError("Must end before event starts");
+            editRegCloseTime.setError("Must end before event starts");
+            editRegCloseDate.requestFocus();
+            return;
+        }
         // endregion
 
+        // endregion
 
-        int capacity = 0;
-        try { capacity = capacityStr.isEmpty() ? 0 : Integer.parseInt(capacityStr); } catch (NumberFormatException ignored) {}
-
-        double price = 0.0;
-        try { price = priceStr.isEmpty() ? 0.0 : Double.parseDouble(priceStr); } catch (NumberFormatException ignored) {}
+        // region Gather form data
+        String eventName = editTextEventName.getText().toString().trim();
+        String eventDescription = editTextEventDescription.getText().toString().trim();
+        String eventLocation = editTextEventLocation.getText().toString().trim();
+        String eventDate = editTextEventDate.getText().toString().trim();
+        String eventTime = editTextEventTime.getText().toString().trim();
+        String capacityStr = editTextEventCapacity.getText().toString().trim();
+        String priceStr = editTextEventPrice.getText().toString().trim();
+        boolean geoLocation = geoLocationBox.isChecked();
+        boolean qrCode = qrCodeBox.isChecked();
+        // endregion
 
         // Current user
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         String userId = (user != null) ? user.getUid() : null;
 
         String eventId = UUID.randomUUID().toString();
+        String posterUri = (selectedImageUri != null) ? selectedImageUri.toString() : null; // Poster image URI
 
-        // Poster image
-        String posterUri = (selectedImageUri != null) ? selectedImageUri.toString() : null;
 
         // region Build the event payload
         Map<String, Object> eventDoc = new HashMap<>();
@@ -241,27 +274,37 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("name", eventName);
         eventDoc.put("description", eventDescription);
         eventDoc.put("location", eventLocation);
+
         eventDoc.put("date", eventDate);
         eventDoc.put("time", eventTime);
-        eventDoc.put("capacity", capacity);
-        eventDoc.put("price", price);
+
+        eventDoc.put("eventAt",   eventTs);
+        eventDoc.put("regOpenAt",  regOpenTs);
+        eventDoc.put("regCloseAt", regCloseTs);
+
+        // Numeric fields as numbers
+        eventDoc.put("price", priceVal);
+        eventDoc.put("capacity", capacityVal);
+        if (waitLimitVal != null) eventDoc.put("waitingListLimit", waitLimitVal);
+
         eventDoc.put("geoLocation", geoLocation);
         eventDoc.put("qrCode", qrCode);
         eventDoc.put("posterUri", posterUri);
         eventDoc.put("createdBy", userId);
         // MARK: can remove this createdAt field if we don't need it
         eventDoc.put("createdAt", FieldValue.serverTimestamp());
-        // Optional pretty strings for display
+
         eventDoc.put("regOpenDate",  editRegOpenDate.getText().toString().trim());
         eventDoc.put("regOpenTime",  editRegOpenTime.getText().toString().trim());
         eventDoc.put("regCloseDate", editRegCloseDate.getText().toString().trim());
         eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
 
         // Canonical timestamps for queries/sorting (Future use in this project)
-        eventDoc.put("regOpenAt",  regOpenTs);
-        eventDoc.put("regCloseAt", regCloseTs);
+//        eventDoc.put("regOpenAt",  regOpenTs);
+//        eventDoc.put("regCloseAt", regCloseTs);
         // endregion
 
+        submitButton.setEnabled(false);
         // Write to Firestore - collection "events" with ID
         db.collection("events")
                 .document(eventId)
@@ -273,6 +316,7 @@ public class EventCreationFragment extends Fragment {
                     requireActivity().getOnBackPressedDispatcher().onBackPressed();
                 })
                 .addOnFailureListener(e -> {
+                    submitButton.setEnabled(true);
                     Log.e("Firestore", "Failed to create event", e);
                     Toast.makeText(requireContext(), "Failed to create event: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
@@ -350,6 +394,30 @@ public class EventCreationFragment extends Fragment {
     }
     // endregion
 
+    private boolean requireText(EditText et, String msg) {
+        if (et.getText().toString().trim().isEmpty()) {
+            et.setError(msg);
+            et.requestFocus();
+            return false;
+        }
+        et.setError(null);
+        return true;
+    }
+
+    // region Helper functions
+    @Nullable
+    private Integer parseIntOrNull(String s) {
+        try { return s.trim().isEmpty() ? null : Integer.parseInt(s.trim()); }
+        catch (NumberFormatException e) { return null; }
+    }
+
+    @Nullable
+    private Double parseDoubleOrNull(String s) {
+        try { return s.trim().isEmpty() ? null : Double.parseDouble(s.trim()); }
+        catch (NumberFormatException e) { return null; }
+    }
+
+
     /**
      * Makes a Firestore Timestamp from a picked date and a picked time.
      *
@@ -383,5 +451,6 @@ public class EventCreationFragment extends Fragment {
 
         return new com.google.firebase.Timestamp(cal.getTime());
     }
+    // endregion
 
 }
