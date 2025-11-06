@@ -11,7 +11,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -29,6 +28,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         this.layoutResource = layoutResource;
         this.userRole = role;
     }
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -42,33 +42,81 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
 
         Event event = getItem(position);
-        ImageView eventImage = view.findViewById(R.id.event_image);
-        TextView eventCategory = view.findViewById(R.id.event_category);
-        TextView eventName = view.findViewById(R.id.event_name);
-        TextView eventPrice = view.findViewById(R.id.event_price);
-        TextView eventSpots = view.findViewById(R.id.event_spots);
-        TextView eventWaiting = view.findViewById(R.id.event_waiting);
-        Button joinButton = view.findViewById(R.id.join_button);
+        if (event == null) {
+            return view; // Return the recycled view as-is if there's no data
+        }
 
-        if (event != null) {
-            // eventImage.setImageResource(event.getPosterImage());
-            eventCategory.setText(event.getCategory());
-            eventName.setText(event.getTitle());
-            String price = event.getPrice().toString();
-            if (price.equals("0.0")) {
-                price = "Free";
+        // Check if we are using the new entrant_event_content.xml layout
+        // by looking for a view ID that is unique to it.
+        TextView eventDetails = view.findViewById(R.id.event_details);
+        if (eventDetails != null) {
+            // New layout (`entrant_event_content.xml`)
+            ImageView eventImage = view.findViewById(R.id.eventPic);
+            TextView eventTitle = view.findViewById(R.id.event_text);
+
+            // TODO: Use a library like Glide or Picasso to load the image from a URL
+            // if (event.getPosterImage() != null) {
+            //     Glide.with(getContext()).load(event.getPosterImage().getUrl()).into(eventImage);
+            // }
+
+            eventTitle.setText(event.getTitle());
+
+            String priceString = "Free";
+            if (event.getPrice() != null && event.getPrice() > 0) {
+                priceString = String.format(Locale.getDefault(), "$%.2f", event.getPrice());
             }
-            eventPrice.setText(price);
-            String spotsText = String.format(Locale.getDefault(), "%d spots", event.getCapacity());
-            eventSpots.setText(spotsText);
-            String waiting;
-            if (event.getWaitingList() != null){
-                waiting = String.format(Locale.getDefault(), "%d waiting", event.getWaitingList().size());
+
+            int waitingCount = 0;
+            if (event.getWaitingList() != null) {
+                waitingCount = event.getWaitingList().size();
             }
-            else {
-                waiting = "0 waiting";
+
+            String details = String.format(Locale.getDefault(), "Location: %s\nSpots: %d | Waiting: %d | Price: %s",
+                    event.getLocationAddress() != null ? event.getLocationAddress() : "N/A",
+                    event.getCapacity(),
+                    waitingCount,
+                    priceString);
+            eventDetails.setText(details);
+
+        } else {
+            // Fallback to the old layout logic
+            TextView eventCategory = view.findViewById(R.id.event_category);
+            TextView eventName = view.findViewById(R.id.event_name);
+            TextView eventPrice = view.findViewById(R.id.event_price);
+            TextView eventSpots = view.findViewById(R.id.event_spots);
+            TextView eventWaiting = view.findViewById(R.id.event_waiting);
+
+            // TODO: Use a library like Glide or Picasso to load the image from a URL
+            // if (event.getPosterImage() != null) { ... }
+
+            if (eventCategory != null) {
+                eventCategory.setText(event.getCategory());
             }
-            eventWaiting.setText(waiting);
+            if (eventName != null) {
+                eventName.setText(event.getTitle());
+            }
+
+            if (eventPrice != null) {
+                if (event.getPrice() != null && event.getPrice() > 0) {
+                    eventPrice.setText(String.format(Locale.getDefault(), "$%.2f", event.getPrice()));
+                } else {
+                    eventPrice.setText("Free");
+                }
+            }
+
+            if (eventSpots != null) {
+                String spotsText = String.format(Locale.getDefault(), "%d spots", event.getCapacity());
+                eventSpots.setText(spotsText);
+            }
+            if (eventWaiting != null) {
+                String waiting;
+                if (event.getWaitingList() != null) {
+                    waiting = String.format(Locale.getDefault(), "%d waiting", event.getWaitingList().size());
+                } else {
+                    waiting = "0 waiting";
+                }
+                eventWaiting.setText(waiting);
+            }
         }
         if (userRole == User.Role.ORGANIZER || userRole == User.Role.ADMIN) {
             joinButton.setVisibility(View.GONE);
