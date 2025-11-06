@@ -1,12 +1,13 @@
 package com.example.jackpot;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 public class Event {
-    private UUID eventId;
-    private UUID organizerId;
+    private String eventId;
+    private String organizerId;
     private String title;
     private String description;
     private EntrantList waitingList;
@@ -16,17 +17,20 @@ public class Event {
 //    private com.google.android.libraries.places.api.model.Money price;
     private Double price;
     private int capacity;
-    private Instant regOpenAt;
-    private Instant regCloseAt;
+    private Date regOpenAt;
+    private Date regCloseAt;
     private Image posterImage;
-    private UUID qrCodeId;
+    private String qrCodeId;
 //    private GeoPolicy geoPolicy;
     private boolean geoRequired;
-    public Event(UUID organizerId, String title, String description,
+    private String category;
+    public Event() {}
+
+    public Event(String eventId, String organizerId, String title, String description,
                  EntrantList waitingList, String locationAddress, Double lat,
-                 Double lng, Double price, int capacity, Instant regOpenAt,
-                 Instant regCloseAt, Image posterImage, UUID qrCodeId, boolean geoRequired){
-        this.eventId = UUID.randomUUID();
+                 Double lng, Double price, int capacity, Date regOpenAt,
+                 Date regCloseAt, Image posterImage, String qrCodeId, boolean geoRequired){
+        this.eventId = eventId;
         this.organizerId = organizerId;
         this.title = title;
         this.description = description;
@@ -41,17 +45,18 @@ public class Event {
         this.posterImage = posterImage;
         this.qrCodeId = qrCodeId;
         this.geoRequired = geoRequired;
+        this.category = category;
     }
-    public UUID getEventId() {
+    public String getEventId() {
         return eventId;
     }
-    public void setEventId(UUID eventId) {
+    public void setEventId(String eventId) {
         this.eventId = eventId;
     }
-    public UUID getOrganizerId() {
+    public String getOrganizerId() {
         return organizerId;
     }
-    public void setOrganizerId(UUID organizerId) {
+    public void setOrganizerId(String organizerId) {
         this.organizerId = organizerId;
     }
     public String getTitle() {
@@ -102,16 +107,16 @@ public class Event {
     public void setCapacity(int capacity) {
         this.capacity = capacity;
     }
-    public Instant getRegOpenAt() {
+    public Date getRegOpenAt() {
         return regOpenAt;
     }
-    public void setRegOpenAt(Instant regOpenAt) {
+    public void setRegOpenAt(Date regOpenAt) {
         this.regOpenAt = regOpenAt;
     }
-    public Instant getRegCloseAt() {
+    public Date getRegCloseAt() {
         return regCloseAt;
     }
-    public void setRegCloseAt(Instant regCloseAt) {
+    public void setRegCloseAt(Date regCloseAt) {
         this.regCloseAt = regCloseAt;
     }
     public Image getPosterImage() {
@@ -120,10 +125,10 @@ public class Event {
     public void setPosterImage(Image posterImage) {
         this.posterImage = posterImage;
     }
-    public UUID getQrCodeId() {
+    public String getQrCodeId() {
         return qrCodeId;
     }
-    public void setQrCodeId(UUID qrCodeId) {
+    public void setQrCodeId(String qrCodeId) {
         this.qrCodeId = qrCodeId;
     }
     public boolean isGeoRequired() {
@@ -131,6 +136,12 @@ public class Event {
     }
     public void setGeoRequired(boolean geoRequired) {
         this.geoRequired = geoRequired;
+    }
+    public String getCategory() {
+        return category;
+    }
+    public void setCategory(String category) {
+        this.category = category;
     }
     public void schedule(List<Event> events) {
 //        for(Event event : events){

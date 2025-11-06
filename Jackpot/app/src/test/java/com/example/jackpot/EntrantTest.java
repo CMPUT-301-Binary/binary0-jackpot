@@ -5,6 +5,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -19,19 +20,35 @@ public class EntrantTest {
         Entrant entrant = new Entrant("John Doe", id.toString(), User.Role.ENTRANT,
                 "", "", "", "", new Device());
         EntrantList waitingList = new EntrantList(5);
-        Event event = new Event(UUID.randomUUID(), "Test", "", waitingList,
-                "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
-                new Image(UUID.randomUUID()), UUID.randomUUID(), true);
+        Event event = new Event(UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                "Test",
+                "",
+                waitingList,
+                "",
+                0.0,
+                0.0,
+                5.5,
+                5,
+                new Date(),
+                new Date(),
+                new Image(UUID.randomUUID()),
+                UUID.randomUUID().toString(),
+                true);
 
         EntrantList waitingList2 = new EntrantList();
-        Event event2 = new Event(UUID.randomUUID(), "Test", "", waitingList2,
-                "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
-                new Image(UUID.randomUUID()), UUID.randomUUID(), true);
+        Event event2 = new Event(UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                "Test", "", waitingList2,
+                "", 0.0, 0.0, 5.5, 5, new Date(), new Date(),
+                new Image(UUID.randomUUID()), UUID.randomUUID().toString(), true);
 
         EntrantList waitingList3 = new EntrantList(0);
-        Event event3 = new Event(UUID.randomUUID(), "Test", "", waitingList3,
-                "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
-                new Image(UUID.randomUUID()), UUID.randomUUID(), true);
+        Event event3 = new Event(UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                "Test", "", waitingList3,
+                "", 0.0, 0.0, 5.5, 5, new Date(), new Date(),
+                new Image(UUID.randomUUID()), UUID.randomUUID().toString(), true);
 
         entrant.joinWaitingList(event);
         assertTrue(waitingList.contains(entrant));
@@ -46,9 +63,11 @@ public class EntrantTest {
         Entrant entrant = new Entrant("John Doe", id.toString(), User.Role.ENTRANT,
                 "", "", "", "", new Device());
         EntrantList waitingList = new EntrantList(5);
-        Event event = new Event(UUID.randomUUID(), "Test", "", waitingList,
-                "", 0.0, 0.0, 5.5, 5, Instant.now(), Instant.now(),
-                new Image(UUID.randomUUID()), UUID.randomUUID(), true);
+        Event event = new Event(UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                "Test", "", waitingList,
+                "", 0.0, 0.0, 5.5, 5, new Date(), new Date(),
+                new Image(UUID.randomUUID()), UUID.randomUUID().toString(), true);
         waitingList.add(entrant);
         entrant.leaveWaitingList(event);
         assertFalse(waitingList.contains(entrant));

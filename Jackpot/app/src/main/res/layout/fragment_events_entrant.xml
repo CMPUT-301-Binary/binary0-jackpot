@@ -11,7 +11,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/event_list"
+        app:layout_constraintBottom_toTopOf="@+id/entrant_events"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -45,7 +45,7 @@
     </LinearLayout>
 
     <ListView
-        android:id="@+id/event_list"
+        android:id="@+id/entrant_events"
         android:layout_width="409dp"
         android:layout_height="681dp"
         app:layout_constraintBottom_toBottomOf="parent"
