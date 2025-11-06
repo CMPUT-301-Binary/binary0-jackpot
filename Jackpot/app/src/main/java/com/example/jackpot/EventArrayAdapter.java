@@ -85,6 +85,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             TextView eventPrice = view.findViewById(R.id.event_price);
             TextView eventSpots = view.findViewById(R.id.event_spots);
             TextView eventWaiting = view.findViewById(R.id.event_waiting);
+            Button joinButton = view.findViewById(R.id.join_button);
 
             // TODO: Use a library like Glide or Picasso to load the image from a URL
             // if (event.getPosterImage() != null) { ... }
@@ -117,11 +118,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 }
                 eventWaiting.setText(waiting);
             }
-        }
-        if (userRole == User.Role.ORGANIZER || userRole == User.Role.ADMIN) {
-            joinButton.setVisibility(View.GONE);
-        } else {
-            joinButton.setVisibility(View.VISIBLE);
+            if (userRole == User.Role.ORGANIZER || userRole == User.Role.ADMIN) {
+                joinButton.setVisibility(View.GONE);
+            } else {
+                joinButton.setVisibility(View.VISIBLE);
+            }
         }
         return view;
     }
