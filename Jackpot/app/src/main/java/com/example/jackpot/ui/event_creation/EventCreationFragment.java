@@ -323,7 +323,8 @@ public class EventCreationFragment extends Fragment {
         // Numeric fields as numbers
         eventDoc.put("price", priceVal);
         eventDoc.put("capacity", capacityVal);
-        if (waitLimitVal != null) eventDoc.put("waitingListLimit", waitLimitVal);
+        if (waitLimitVal == null)  {waitLimitVal = 0;}
+        eventDoc.put("waitingListLimit", waitLimitVal);
 
         eventDoc.put("geoLocation", geoLocation);
         eventDoc.put("qrCode", qrCode);
