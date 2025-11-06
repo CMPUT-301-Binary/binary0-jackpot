@@ -45,7 +45,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             // eventImage.setImageResource(event.getPosterImage());
             eventCategory.setText(event.getCategory());
             eventName.setText(event.getTitle());
-            eventPrice.setText(event.getPrice().toString());
+            String price = event.getPrice().toString();
+            if (price.equals("0.0")) {
+                price = "Free";
+            }
+            eventPrice.setText(price);
             String spotsText = String.format(Locale.getDefault(), "%d spots", event.getCapacity());
             eventSpots.setText(spotsText);
             String waiting;
