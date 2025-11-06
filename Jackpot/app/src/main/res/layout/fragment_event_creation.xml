@@ -36,6 +36,7 @@
             android:id="@+id/editTextPrice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
             android:hint="Price (in $) or Free" />
 
         <TextView
@@ -115,7 +116,7 @@
             android:layout_height="wrap_content"
             android:gravity="top"
             android:hint="Capacity"
-            android:inputType="textMultiLine"
+            android:inputType="number"
             android:minLines="1" />
 
         <!-- Registration opens -->
@@ -171,7 +172,7 @@
             android:layout_height="wrap_content"
             android:gravity="top"
             android:hint="Limit (optional)"
-            android:inputType="textMultiLine"
+            android:inputType="number"
             android:minLines="1" />
 
         <!-- Add more fields as needed -->
