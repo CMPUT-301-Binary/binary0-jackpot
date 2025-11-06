@@ -13,14 +13,21 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
     private final int layoutResource;
-    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource) {
+    private FirebaseUser currentUser;
+    private User.Role userRole;
+
+    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User.Role role) {
         super(context, 0, events);
         this.layoutResource = layoutResource;
+        this.userRole = role;
     }
     @NonNull
     @Override
@@ -31,6 +38,8 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         } else {
             view = convertView;
         }
+
+
 
         Event event = getItem(position);
         ImageView eventImage = view.findViewById(R.id.event_image);
@@ -59,8 +68,12 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             else {
                 waiting = "0 waiting";
             }
-
             eventWaiting.setText(waiting);
+        }
+        if (userRole == User.Role.ORGANIZER || userRole == User.Role.ADMIN) {
+            joinButton.setVisibility(View.GONE);
+        } else {
+            joinButton.setVisibility(View.VISIBLE);
         }
         return view;
     }
