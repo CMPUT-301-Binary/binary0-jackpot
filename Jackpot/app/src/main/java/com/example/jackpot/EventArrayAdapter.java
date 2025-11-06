@@ -59,14 +59,9 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             else {
                 waiting = "0 waiting";
             }
+
             eventWaiting.setText(waiting);
-
-
         }
-
-
-
-
         return view;
     }
 }
