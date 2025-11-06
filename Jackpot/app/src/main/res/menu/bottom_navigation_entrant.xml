@@ -4,11 +4,11 @@
         android:icon="@drawable/ic_home_black_24dp"
         android:title="@string/menu_home" />
     <item
-        android:id="@+id/nav_events"
+        android:id="@+id/nav_events_entrant"
         android:icon="@drawable/ic_gallery_black_24dp"
         android:title="@string/events" />
     <item
-        android:id="@+id/nav_notification"
+        android:id="@+id/nav_notification_entrant"
         android:icon="@drawable/ic_notification_black_24dp"
         android:title="@string/notification" />
 </menu>
