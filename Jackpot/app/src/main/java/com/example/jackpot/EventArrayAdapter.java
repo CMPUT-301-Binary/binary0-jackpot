@@ -12,7 +12,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
@@ -59,7 +58,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             //     Glide.with(getContext()).load(event.getPosterImage().getUrl()).into(eventImage);
             // }
 
-            eventTitle.setText(event.getTitle());
+            eventTitle.setText(event.getName());
 
             String priceString = "Free";
             if (event.getPrice() != null && event.getPrice() > 0) {
@@ -94,7 +93,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 eventCategory.setText(event.getCategory());
             }
             if (eventName != null) {
-                eventName.setText(event.getTitle());
+                eventName.setText(event.getName());
             }
 
             if (eventPrice != null) {
