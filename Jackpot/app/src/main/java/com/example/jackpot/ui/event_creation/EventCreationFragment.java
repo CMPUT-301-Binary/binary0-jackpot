@@ -6,9 +6,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,7 +33,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -54,7 +58,7 @@ public class EventCreationFragment extends Fragment {
     private EditText editWaitingListLimit;
     // UI refs
     private EditText editRegOpenDate, editRegOpenTime, editRegCloseDate, editRegCloseTime;
-
+    private Spinner spinnerCategory;
 
     // Registration picker state
     private Long regOpenDateUtcMs = null, regCloseDateUtcMs = null;
@@ -101,6 +105,21 @@ public class EventCreationFragment extends Fragment {
             createEvent();
         });
         db = FirebaseFirestore.getInstance();
+
+        spinnerCategory = view.findViewById(R.id.spinnerCategory);
+
+        List<String> categories = Arrays.asList(
+                "Select a category…", // INDEX 0 is just a hint
+                "Party", "Concert", "Charity", "Fair"
+        );
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                categories
+        );
+
+        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCategory.setAdapter(catAdapter);
 
         editTextEventDate.setFocusable(false);
         editTextEventDate.setClickable(true);
@@ -195,7 +214,21 @@ public class EventCreationFragment extends Fragment {
         com.google.firebase.Timestamp regCloseTs =
                 toTimestamp(regCloseDateUtcMs, regCloseHour, regCloseMinute);
 
-        // region Validation for canonical timestamps
+        int catPos = spinnerCategory.getSelectedItemPosition();
+
+        // region Validation for category and also canonical timestamps
+
+        if (catPos <= 0) {
+            View selectedView = spinnerCategory.getSelectedView();
+            if (selectedView instanceof TextView) {
+                ((TextView) selectedView).setError("Pick a category");
+            }
+            spinnerCategory.requestFocus();
+            Toast.makeText(requireContext(), "Please choose a category", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String category = (String) spinnerCategory.getSelectedItem();
+
         if (eventTs == null) {
             editTextEventDate.setError("Pick event date");
             editTextEventTime.setError("Pick event time");
@@ -298,6 +331,7 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("regOpenTime",  editRegOpenTime.getText().toString().trim());
         eventDoc.put("regCloseDate", editRegCloseDate.getText().toString().trim());
         eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
+        eventDoc.put("category", category);
 
         // Canonical timestamps for queries/sorting (Future use in this project)
 //        eventDoc.put("regOpenAt",  regOpenTs);
@@ -311,7 +345,6 @@ public class EventCreationFragment extends Fragment {
                 .set(eventDoc)
                 .addOnSuccessListener(v -> {
                     Toast.makeText(requireContext(), "Event created!", Toast.LENGTH_SHORT).show();
-                    // TODO: optionally navigate back or clear the form
                     // currently have it just do the back press function
                     requireActivity().getOnBackPressedDispatcher().onBackPressed();
                 })
