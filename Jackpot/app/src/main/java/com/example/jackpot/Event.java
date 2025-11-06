@@ -29,7 +29,7 @@ public class Event {
     public Event(String eventId, String organizerId, String title, String description,
                  EntrantList waitingList, String locationAddress, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
-                 Date regCloseAt, Image posterImage, String qrCodeId, boolean geoRequired){
+                 Date regCloseAt, Image posterImage, String qrCodeId, boolean geoRequired, String category){
         this.eventId = eventId;
         this.organizerId = organizerId;
         this.title = title;
