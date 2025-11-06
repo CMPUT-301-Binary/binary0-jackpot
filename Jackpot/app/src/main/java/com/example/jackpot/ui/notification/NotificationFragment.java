@@ -31,7 +31,7 @@ public class NotificationFragment extends Fragment {
             // Default to ENTRANT or whatever makes sense
             role = User.Role.ENTRANT;
         }
-        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+//        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         // Inflate correct home layout
         View root;
         switch (role) {

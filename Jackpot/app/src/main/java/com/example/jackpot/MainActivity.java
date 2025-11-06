@@ -9,6 +9,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -25,7 +26,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private FirebaseFirestore db;
+    private FDatabase fDatabase = FDatabase.getInstance();
     private User.Role currentRole = User.Role.ENTRANT;
     private ActivityMainBinding binding;
 
@@ -33,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        db = FirebaseFirestore.getInstance();
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -54,13 +54,13 @@ public class MainActivity extends AppCompatActivity {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
             String uid = firebaseUser.getUid();
-            db.collection("users").document(uid).get()
+            fDatabase.getDb().collection("users").document(uid).get()
                     .addOnSuccessListener(doc -> {
                         User user = doc.toObject(User.class);
                         if (user != null && user.getRole() != null) {
                             currentRole = user.getRole();
                             Log.d("Firestore", "Logged in as: " + currentRole);
-                            currentRole = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+//                            currentRole = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 
                             // Inflate menus based on role
                             setupMenusAndFab(currentRole, bottomNav, drawerNav);
@@ -131,7 +131,13 @@ public class MainActivity extends AppCompatActivity {
                 bottomNav.inflateMenu(R.menu.bottom_navigation_organizer);
                 drawerNav.inflateMenu(R.menu.activity_side_bar_drawer);
                 findViewById(R.id.fab).setVisibility(View.VISIBLE);
-                fab.setOnClickListener(v -> navController.navigate(R.id.nav_event_creation));
+                //fab.setOnClickListener(v -> navController.navigate(R.id.nav_event_creation));
+                fab.setOnClickListener(v -> {
+                    NavOptions navOptions = new NavOptions.Builder()
+                            .setPopUpTo(navController.getGraph().getStartDestinationId(), false)
+                            .build();
+                    navController.navigate(R.id.nav_event_creation, null, navOptions);
+                });
                 break;
             case ADMIN:
                 bottomNav.inflateMenu(R.menu.bottom_navigation_admin);

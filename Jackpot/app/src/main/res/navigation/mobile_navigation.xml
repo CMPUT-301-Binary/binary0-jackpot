@@ -13,13 +13,13 @@
         tools:layout="@layout/fragment_home_entrant" />
 
     <fragment
-        android:id="@+id/nav_events"
+        android:id="@+id/nav_events_entrant"
         android:name="com.example.jackpot.ui.events.EventsFragment"
         android:label="Events"
         tools:layout="@layout/fragment_events_entrant" />
 
     <fragment
-        android:id="@+id/nav_notification"
+        android:id="@+id/nav_notification_entrant"
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
         tools:layout="@layout/fragment_notification_entrant" />
@@ -32,19 +32,13 @@
         tools:layout="@layout/fragment_map_organizer" />
 
     <fragment
-        android:id="@+id/nav_events"
+        android:id="@+id/nav_events_organizer"
         android:name="com.example.jackpot.ui.events.EventsFragment"
         android:label="Events"
         tools:layout="@layout/fragment_events_organizer" />
 
     <fragment
-        android:id="@+id/nav_events"
-        android:name="com.example.jackpot.ui.events.EventsFragment"
-        android:label="Events"
-        tools:layout="@layout/fragment_events_entrant" />
-
-    <fragment
-        android:id="@+id/nav_notification"
+        android:id="@+id/nav_notification_organizer"
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
         tools:layout="@layout/fragment_notification_organizer" />
@@ -69,12 +63,18 @@
         tools:layout="@layout/fragment_image_list_admin" />
 
     <fragment
-        android:id="@+id/nav_notification"
+        android:id="@+id/nav_notification_admin"
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
         tools:layout="@layout/fragment_notification_admin" />
 
     <!-- Sidebar fragments -->
+    <fragment
+        android:id="@+id/drawer_profile"
+        android:name="com.example.jackpot.ui.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
+
     <fragment
         android:id="@+id/drawer_settings"
         android:name="com.example.jackpot.ui.settings.SettingsFragment"

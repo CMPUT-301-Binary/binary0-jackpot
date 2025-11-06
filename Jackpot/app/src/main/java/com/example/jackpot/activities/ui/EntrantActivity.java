@@ -24,36 +24,4 @@ public class EntrantActivity extends AppCompatActivity {
 //        setContentView(R.layout.activity_entrant);
 
     }
-
-    /**
-     * retrieves events from the database based on the given parameters
-     * @param param parameter to compare
-     * @param value value to check in parameter
-     * @param db database reference
-     * @return ArrayList of Event objects
-     */
-    public ArrayList<Event> queryEvents(String param, String value, DatabaseReference db) {
-        ArrayList<Event> results = new ArrayList<>();
-        Query query = db.orderByChild(param).equalTo(value);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        Event event = dataSnapshot.getValue(Event.class);
-                        results.add(event);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                error.toException().printStackTrace();
-                // handle error
-                // int errorCode = error.getCode();
-                // act accordingly
-            }
-        });
-        return results;
-    }
 }
