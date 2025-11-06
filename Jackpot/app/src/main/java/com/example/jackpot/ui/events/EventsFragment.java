@@ -63,7 +63,7 @@ public class EventsFragment extends Fragment {
         EventList dataList = new EventList(new ArrayList<>());
         assert root != null;
         eventList = root.findViewById(R.id.entrant_events);
-        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource);
+        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, role);
         eventList.setAdapter(eventAdapter);
 
         if (currentUser != null) {

@@ -66,7 +66,7 @@ public class HomeFragment extends Fragment {
         EventList dataList = new EventList(new ArrayList<>());
         assert root != null;
         eventList = root.findViewById(R.id.events_list);
-        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource);
+        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, role);
         eventList.setAdapter(eventAdapter);
 
         fDatabase.getAllEvents(new FDatabase.DataCallback<Event>() {

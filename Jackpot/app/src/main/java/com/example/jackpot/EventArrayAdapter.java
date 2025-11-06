@@ -12,15 +12,21 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
     private final int layoutResource;
+    private FirebaseUser currentUser;
+    private User.Role userRole;
 
-    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource) {
+    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User.Role role) {
         super(context, 0, events);
         this.layoutResource = layoutResource;
+        this.userRole = role;
     }
 
     @NonNull
@@ -32,6 +38,8 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         } else {
             view = convertView;
         }
+
+
 
         Event event = getItem(position);
         if (event == null) {
@@ -100,7 +108,6 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 String spotsText = String.format(Locale.getDefault(), "%d spots", event.getCapacity());
                 eventSpots.setText(spotsText);
             }
-
             if (eventWaiting != null) {
                 String waiting;
                 if (event.getWaitingList() != null) {
@@ -111,7 +118,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 eventWaiting.setText(waiting);
             }
         }
-
+        if (userRole == User.Role.ORGANIZER || userRole == User.Role.ADMIN) {
+            joinButton.setVisibility(View.GONE);
+        } else {
+            joinButton.setVisibility(View.VISIBLE);
+        }
         return view;
     }
 }
