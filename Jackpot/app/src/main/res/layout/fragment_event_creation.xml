@@ -36,6 +36,7 @@
             android:id="@+id/editTextPrice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
             android:hint="Price (in $) or Free" />
 
         <TextView
@@ -90,22 +91,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="*Location"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/editLocation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="top"
-            android:hint="Address"
-            android:inputType="textMultiLine"
-            android:minLines="1" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:text="*Description"
             android:textSize="16sp" />
 
@@ -131,24 +116,48 @@
             android:layout_height="wrap_content"
             android:gravity="top"
             android:hint="Capacity"
-            android:inputType="textMultiLine"
+            android:inputType="number"
             android:minLines="1" />
 
+        <!-- Registration opens -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="*Registration Period"
+            android:text="*Registration Opens"
             android:textSize="16sp" />
 
         <EditText
-            android:id="@+id/editRegistrationPeriod"
+            android:id="@+id/editRegOpenDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="top"
-            android:hint="Registration Period"
-            android:inputType="textMultiLine"
-            android:minLines="1" />
+            android:hint="Pick open date" />
+
+        <EditText
+            android:id="@+id/editRegOpenTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Pick open time" />
+
+        <!-- Registration closes -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="*Registration Closes"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/editRegCloseDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Pick close date" />
+
+        <EditText
+            android:id="@+id/editRegCloseTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Pick close time" />
 
         <TextView
             android:layout_width="match_parent"
@@ -163,13 +172,13 @@
             android:layout_height="wrap_content"
             android:gravity="top"
             android:hint="Limit (optional)"
-            android:inputType="textMultiLine"
+            android:inputType="number"
             android:minLines="1" />
 
         <!-- Add more fields as needed -->
 
         <CheckBox
-            android:id="@+id/checkBox"
+            android:id="@+id/qrCodeBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Generate QR Code" />
@@ -187,7 +196,7 @@
             android:text="Upload Image" />
 
         <TextView
-            android:id="@+id/textView3"
+            android:id="@+id/selectedPhotoText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="No Image Selected" />
