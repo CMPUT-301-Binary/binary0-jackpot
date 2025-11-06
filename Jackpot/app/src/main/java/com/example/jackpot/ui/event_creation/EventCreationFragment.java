@@ -22,7 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.jackpot.Entrant;
-import com.example.jackpot.EntrantList;
+import com.example.jackpot.UserList;
 import com.example.jackpot.Event;
 import com.example.jackpot.Image;
 import com.example.jackpot.R;
@@ -338,7 +338,7 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
         eventDoc.put("category", category);
         //Put an empty list of Entrants as a waitinglist.
-        EntrantList waitingList = new EntrantList(capacityVal);
+        UserList waitingList = new UserList();
         eventDoc.put("waitingList", waitingList);
 
         // Canonical timestamps for queries/sorting (Future use in this project)

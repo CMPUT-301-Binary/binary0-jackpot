@@ -1,8 +1,15 @@
 package com.example.jackpot;
+import android.util.Log;
+
+import java.security.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 public class Event {
@@ -88,9 +95,7 @@ public class Event {
     public Date getDate() {
         return date;
     }
-    public void setDate(Date date) {
-        this.date = date;
-    }
+
     public Double getLat() {
         return lat;
     }
@@ -118,14 +123,62 @@ public class Event {
     public Date getRegOpenAt() {
         return regOpenAt;
     }
-    public void setRegOpenAt(Date regOpenAt) {
-        this.regOpenAt = regOpenAt;
+    public void setDate(Object date) {
+        this.date = convertToDate(date);
     }
-    public Date getRegCloseAt() {
-        return regCloseAt;
+
+    public void setRegOpenAt(Object regOpenAt) {
+        this.regOpenAt = convertToDate(regOpenAt);
     }
-    public void setRegCloseAt(Date regCloseAt) {
-        this.regCloseAt = regCloseAt;
+
+    public void setRegCloseAt(Object regCloseAt) {
+        this.regCloseAt = convertToDate(regCloseAt);
+    }
+
+    private Date convertToDate(Object dateObj) {
+        if (dateObj == null) {
+            return null;
+        }
+
+        if (dateObj instanceof Date) {
+            return (Date) dateObj;
+        } else if (dateObj instanceof com.google.firebase.Timestamp) {
+            return ((com.google.firebase.Timestamp) dateObj).toDate();
+        } else if (dateObj instanceof Map) {
+            // Firestore Timestamp as Map
+            Map<String, Object> timestampMap = (Map<String, Object>) dateObj;
+            if (timestampMap.containsKey("seconds")) {
+                long seconds = ((Number) timestampMap.get("seconds")).longValue();
+                int nanoseconds = timestampMap.containsKey("nanoseconds")
+                        ? ((Number) timestampMap.get("nanoseconds")).intValue()
+                        : 0;
+                return new Date(seconds * 1000 + nanoseconds / 1000000);
+            }
+        } else if (dateObj instanceof String) {
+            String dateStr = (String) dateObj;
+            SimpleDateFormat[] formats = {
+                    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US),
+                    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US),
+                    new SimpleDateFormat("yyyy-MM-dd", Locale.US),
+                    new SimpleDateFormat("MM/dd/yyyy", Locale.US)
+            };
+
+            for (SimpleDateFormat format : formats) {
+                try {
+                    return format.parse(dateStr);
+                } catch (ParseException e) {
+                    // Try next format
+                }
+            }
+
+            Log.e("Event", "Failed to parse date string: " + dateStr);
+            return null;
+        } else if (dateObj instanceof Long) {
+            return new Date((Long) dateObj);
+        }
+
+        return null;
     }
     public Image getPosterImage() {
         return posterImage;
