@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+import android.widget.ImageView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -20,6 +21,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.example.jackpot.FDatabase;
+
 import com.example.jackpot.R;
 import com.example.jackpot.activities.ui.LoginActivity;
 import com.google.firebase.auth.FirebaseAuth;
@@ -44,6 +46,8 @@ public class ProfileFragment extends Fragment {
         profileImage = root.findViewById(R.id.profile_image);
         deleteAccountButton = root.findViewById(R.id.delete_account_button);
         logoutButton = root.findViewById(R.id.logout_button);
+        View view = inflater.inflate(R.layout.fragment_profile, container, false);
+        profileImage = view.findViewById(R.id.profile_image);
 
         // Image picker setup
         imagePickerLauncher = registerForActivityResult(
