@@ -21,9 +21,12 @@ import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.jackpot.Entrant;
+import com.example.jackpot.EntrantList;
 import com.example.jackpot.Event;
 import com.example.jackpot.Image;
 import com.example.jackpot.R;
+import com.example.jackpot.User;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
@@ -33,6 +36,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -300,6 +304,7 @@ public class EventCreationFragment extends Fragment {
         String eventId = UUID.randomUUID().toString();
         String posterUri = (selectedImageUri != null) ? selectedImageUri.toString() : null; // Poster image URI
 
+        //Build the event payload
 
         // region Build the event payload
         Map<String, Object> eventDoc = new HashMap<>();
@@ -332,6 +337,9 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("regCloseDate", editRegCloseDate.getText().toString().trim());
         eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
         eventDoc.put("category", category);
+        //Put an empty list of Entrants as a waitinglist.
+        EntrantList waitingList = new EntrantList(capacityVal);
+        eventDoc.put("waitingList", waitingList);
 
         // Canonical timestamps for queries/sorting (Future use in this project)
 //        eventDoc.put("regOpenAt",  regOpenTs);
