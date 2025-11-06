@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
-import android.widget.ImageView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -40,14 +39,14 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        // Inflate once
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        // Initialize Firebase & Views
         mAuth = FirebaseAuth.getInstance();
         profileImage = root.findViewById(R.id.profile_image);
         deleteAccountButton = root.findViewById(R.id.delete_account_button);
         logoutButton = root.findViewById(R.id.logout_button);
-        View view = inflater.inflate(R.layout.fragment_profile, container, false);
-        profileImage = view.findViewById(R.id.profile_image);
 
         // Image picker setup
         imagePickerLauncher = registerForActivityResult(
@@ -59,12 +58,11 @@ public class ProfileFragment extends Fragment {
                     }
                 });
 
+        // Open gallery on image click
         profileImage.setOnClickListener(v -> openGallery());
 
-        // Logout button
+        // Logout and Delete account
         logoutButton.setOnClickListener(v -> logout());
-
-        // Delete account button
         deleteAccountButton.setOnClickListener(v -> showDeleteAccountDialog());
 
         return root;
