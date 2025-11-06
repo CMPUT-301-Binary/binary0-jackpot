@@ -8,7 +8,7 @@ import java.util.UUID;
 public class Event {
     private String eventId;
     private String organizerId;
-    private String title;
+    private String name;
     private String description;
     private EntrantList waitingList;
     private String locationAddress;
@@ -26,13 +26,13 @@ public class Event {
     private String category;
     public Event() {}
 
-    public Event(String eventId, String organizerId, String title, String description,
+    public Event(String eventId, String organizerId, String name, String description,
                  EntrantList waitingList, String locationAddress, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
                  Date regCloseAt, Image posterImage, String qrCodeId, boolean geoRequired){
         this.eventId = eventId;
         this.organizerId = organizerId;
-        this.title = title;
+        this.name = name;
         this.description = description;
         this.waitingList = waitingList;
         this.locationAddress = locationAddress;
@@ -59,11 +59,11 @@ public class Event {
     public void setOrganizerId(String organizerId) {
         this.organizerId = organizerId;
     }
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
-    public void setTitle(String title) {
-        this.title = title;
+    public void setName(String name) {
+        this.name = name;
     }
     public String getDescription() {
         return description;
