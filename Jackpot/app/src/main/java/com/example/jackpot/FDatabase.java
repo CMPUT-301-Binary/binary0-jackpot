@@ -124,6 +124,16 @@ public class FDatabase {
                 });
     }
 
+    public void updateEvent(Event event) {
+        if (event == null || event.getEventId() == null) {
+            Log.e("FDatabase", "Event or event ID is null, cannot update.");
+            return;
+        }
+        db.collection("events").document(event.getEventId()).set(event)
+                .addOnSuccessListener(aVoid -> Log.d("FDatabase", "Event updated successfully"))
+                .addOnFailureListener(e -> Log.e("FDatabase", "Error updating event", e));
+    }
+
     // Convenience methods for Events (backward compatibility)
     public void queryEvents(String field, Object value, DataCallback<Event> callback) {
         queryCollection("events", field, value, Event.class, callback);

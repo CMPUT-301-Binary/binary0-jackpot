@@ -14,6 +14,8 @@ import com.example.jackpot.EventArrayAdapter;
 import com.example.jackpot.EventList;
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.jackpot.User;
 import com.example.jackpot.Event;
@@ -25,6 +27,7 @@ public class HomeFragment extends Fragment {
     private ListView eventList;
     private EventArrayAdapter eventAdapter;
     private FDatabase fDatabase = FDatabase.getInstance();
+    private User currentUser;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -66,14 +69,40 @@ public class HomeFragment extends Fragment {
         EventList dataList = new EventList(new ArrayList<>());
         assert root != null;
         eventList = root.findViewById(R.id.events_list);
-        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, role);
-        eventList.setAdapter(eventAdapter);
 
+
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null) {
+            fDatabase.getUserById(firebaseUser.getUid(), new FDatabase.DataCallback<User>() {
+                @Override
+                public void onSuccess(ArrayList<User> data) {
+                    if (!data.isEmpty()) {
+                        currentUser = data.get(0);
+                        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, currentUser);
+                        eventList.setAdapter(eventAdapter);
+                        loadEvents();
+                    }
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    // Handle user not found
+                }
+            });
+        }
+
+
+        return root;
+    }
+
+    private void loadEvents() {
         fDatabase.getAllEvents(new FDatabase.DataCallback<Event>() {
             @Override
             public void onSuccess(ArrayList<Event> data) {
-                eventAdapter.clear();
-                eventAdapter.addAll(data);
+                if (eventAdapter != null) {
+                    eventAdapter.clear();
+                    eventAdapter.addAll(data);
+                }
             }
             @Override
             public void onFailure(Exception e) {
@@ -81,13 +110,5 @@ public class HomeFragment extends Fragment {
                 e.printStackTrace();
             }
         });
-        return root;
     }
-//    @Override
-//    public void onCreate(@Nullable Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//
-//
-//    }
 }
-
