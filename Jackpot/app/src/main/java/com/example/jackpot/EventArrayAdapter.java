@@ -79,7 +79,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         }
 
         String details = String.format(Locale.getDefault(), "Location: %s\nSpots: %d | Waiting: %d | Price: %s",
-                event.getLocationAddress() != null ? event.getLocationAddress() : "N/A",
+                event.getLocation() != null ? event.getLocation() : "N/A",
                 event.getCapacity(),
                 waitingCount,
                 priceString);

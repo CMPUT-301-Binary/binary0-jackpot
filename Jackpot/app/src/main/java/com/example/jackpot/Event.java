@@ -10,8 +10,9 @@ public class Event {
     private String organizerId;
     private String name;
     private String description;
-    private EntrantList waitingList;
-    private String locationAddress;
+    private UserList waitingList;
+    private String location;
+    private Date date;
     private Double lat;
     private Double lng;
 //    private com.google.android.libraries.places.api.model.Money price;
@@ -27,7 +28,7 @@ public class Event {
     public Event() {}
 
     public Event(String eventId, String organizerId, String name, String description,
-                 EntrantList waitingList, String locationAddress, Double lat,
+                 UserList waitingList, String location, Date date, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
                  Date regCloseAt, Image posterImage, String qrCodeId, boolean geoRequired, String category){
         this.eventId = eventId;
@@ -35,7 +36,8 @@ public class Event {
         this.name = name;
         this.description = description;
         this.waitingList = waitingList;
-        this.locationAddress = locationAddress;
+        this.location = location;
+        this.date = date;
         this.lat = lat;
         this.lng = lng;
         this.price = price;
@@ -71,17 +73,23 @@ public class Event {
     public void setDescription(String description) {
         this.description = description;
     }
-    public EntrantList getWaitingList() {
+    public UserList getWaitingList() {
         return waitingList;
     }
-    public void setWaitingList(EntrantList waitingList) {
+    public void setWaitingList(UserList waitingList) {
         this.waitingList = waitingList;
     }
-    public String getLocationAddress() {
-        return locationAddress;
+    public String getLocation() {
+        return location;
     }
-    public void setLocationAddress(String locationAddress) {
-        this.locationAddress = locationAddress;
+    public void setLocation(String location) {
+        this.location = location;
+    }
+    public Date getDate() {
+        return date;
+    }
+    public void setDate(Date date) {
+        this.date = date;
     }
     public Double getLat() {
         return lat;
@@ -238,14 +246,14 @@ public class Event {
      * @throws IllegalArgumentException If there are not enough entrants in the waiting list.
      * @return A list of entrants.
      */
-    public ArrayList<Entrant> drawEvent(int amountEntrants){
+    public ArrayList<User> drawEvent(int amountEntrants){
         if(amountEntrants>waitingList.size()){
             throw new IllegalArgumentException("Too few entrants in waiting list");
         }
-        ArrayList<Entrant> list = new ArrayList<>();
+        ArrayList<User> list = new ArrayList<>();
         for(int i = 0; i < amountEntrants; i++){
             int index = (int)(Math.random()*waitingList.size());
-            Entrant e = waitingList.get(index);
+            User e = waitingList.get(index);
             list.add(e);
             waitingList.remove(e);
         }
