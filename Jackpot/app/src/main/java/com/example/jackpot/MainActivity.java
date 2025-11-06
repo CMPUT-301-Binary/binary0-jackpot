@@ -9,6 +9,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -130,7 +131,13 @@ public class MainActivity extends AppCompatActivity {
                 bottomNav.inflateMenu(R.menu.bottom_navigation_organizer);
                 drawerNav.inflateMenu(R.menu.activity_side_bar_drawer);
                 findViewById(R.id.fab).setVisibility(View.VISIBLE);
-                fab.setOnClickListener(v -> navController.navigate(R.id.nav_event_creation));
+                //fab.setOnClickListener(v -> navController.navigate(R.id.nav_event_creation));
+                fab.setOnClickListener(v -> {
+                    NavOptions navOptions = new NavOptions.Builder()
+                            .setPopUpTo(navController.getGraph().getStartDestinationId(), false)
+                            .build();
+                    navController.navigate(R.id.nav_event_creation, null, navOptions);
+                });
                 break;
             case ADMIN:
                 bottomNav.inflateMenu(R.menu.bottom_navigation_admin);

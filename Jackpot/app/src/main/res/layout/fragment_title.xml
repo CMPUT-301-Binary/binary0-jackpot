@@ -12,9 +12,9 @@
         android:id="@+id/imageView5"
         android:layout_width="234dp"
         android:layout_height="321dp"
-        android:layout_marginStart="88dp"
-        android:layout_marginTop="204dp"
         android:src="@drawable/titlescreen"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -23,7 +23,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/jackpottitletext"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="-121dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="-120dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
