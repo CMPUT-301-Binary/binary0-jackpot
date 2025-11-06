@@ -1,6 +1,7 @@
 package com.example.jackpot.ui.home;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -65,33 +66,41 @@ public class HomeFragment extends Fragment {
                 break;
         }
 
-        // Initialize the event list and adapter
+        // Initialize the event list and adapter immediately.
         EventList dataList = new EventList(new ArrayList<>());
         assert root != null;
         eventList = root.findViewById(R.id.events_list);
+        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, null);
+        eventList.setAdapter(eventAdapter);
+
+        // Load events for everyone, regardless of login status.
 
 
+        // Fetch the current user and update the adapter when done.
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
-            fDatabase.getUserById(firebaseUser.getUid(), new FDatabase.DataCallback<User>() {
+            fDatabase.getUserById(firebaseUser.getUid(), new FDatabase.DataCallback<>() {
                 @Override
                 public void onSuccess(ArrayList<User> data) {
                     if (!data.isEmpty()) {
+                        Log.d("HomeFragment", "User data: " + data.get(0));
                         currentUser = data.get(0);
-                        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, currentUser);
-                        eventList.setAdapter(eventAdapter);
-                        loadEvents();
+                        if (eventAdapter != null) {
+                            eventAdapter.setCurrentUser(currentUser);
+                        }
+                    } else {
+                        Log.d("HomeFragment", "No user data found.");
                     }
+                    loadEvents();
                 }
 
                 @Override
                 public void onFailure(Exception e) {
-                    // Handle user not found
+                    // Handle user not found or other errors
+                    e.printStackTrace();
                 }
             });
         }
-
-
         return root;
     }
 

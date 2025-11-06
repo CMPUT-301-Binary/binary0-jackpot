@@ -61,6 +61,8 @@ public class EventsFragment extends Fragment {
         EventList dataList = new EventList(new ArrayList<>());
         assert root != null;
         eventList = root.findViewById(R.id.entrant_events);
+        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, null);
+        eventList.setAdapter(eventAdapter);
 
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
@@ -69,8 +71,6 @@ public class EventsFragment extends Fragment {
                 public void onSuccess(ArrayList<User> data) {
                     if (!data.isEmpty()) {
                         currentUser = data.get(0);
-                        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, currentUser);
-                        eventList.setAdapter(eventAdapter);
                         fDatabase.queryEventsWithArrayContains("waitingList", currentUser, new FDatabase.DataCallback<Event>() {
                             @Override
                             public void onSuccess(ArrayList<Event> events) {

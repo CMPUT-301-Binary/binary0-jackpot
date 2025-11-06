@@ -19,18 +19,19 @@ import java.util.Locale;
 public class EventArrayAdapter extends ArrayAdapter<Event> {
     private final int layoutResource;
     private User currentUser;
-
-    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource) {
+    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, @Nullable User currentUser) {
         super(context, 0, events);
         this.layoutResource = layoutResource;
+        this.currentUser = null;
     }
-
-    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User user) {
-        super(context, 0, events);
-        this.layoutResource = layoutResource;
+//    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User user) {
+//        super(context, 0, events);
+//        this.layoutResource = layoutResource;
+//        this.currentUser = user;
+//    }
+    public void setCurrentUser(User user) {
         this.currentUser = user;
     }
-
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -43,6 +44,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
         Event event = getItem(position);
         if (event == null) {
+            Toast.makeText(getContext(), "Event is null", Toast.LENGTH_SHORT).show();
             return view; // Return the recycled view as-is if there's no data
         }
 
@@ -119,18 +121,30 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         Button joinButton = view.findViewById(R.id.join_button);
         if (joinButton != null) {
             joinButton.setOnClickListener(v -> {
-                if (currentUser instanceof Entrant) {
-                    Entrant entrant = (Entrant) currentUser;
+                if (currentUser.getRole()==User.Role.ENTRANT) {
+                    Entrant entrant = new Entrant(
+                            currentUser.getId(),
+                            currentUser.getName(),
+                            currentUser.getRole(),
+                            currentUser.getEmail(),
+                            currentUser.getPhone(),
+                            currentUser.getPassword(),
+                            currentUser.getNotificationPreferences(),
+                            currentUser.getDevice()
+                    );
                     try {
                         entrant.joinWaitingList(event);
                         FDatabase.getInstance().updateEvent(event);
                         Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
                         notifyDataSetChanged(); // To update the waiting count
                     } catch (Exception e) {
-                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
                     }
-                } else {
+                } else if (currentUser != null) {
                     Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
                 }
             });
         }

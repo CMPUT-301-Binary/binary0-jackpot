@@ -149,6 +149,6 @@ public class FDatabase {
 
     // Convenience methods for Users
     public void getUserById(String uid, DataCallback<User> callback) {
-        queryCollection("users", "userId", uid, User.class, callback);
+        queryCollection("users", "id", uid, User.class, callback);
     }
 }
