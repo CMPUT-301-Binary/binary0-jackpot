@@ -401,7 +401,7 @@ public class EventCreationFragment extends Fragment {
     }
 
     private void openRegTimePicker(boolean isOpen) {
-        int defHour   = isOpen ? (regOpenHour  == null ? 9  : regOpenHour)  : (regCloseHour  == null ? 17 : regCloseHour);
+        int defHour = isOpen ? (regOpenHour  == null ? 9  : regOpenHour)  : (regCloseHour  == null ? 17 : regCloseHour);
         int defMinute = isOpen ? (regOpenMinute== null ? 0  : regOpenMinute): (regCloseMinute== null ? 0  : regCloseMinute);
 
         MaterialTimePicker picker = new MaterialTimePicker.Builder()
