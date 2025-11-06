@@ -1,32 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:layout_margin="8dp">
 
-    <ImageView
-        android:id="@+id/eventPic"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:contentDescription="TODO"
-        tools:srcCompat="@tools:sample/avatars" />
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/event_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="20dp"
-        android:textSize="30sp"
-        android:text="@string/event" />
-    <Button
-        android:id="@+id/leave_button"
-        style="?android:attr/buttonBarButtonStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/leave_lottery" />
-</LinearLayout>
+        <ImageView
+            android:id="@+id/eventPic"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:contentDescription="TODO"
+            tools:srcCompat="@tools:sample/avatars"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:scaleType="centerCrop"/>
+
+        <TextView
+            android:id="@+id/event_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:text="@string/event"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            app:layout_constraintStart_toEndOf="@id/eventPic"
+            app:layout_constraintEnd_toStartOf="@+id/leave_button"
+            app:layout_constraintTop_toTopOf="@id/eventPic" />
+
+        <TextView
+            android:id="@+id/event_details"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            tools:text="Event details"
+            android:textAppearance="?attr/textAppearanceBody2"
+            app:layout_constraintStart_toStartOf="@id/event_text"
+            app:layout_constraintEnd_toEndOf="@id/event_text"
+            app:layout_constraintTop_toBottomOf="@id/event_text" />
+
+        <Button
+            android:id="@+id/leave_button"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/leave_lottery"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
