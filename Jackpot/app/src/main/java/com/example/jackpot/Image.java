@@ -1,5 +1,6 @@
 package com.example.jackpot;
 
+import java.io.Serializable;
 import java.net.URL;
 import java.util.UUID;
 

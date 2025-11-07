@@ -324,7 +324,14 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("price", priceVal);
         eventDoc.put("capacity", capacityVal);
         if (waitLimitVal == null)  {waitLimitVal = 0;}
-        eventDoc.put("waitingListLimit", waitLimitVal);
+        UserList waitingList = new UserList(waitLimitVal);
+        eventDoc.put("waitingList", waitingList);
+
+// Create an empty waiting list structure that Firestore can serialize
+        Map<String, Object> waitingListMap = new HashMap<>();
+        waitingListMap.put("users", new ArrayList<>()); // Empty array for users
+        waitingListMap.put("capacity", waitLimitVal);   // The capacity limit
+        eventDoc.put("waitingList", waitingListMap);
 
         eventDoc.put("geoLocation", geoLocation);
         eventDoc.put("qrCode", qrCode);
@@ -339,7 +346,6 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
         eventDoc.put("category", category);
         //Put an empty list of Entrants as a waitinglist.
-        UserList waitingList = new UserList(waitLimitVal);
         eventDoc.put("waitingList", waitingList);
 
         // Canonical timestamps for queries/sorting (Future use in this project)
