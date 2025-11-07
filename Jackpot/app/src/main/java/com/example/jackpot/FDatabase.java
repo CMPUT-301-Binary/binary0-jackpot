@@ -35,6 +35,11 @@ public class FDatabase {
         void onFailure(Exception e);
     }
 
+    public interface StatusCallback {
+        void onSuccess();
+        void onFailure(String error);
+    }
+
     // Single event callback interface
     public interface EventCallback {
         void onSuccess(Event event);
@@ -201,5 +206,13 @@ public class FDatabase {
     // Convenience methods for Users
     public void getUserById(String uid, DataCallback<User> callback) {
         queryCollection("users", "id", uid, User.class, callback);
+    }
+
+
+    public void deleteEvent(String eventId, StatusCallback callback) {
+        db.collection("events").document(eventId)
+                .delete()
+                .addOnSuccessListener(aVoid -> callback.onSuccess())
+                .addOnFailureListener(e -> callback.onFailure(e.getMessage()));
     }
 }
