@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.jackpot.Event;
@@ -81,16 +82,54 @@ public class EventsFragment extends Fragment {
         Button wishlistButton = root.findViewById(R.id.wishlist_events_button);
         Button invitsButton = root.findViewById(R.id.invits_events_button);
 
+        // Define colours for the buttons
+        int activeColor = ContextCompat.getColor(requireContext(), R.color.black);
+        int inactiveColor = ContextCompat.getColor(requireContext(), R.color.white);
+        int activeTextColor = ContextCompat.getColor(requireContext(), R.color.white);
+        int inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.black);
+
+        // set initial state
+        wishlistButton.setBackgroundColor(activeColor);
+        wishlistButton.setTextColor(activeTextColor);
+        joinedButton.setBackgroundColor(inactiveColor);
+        joinedButton.setTextColor(inactiveTextColor);
+        invitsButton.setBackgroundColor(inactiveColor);
+        invitsButton.setTextColor(inactiveTextColor);
+
         joinedButton.setOnClickListener(v -> {
             currentTab = EventTab.JOINED;
+            // Set active state for Joined button
+            joinedButton.setBackgroundColor(activeColor);
+            joinedButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
+            wishlistButton.setBackgroundColor(inactiveColor);
+            wishlistButton.setTextColor(inactiveTextColor);
+            invitsButton.setBackgroundColor(inactiveColor);
+            invitsButton.setTextColor(inactiveTextColor);
             loadEventsForTab();
         });
         wishlistButton.setOnClickListener(v -> {
             currentTab = EventTab.WISHLIST;
+            // Set active state for Wishlist button
+            wishlistButton.setBackgroundColor(activeColor);
+            wishlistButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
+            joinedButton.setBackgroundColor(inactiveColor);
+            joinedButton.setTextColor(inactiveTextColor);
+            invitsButton.setBackgroundColor(inactiveColor);
+            invitsButton.setTextColor(inactiveTextColor);
             loadEventsForTab();
         });
         invitsButton.setOnClickListener(v -> {
             currentTab = EventTab.INVITATIONS;
+            // Set active state for Invitations button
+            invitsButton.setBackgroundColor(activeColor);
+            invitsButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
+            wishlistButton.setBackgroundColor(inactiveColor);
+            wishlistButton.setTextColor(inactiveTextColor);
+            joinedButton.setBackgroundColor(inactiveColor);
+            joinedButton.setTextColor(inactiveTextColor);
             loadEventsForTab();
         });
     }
