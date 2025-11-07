@@ -12,12 +12,33 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 
+/*
+ * CMPUT 301 – Event Lottery App (“Jackpot”)
+ * File: FDatabase.java
+ *
+ * Purpose/Role:
+ *   Lightweight data-access facade over Firebase Firestore for app domain objects.
+ *   Centralizes common queries and hides Firestore boilerplate.
+ *
+ * Design Pattern:
+ *   - Singleton: a single shared instance via getInstance().
+ */
+
+/**
+ * Singleton facade for Firestore access used by the application.
+ * Provides typed callbacks and convenience methods for common queries and updates.
+ */
 public class FDatabase {
     private static FDatabase instance = null;
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     private FDatabase() {}
 
+    /**
+     * Get the singleton instance of the database.
+     * If the instance doesn't exist, create it.
+     * @return The singleton instance of the database.
+     */
     public static FDatabase getInstance() {
         if (instance == null) {
             instance = new FDatabase();
@@ -25,6 +46,10 @@ public class FDatabase {
         return instance;
     }
 
+    /**
+     * Get the Firebase Firestore instance used by the database.
+     * @return The Firebase Firestore instance.
+     */
     public FirebaseFirestore getDb() {
         return db;
     }
@@ -35,12 +60,19 @@ public class FDatabase {
         void onFailure(Exception e);
     }
 
+    /**
+     * Callback interface for successful and failed operations.
+     */
     public interface StatusCallback {
         void onSuccess();
         void onFailure(String error);
     }
 
     // Single event callback interface
+
+    /**
+     * Callback interface for events.
+     */
     public interface EventCallback {
         void onSuccess(Event event);
         void onFailure(String error);
@@ -184,6 +216,10 @@ public class FDatabase {
                 });
     }
 
+    /**
+     * Updates an event in Firestore
+     * @param event The event to update
+     */
     public void updateEvent(Event event) {
         if (event == null || event.getEventId() == null) {
             Log.e("FDatabase", "Event or event ID is null, cannot update.");
@@ -195,24 +231,53 @@ public class FDatabase {
     }
 
     // Convenience methods for Events (backward compatibility)
+
+    /**
+     * Queries events based on a field and value
+     * @param field parameter to compare
+     * @param value value to check in parameter
+     * @param callback Callback to handle success or failure
+     */
     public void queryEvents(String field, Object value, DataCallback<Event> callback) {
         queryCollection("events", field, value, Event.class, callback);
     }
 
+    /**
+     * Queries events where a field (array) contains a specific value.
+     * @param field parameter to compare (must be an array)
+     * @param value value to check for in the array
+     * @param callback Callback to handle success or failure
+     */
     public void queryEventsWithArrayContains(String field, Object value, DataCallback<Event> callback) {
         queryCollectionWithArrayContains("events", field, value, Event.class, callback);
     }
 
+    /**
+     * Gets all events from the "events" collection
+     * @param callback Callback to handle success or failure
+     */
     public void getAllEvents(DataCallback<Event> callback) {
         getAllFromCollection("events", Event.class, callback);
     }
 
     // Convenience methods for Users
+
+    /**
+     * Queries users based on a field and value
+     *
+     * @param uid The ID of the user to query
+     * @param callback Callback to handle success or failure
+     */
     public void getUserById(String uid, DataCallback<User> callback) {
         queryCollection("users", "id", uid, User.class, callback);
     }
 
 
+    /**
+     * Deletes an event from Firestore
+     * @param eventId The ID of the event to delete
+     * @param callback Callback to handle success or failure
+     */
     public void deleteEvent(String eventId, StatusCallback callback) {
         db.collection("events").document(eventId)
                 .delete()

@@ -8,6 +8,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+/*
+ * CMPUT 301 – Event Lottery App (“Jackpot”)
+ * File: TitleFragment.java
+ *
+ * Purpose/Role:
+ *  Displays the app’s title/landing screen and acts as the entry point into
+ *  navigation (e.g., sign-in, role selection, or quick actions like “Scan QR” if shown).
+ *  This fragment is a View-layer component (MVVM/MVC) and should contain only UI and navigation
+ *  logic.
+ *
+ * Design Notes:
+ *  - AndroidX Fragment used as a self-contained UI screen.
+ *  - Navigation should be handled via the NavController (safe-args if applicable).
+ *
+ * Outstanding Issues / TODOs:
+ *  - TODO: Remove template args (ARG_PARAM1/ARG_PARAM2) if not used anywhere.
+ *  - TODO: Rename and change types of parameters
+ */
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link TitleFragment#newInstance} factory method to
@@ -46,6 +65,11 @@ public class TitleFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Initializes fragment-scoped state from arguments if present.
+     *
+     * @param savedInstanceState previously saved state, or {@code null}.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +79,15 @@ public class TitleFragment extends Fragment {
         }
     }
 
+    /**
+     * Inflates the title screen layout and returns the root view.
+     * Wire any buttons here to the NavController.
+     *
+     * @param inflater  LayoutInflater to inflate the XML layout.
+     * @param container Optional parent view.
+     * @param savedInstanceState previously saved state, or {@code null}.
+     * @return the root view for this fragment.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

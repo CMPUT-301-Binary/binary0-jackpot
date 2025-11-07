@@ -27,8 +27,35 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/*
+ * CMPUT 301 – Event Lottery App (“Jackpot”)
+ * File: EventDetailsActivity.java
+ *
+ * Purpose/Role:
+ *   Detail screen for a single Event. Displays event metadata (name, date, price, capacity,
+ *   category, registration window, poster image) and exposes role-specific actions:
+ *   - Entrant: join waiting list
+ *   - Organizer: update poster image
+ *   - Admin: delete event
+ *
+ * Design Notes:
+ *   - View/Controller layer (Android Activity). Business/persistence logic delegated to FDatabase.
+ *   - Uses Glide for image loading, Firebase Storage for uploads, and Firestore for posterUri updates.
+ *   - Receives initial event data via Intent extras; refreshes full record from Firestore on load.
+ *   - Runtime image-picker via Activity Result API; upload continues even if user navigates back.
+ *
+ * Outstanding Issues / TODOs:
+ *   - TODO: Fix back-press UX (currently requires two presses to exit this screen).
+ *   - TODO: Add basic error/empty states for missing event or network failures.
+ */
+
+
+/**
+ * Activity that presents the details of a single {@link Event} and routes role-specific actions.
+ */
 public class EventDetailsActivity extends AppCompatActivity {
 
+    // TODO: Fix bug: User should only press back once to go to previous screen. Currently user needs to press back twice.
     private static final String TAG = "EventDetailsActivity";
 
     private TextView eventName;
@@ -58,7 +85,9 @@ public class EventDetailsActivity extends AppCompatActivity {
     private Uri pickedImageUri;
     private com.google.firebase.storage.UploadTask currentUpload;
 
-
+    /**
+     * Load the current user from Firestore.
+     */
     private void loadCurrentUser() {
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -94,7 +123,14 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Log.e(TAG, "Failed to load user", e));
     }
 
-
+    /**
+     * Called when the activity is first created.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down then this Bundle contains the data it most
+     *     recently supplied in {@link #onSaveInstanceState}. Otherwise it is null.
+     *
+     */
     // From OpenAI, ChatGPT (GPT-5 Thinking), "Register image picker, show local Glide preview, and hook Update Photo click", 2025-11-07
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,6 +181,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Initialize the views in the activity.
+     */
     private void initializeViews() {
         deleteButton = findViewById(R.id.event_details_delete_button);
         eventName = findViewById(R.id.event_details_name);
@@ -165,6 +204,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         updatePhotoBtn = findViewById(R.id.event_details_update_photo_button);
     }
 
+    /**
+     * Load the event data from Firestore.
+     */
     private void loadEventData() {
         eventId = getIntent().getStringExtra("EVENT_ID");
 
@@ -193,6 +235,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         loadFullEventFromDatabase();
     }
 
+    /**
+     * Load the full event from Firestore.
+     */
     private void loadFullEventFromDatabase() {
         FDatabase db = FDatabase.getInstance();
 
@@ -225,6 +270,14 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Loads and displays the poster image for the current event into {@link #eventPoster}.
+     *
+     * If {@code posterUri} is non-null and non-empty, the image is fetched with Glide
+     * using a placeholder and an error fallback. Otherwise, a default drawable is shown.
+     *
+     * @param posterUri The URI of the event poster image
+     */
     private void loadEventPoster(String posterUri) {
         if (posterUri != null && !posterUri.isEmpty()) {
             Log.d(TAG, "Loading poster image: " + posterUri);
@@ -239,6 +292,20 @@ public class EventDetailsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Display event information in the UI.
+     *
+     * @param name Name of the event
+     * @param description Event description
+     * @param location Event location
+     * @param category Event category
+     * @param price Event price
+     * @param capacity Event capacity
+     * @param dateMillis Event date
+     * @param regOpenMillis Event registration open time
+     * @param regCloseMillis Event registration close time
+     * @param waitingCount Number of people waiting to join
+     */
     private void displayEventInfo(String name, String description, String location,
                                   String category, Double price, int capacity,
                                   long dateMillis, long regOpenMillis, long regCloseMillis,
@@ -278,6 +345,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Set up the buttons in the UI.
+     */
     private void setupButtons() {
         backButton.setOnClickListener(v -> finish());
 
@@ -309,6 +379,10 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Join the current event's waiting list.
+     * @param event The event to join
+     */
     private void joinWaitingList(Event event) {
         if (currentUser == null) {
             Toast.makeText(this, "Please log in to join events", Toast.LENGTH_SHORT).show();
@@ -347,8 +421,16 @@ public class EventDetailsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Delete the current event.
+     * @param id The ID of the event to delete
+     */
     private void deleteEvent(String id) {
         FDatabase.getInstance().deleteEvent(eventId, new FDatabase.StatusCallback() {
+
+            /**
+             * Callback for when the delete operation succeeds.
+             */
             @Override
             public void onSuccess() {
                 runOnUiThread(() -> {
@@ -357,6 +439,10 @@ public class EventDetailsActivity extends AppCompatActivity {
                 });
             }
 
+            /**
+             * Callback for when the delete operation fails.
+             * @param error The error message
+             */
             @Override
             public void onFailure(String error) {
                 runOnUiThread(() ->
@@ -366,7 +452,12 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
     }
 
+
     // helper functions
+
+    /**
+     * Open the image picker.
+     */
     private void openImagePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -374,6 +465,11 @@ public class EventDetailsActivity extends AppCompatActivity {
         pickImageLauncher.launch(intent);
     }
 
+    /**
+     * Upload the selected image to Firebase Storage and update the event's posterUri in Firestore.
+     *
+     * @param fileUri The URI of the selected image
+     */
     // From OpenAI, ChatGPT (GPT-5 Thinking), "Upload poster + Firestore update (posterUri) with background-safe callbacks and Glide reload", 2025-11-07
     private void uploadPosterAndSaveUrl(Uri fileUri) {
         if (eventId == null || eventId.isEmpty()) {
@@ -440,6 +536,9 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Hide all the buttons in the UI.
+     */
     private void setDefaultVisibility() {
         deleteButton.setVisibility(View.GONE);
         joinButton.setVisibility(View.GONE);
