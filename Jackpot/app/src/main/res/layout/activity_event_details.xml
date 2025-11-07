@@ -19,7 +19,7 @@
             android:contentDescription="Back"
             android:padding="12dp"
             android:src="@android:drawable/ic_menu_revert"
-            android:tint="@color/black"
+            app:tint="@color/black"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
