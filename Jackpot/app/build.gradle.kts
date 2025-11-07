@@ -3,6 +3,14 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+// Add this block to force a specific dependency version across ALL configurations.
+// This is the strongest way to resolve a transitive dependency conflict.
+configurations.all {
+    resolutionStrategy {
+        force("com.google.protobuf:protobuf-javalite:3.25.3")
+    }
+}
+
 android {
     namespace = "com.example.jackpot"
     compileSdk {
@@ -35,6 +43,9 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    packagingOptions {
+        resources.excludes.add("META-INF/DEPENDENCIES")
+    }
 }
 
 dependencies {
@@ -47,20 +58,31 @@ dependencies {
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
     implementation(libs.places)
-    implementation(libs.firebase.database)
-    implementation(libs.firebase.storage)
     implementation(libs.play.services.nearby)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.7.0")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.7.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test:rules:1.7.0")
 
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("androidx.annotation:annotation:1.7.1")
+
+    // Use the Firebase BOM to manage all Firebase library versions.
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    androidTestImplementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+
+    // Declare Firebase dependencies WITHOUT specifying versions.
     implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-auth:23.0.0")
-    implementation("com.google.firebase:firebase-firestore:24.10.0")
-    implementation("com.google.android.material:material:1.12.0")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-database")
+
+    // Declare test dependencies WITHOUT specifying versions.
+    androidTestImplementation("com.google.firebase:firebase-firestore")
+    androidTestImplementation("com.google.firebase:firebase-auth")
 }
