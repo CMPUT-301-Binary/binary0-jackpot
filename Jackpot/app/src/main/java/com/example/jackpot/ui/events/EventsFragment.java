@@ -1,10 +1,13 @@
 package com.example.jackpot.ui.events;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +29,11 @@ public class EventsFragment extends Fragment {
     private EventArrayAdapter eventAdapter;
     private FDatabase fDatabase = FDatabase.getInstance();
     private User currentUser;
+    private EventList displayedEvents = new EventList(new ArrayList<>());
+    private enum EventTab {
+        JOINED, WISHLIST, INVITATIONS
+    }
+    private EventTab currentTab = EventTab.WISHLIST;
     public EventsFragment() {
         // Required empty public constructor
     }
@@ -58,68 +66,98 @@ public class EventsFragment extends Fragment {
                 eventItemLayoutResource = R.layout.entrant_event_content;
                 break;
         }
-        EventList dataList = new EventList(new ArrayList<>());
         assert root != null;
         eventList = root.findViewById(R.id.entrant_events);
-        eventAdapter = new EventArrayAdapter(requireActivity(), dataList.getEvents(), eventItemLayoutResource, null);
+        eventAdapter = new EventArrayAdapter(requireActivity(), displayedEvents.getEvents(), eventItemLayoutResource, null);
         eventList.setAdapter(eventAdapter);
 
+        setupTabs(root);
+        getUserAndLoadEvents();
+        return root;
+    }
+
+    private void setupTabs(View root) {
+        Button joinedButton = root.findViewById(R.id.joined_events_button);
+        Button wishlistButton = root.findViewById(R.id.wishlist_events_button);
+        Button invitsButton = root.findViewById(R.id.invits_events_button);
+
+        joinedButton.setOnClickListener(v -> {
+            currentTab = EventTab.JOINED;
+            loadEventsForTab();
+        });
+        wishlistButton.setOnClickListener(v -> {
+            currentTab = EventTab.WISHLIST;
+            loadEventsForTab();
+        });
+        invitsButton.setOnClickListener(v -> {
+            currentTab = EventTab.INVITATIONS;
+            loadEventsForTab();
+        });
+    }
+    private void getUserAndLoadEvents() {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (firebaseUser != null) {
+        if (firebaseUser != null && firebaseUser.getUid() != null) {
             fDatabase.getUserById(firebaseUser.getUid(), new FDatabase.DataCallback<User>() {
                 @Override
                 public void onSuccess(ArrayList<User> data) {
-                    if (!data.isEmpty()) {
+                    if (isAdded() && !data.isEmpty()) {
                         currentUser = data.get(0);
-                        fDatabase.queryEventsWithArrayContains("waitingList", currentUser, new FDatabase.DataCallback<Event>() {
-                            @Override
-                            public void onSuccess(ArrayList<Event> events) {
-                                dataList.getEvents().clear();
-                                dataList.getEvents().addAll(events);
-                                eventAdapter.notifyDataSetChanged();
-                            }
-
-                            @Override
-                            public void onFailure(Exception e) {
-                                // Handle failure
-                                e.printStackTrace();
-                            }
-                        });
+                        eventAdapter.setCurrentUser(currentUser);
+                        // Once user is fetched, load events for the default tab
+                        loadEventsForTab();
+                    } else {
+                        Log.d("EventsFragment", "User not found in database.");
                     }
                 }
 
                 @Override
                 public void onFailure(Exception e) {
-                    e.printStackTrace();
+                    Log.d("EventsFragment", "Failed to fetch user.", e);
                 }
             });
+        } else {
+            Log.d("EventsFragment", "No Firebase user logged in.");
+        }
+    }
+    private void loadEventsForTab() {
+        if (currentUser == null) {
+            Log.d("EventsFragment", "User null");
+            return;
         }
 
-        root.findViewById(R.id.joined_events_button).setOnClickListener(new View.OnClickListener() {
+        FDatabase.DataCallback<Event> callback = new FDatabase.DataCallback<Event>() {
             @Override
-            public void onClick(View v) {
-                // joined tab
+            public void onSuccess(ArrayList<Event> events) {
+                if (isAdded()) {
+                    updateEventList(events);
+                }
             }
-        });
-        root.findViewById(R.id.wishlist_events_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // joined tab
-            }
-        });
-        root.findViewById(R.id.invits_events_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // joined tap
-            }
-        });
 
-        return root;
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("EventsFragment", "Failed to load events for tab: " + currentTab, e);
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Error loading events.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+        switch (currentTab) {
+            case JOINED:
+                Toast.makeText(getContext(), "TODO: Joined Events", Toast.LENGTH_SHORT).show();
+                break;
+            case WISHLIST:
+                fDatabase.queryEventsWithArrayContains("waitingList", currentUser, callback);
+                break;
+            case INVITATIONS:
+                Toast.makeText(getContext(), "TODO: Invitations Events", Toast.LENGTH_SHORT).show();
+                break;
+        }
     }
-//    @Override
-//    public void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//
-//
-//    }
+    private void updateEventList(ArrayList<Event> events) {
+        displayedEvents.setEvents(events);
+        eventAdapter.notifyDataSetChanged();
+        if (events.isEmpty()) {
+            Toast.makeText(getContext(), "No events found.", Toast.LENGTH_SHORT).show();
+        }
+    }
 }

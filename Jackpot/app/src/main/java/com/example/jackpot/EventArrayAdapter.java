@@ -170,31 +170,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         if (joinButton != null) {
             // Stop click propagation so button click doesn't trigger view click
             joinButton.setOnClickListener(v -> {
-                if (currentUser.getRole() == User.Role.ENTRANT) {
-                    Entrant entrant = new Entrant(
-                            currentUser.getId(),
-                            currentUser.getName(),
-                            currentUser.getRole(),
-                            currentUser.getEmail(),
-                            currentUser.getPhone(),
-                            currentUser.getPassword(),
-                            currentUser.getNotificationPreferences(),
-                            currentUser.getDevice()
-                    );
-                    try {
-                        entrant.joinWaitingList(event);
-                        FDatabase.getInstance().updateEvent(event);
-                        Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
-                        notifyDataSetChanged(); // To update the waiting count
-                    } catch (Exception e) {
-//                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
-                    }
-                } else if (currentUser != null) {
-                    Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
-                }
+                handleJoinButtonClick(event);
             });
         }
 
