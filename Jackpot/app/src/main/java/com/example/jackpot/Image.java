@@ -5,36 +5,42 @@ import java.net.URL;
 import java.util.UUID;
 
 public class Image {
-    private UUID imageID;
-    //private URL url;
-    private UUID uploadedBy;
+    private String imageID;
+    private String uploadedBy;
+    private String imageUrl;
 
-    public Image(UUID uploadedBy) {
-        this.imageID = UUID.randomUUID();
-        this.uploadedBy = uploadedBy;
+    public Image() {
+        // Needed for Firestore
     }
 
-    public UUID getImageID() {
+    public Image(String imageID, String uploadedBy, String imageUrl) {
+        this.imageID = imageID;
+        this.uploadedBy = uploadedBy;
+        this.imageUrl = imageUrl;
+    }
+
+    public String getImageID() {
         return imageID;
     }
 
-    public UUID getUploadedBy() {
-        return uploadedBy;
-    }
-
-    public void setImageID(UUID imageID) {
+    public void setImageID(String imageID) {
         this.imageID = imageID;
     }
 
-    public void setUploadedBy(UUID uploadedBy) {
+    public String getUploadedBy() {
+        return uploadedBy;
+    }
+
+    public void setUploadedBy(String uploadedBy) {
         this.uploadedBy = uploadedBy;
     }
 
-    public void deleteImage(UUID imageID) {
-        if (imageID == this.imageID) {
-            this.imageID = null;
-            this.uploadedBy = null;
-        }
+    public String getImageUrl() {
+        return imageUrl;
     }
 
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }
+
