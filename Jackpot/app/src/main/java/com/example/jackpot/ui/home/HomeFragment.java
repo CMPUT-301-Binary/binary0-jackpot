@@ -1,6 +1,7 @@
 package com.example.jackpot.ui.home;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,6 +28,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.stream.Collectors;
 
 public class HomeFragment extends Fragment {
@@ -147,16 +149,12 @@ public class HomeFragment extends Fragment {
             searchView.clearFocus();
         });
 
-        Button timeButton = root.findViewById(R.id.timeButton);
+        Button dateButton = root.findViewById(R.id.timeButton);
         Button locationButton = root.findViewById(R.id.locationButton);
         Button historyButton = root.findViewById(R.id.historyButton);
 
-        timeButton.setOnClickListener(v -> {
-            showFilterDialog("time");
-        });
-        locationButton.setOnClickListener(v -> {
-            showFilterDialog("location");
-        });
+        dateButton.setOnClickListener(v -> showDatePickerDialog());
+        locationButton.setOnClickListener(v -> showLocationFilterDialog());
 
         historyButton.setOnClickListener(v -> {
             if (currentUser != null) {
@@ -209,12 +207,48 @@ public class HomeFragment extends Fragment {
         Toast.makeText(getContext(), "Showing " + category + " events", Toast.LENGTH_SHORT).show();
     }
 
-    private void showFilterDialog(String filterType) {
+    private void showDatePickerDialog() {
+        final Calendar c = Calendar.getInstance();
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH);
+        int day = c.get(Calendar.DAY_OF_MONTH);
+
+        new DatePickerDialog(requireContext(), (view, year1, monthOfYear, dayOfMonth) -> {
+            filterByDate(year1, monthOfYear, dayOfMonth);
+        }, year, month, day).show();
+    }
+
+    private void filterByDate(int year, int month, int day) {
+        if (dataList == null || dataList.getEvents() == null) return;
+
+        ArrayList<Event> filteredList = new ArrayList<>();
+        for (Event event : dataList.getEvents()) {
+            if (event.getDate() != null) {
+                Calendar eventCal = Calendar.getInstance();
+                eventCal.setTime(event.getDate());
+                if (eventCal.get(Calendar.YEAR) == year &&
+                    eventCal.get(Calendar.MONTH) == month &&
+                    eventCal.get(Calendar.DAY_OF_MONTH) == day) {
+                    filteredList.add(event);
+                }
+            }
+        }
+        updateEventList(filteredList);
+
+        String dateStr = (month + 1) + "/" + day + "/" + year;
+        if (filteredList.isEmpty()) {
+            Toast.makeText(getContext(), "No events found for " + dateStr, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getContext(), "Showing events for " + dateStr, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showLocationFilterDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Filter by " + filterType);
+        builder.setTitle("Filter by location");
 
         final EditText input = new EditText(requireContext());
-        input.setHint("Enter " + filterType);
+        input.setHint("Enter location");
         builder.setView(input);
 
         builder.setPositiveButton("Confirm", (dialog, which) -> {
@@ -222,14 +256,7 @@ public class HomeFragment extends Fragment {
             if (!filterValue.isEmpty()) {
                 ArrayList<Event> filteredEvents = new ArrayList<>();
                 for (Event event : dataList.getEvents()) {
-                    if (filterType.equals("location") &&
-                            event.getLocation() != null &&
-                            event.getLocation().toLowerCase().contains(filterValue)) {
-                        filteredEvents.add(event);
-                    }
-                    else if (filterType.equals("time") &&
-                            event.getDate() != null &&
-                            event.getDate().toString().toLowerCase().contains(filterValue)) {
+                    if (event.getLocation() != null && event.getLocation().toLowerCase().contains(filterValue)) {
                         filteredEvents.add(event);
                     }
                 }
@@ -240,7 +267,6 @@ public class HomeFragment extends Fragment {
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-
         builder.show();
     }
 
@@ -252,7 +278,7 @@ public class HomeFragment extends Fragment {
                 .collect(Collectors.toCollection(ArrayList::new));
 
         updateEventList(filteredList);
-        Toast.makeText(getContext(), "Showing events you\'re in", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Showing events you're in", Toast.LENGTH_SHORT).show();
     }
 
     private void updateEventList(ArrayList<Event> newList) {
