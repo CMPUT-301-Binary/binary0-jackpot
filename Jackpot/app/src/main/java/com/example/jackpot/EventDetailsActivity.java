@@ -2,6 +2,7 @@ package com.example.jackpot;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -9,6 +10,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -31,11 +34,34 @@ public class EventDetailsActivity extends AppCompatActivity {
     private ImageView eventPoster;
     private Button joinButton;
     private ImageButton backButton;
+    private Button deleteButton;
 
     private String eventId;
     private User currentUser;
     private int waitingCount;
     private Event currentEvent; // Store the event for later use
+
+
+    private void loadCurrentUser() {
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        FDatabase.getInstance().getDb().collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        currentUser = snapshot.toObject(User.class);
+
+                        // Now we know the role → update UI accordingly
+                        if (currentUser.getRole() == User.Role.ADMIN) {
+                            deleteButton.setVisibility(View.VISIBLE);
+                            joinButton.setVisibility(View.GONE);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to load user", e));
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +71,12 @@ public class EventDetailsActivity extends AppCompatActivity {
         initializeViews();
         loadEventData();
         setupButtons();
+        loadCurrentUser();
+
     }
 
     private void initializeViews() {
+        deleteButton = findViewById(R.id.event_details_delete_button);
         eventName = findViewById(R.id.event_details_name);
         eventDescription = findViewById(R.id.event_details_description);
         eventLocation = findViewById(R.id.event_details_location);
@@ -169,6 +198,23 @@ public class EventDetailsActivity extends AppCompatActivity {
     private void setupButtons() {
         backButton.setOnClickListener(v -> finish());
 
+        // Show delete button for admin
+        if (currentUser != null && currentUser.getRole() == User.Role.ADMIN) {
+            deleteButton.setVisibility(View.VISIBLE);
+            joinButton.setVisibility(View.GONE); // optional
+        }
+
+        // Delete event when clicked
+        deleteButton.setOnClickListener(v -> {
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Delete Event")
+                    .setMessage("Are you sure you want to permanently delete this event?")
+                    .setPositiveButton("Delete", (dialog, which) -> deleteEvent(eventId))
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+
+        // Regular join button behavior (for entrants only)
         joinButton.setOnClickListener(v -> {
             if (currentEvent == null) {
                 Toast.makeText(this, "Event is still loading, please try again", Toast.LENGTH_SHORT).show();
@@ -221,5 +267,40 @@ public class EventDetailsActivity extends AppCompatActivity {
             Toast.makeText(this, "Failed to join: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
+        deleteButton.setOnClickListener(v -> {
+            if (eventId == null) {
+                Toast.makeText(this, "Cannot delete: Event ID missing", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Delete Event")
+                    .setMessage("Are you sure you want to permanently delete this event?")
+                    .setPositiveButton("Delete", (dialog, which) -> deleteEvent(eventId))
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
     }
+    private void deleteEvent(String id) {
+        FDatabase.getInstance().deleteEvent(eventId, new FDatabase.StatusCallback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    Toast.makeText(EventDetailsActivity.this, "Event deleted", Toast.LENGTH_SHORT).show();
+                    finish();
+                });
+            }
+
+            @Override
+            public void onFailure(String error) {
+                runOnUiThread(() ->
+                        Toast.makeText(EventDetailsActivity.this, "Delete failed: " + error, Toast.LENGTH_SHORT).show()
+                );
+            }
+        });
+
+
+    }
+
+
 }
