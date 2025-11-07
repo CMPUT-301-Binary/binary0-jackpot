@@ -1,3 +1,13 @@
+package com.example.jackpot;
+
+import android.os.Bundle;
+
+import androidx.fragment.app.Fragment;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
 /*
  * CMPUT 301 – Event Lottery App (“Jackpot”)
  * File: TitleFragment.java
@@ -16,16 +26,6 @@
  *  - TODO: Remove template args (ARG_PARAM1/ARG_PARAM2) if not used anywhere.
  *  - TODO: Rename and change types of parameters
  */
-
-package com.example.jackpot;
-
-import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 /**
  * A simple {@link Fragment} subclass.

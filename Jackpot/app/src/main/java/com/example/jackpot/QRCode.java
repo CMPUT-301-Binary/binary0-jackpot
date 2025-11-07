@@ -1,3 +1,8 @@
+package com.example.jackpot;
+
+import java.net.URL;
+import java.util.*;
+
 /*
  * CMPUT 301 – Event Lottery App (“Jackpot”)
  * File: QRCode.java
@@ -12,11 +17,10 @@
  *  - Payload must not contain secrets, treat the code as an opaque identifier only.
  */
 
-package com.example.jackpot;
-
-import java.net.URL;
-import java.util.*;
-
+/**
+ * Represents a QR code, containing its unique identifier and URL.
+ * This class is a data model and does not have any UI or Android-specific dependencies.
+ */
 public class QRCode {
     private UUID qrCodeID;
 
