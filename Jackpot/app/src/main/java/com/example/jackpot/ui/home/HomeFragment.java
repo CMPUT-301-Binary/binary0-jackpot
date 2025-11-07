@@ -40,6 +40,9 @@ public class HomeFragment extends Fragment {
     private EventList dataList = new EventList(new ArrayList<>());
     private SearchView searchView;
 
+    // From OpenAI, ChatGPT (GPT-5 Thinking), "ListenerRegistration field for live updates from Firestore (events collection)", 2025-11-07
+    private com.google.firebase.firestore.ListenerRegistration eventsReg;
+
     public HomeFragment() {
         // Required empty public constructor
     }
@@ -97,7 +100,8 @@ public class HomeFragment extends Fragment {
         }
 
         eventList = root.findViewById(R.id.events_list);
-        eventAdapter = new EventArrayAdapter(requireActivity(), new ArrayList<>(), eventItemLayoutResource, null);
+        eventAdapter = new EventArrayAdapter(requireActivity(), new ArrayList<>(),
+                eventItemLayoutResource, EventArrayAdapter.ViewType.HOME, null);
         eventList.setAdapter(eventAdapter);
 
         searchView = root.findViewById(R.id.searchView);
@@ -307,5 +311,35 @@ public class HomeFragment extends Fragment {
             eventAdapter.addAll(newList);
             eventAdapter.notifyDataSetChanged();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadEvents();
+    }
+
+    // From OpenAI, ChatGPT (GPT-5 Thinking), "Subscribe to Firestore events collection and refresh list on any change", 2025-11-07
+    @Override
+    public void onStart() {
+        super.onStart();
+        eventsReg = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("events")
+                .addSnapshotListener((snap, e) -> {
+                    if (e != null || snap == null || !isAdded()) return;
+                    java.util.ArrayList<Event> list = new java.util.ArrayList<>();
+                    for (com.google.firebase.firestore.DocumentSnapshot d : snap.getDocuments()) {
+                        Event ev = d.toObject(Event.class);
+                        if (ev != null) list.add(ev);
+                    }
+                    updateEventList(list);
+                });
+    }
+
+    // From OpenAI, ChatGPT (GPT-5 Thinking), "Unsubscribe Firestore listener to avoid leaks when fragment stops", 2025-11-07
+    @Override
+    public void onStop() {
+        if (eventsReg != null) { eventsReg.remove(); eventsReg = null; }
+        super.onStop();
     }
 }

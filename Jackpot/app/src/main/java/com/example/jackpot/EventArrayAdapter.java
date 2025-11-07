@@ -17,7 +17,6 @@ import androidx.annotation.Nullable;
 
 import com.bumptech.glide.Glide;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -26,6 +25,11 @@ import java.util.Locale;
  */
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
+    public enum ViewType {
+        HOME,
+        EVENTS
+    }
+    private final ViewType viewType;
     private final int layoutResource;
     private User currentUser;
 
@@ -36,8 +40,9 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
      * @param layoutResource The layout resource to use.
      * @param currentUser The current user.
      */
-    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, @Nullable User currentUser) {
+    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, ViewType type, @Nullable User currentUser) {
         super(context, 0, events);
+        this.viewType = type;
         this.layoutResource = layoutResource;
         this.currentUser = currentUser;
     }
@@ -106,15 +111,16 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             intent.putExtra("EVENT_GEO_REQUIRED", event.isGeoRequired());
             getContext().startActivity(intent);
         });
-
-        // Handle the new layout (entrant_event_content.xml)
-        TextView eventDetails = view.findViewById(R.id.event_details);
-        if (eventDetails != null) {
-            setupEntrantEventView(view, event);
-        } else {
-            setupEventListItemView(view, event);
+        // Handle the correct layout
+        switch (viewType) {
+            case EVENTS:
+                setupEntrantEventView(view, event);
+                break;
+            case HOME:
+            default:
+                setupEventListItemView(view, event);
+                break;
         }
-
         return view;
     }
 
@@ -124,7 +130,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
      * @param event The event to set up the view for.
      */
     private void setupEntrantEventView(View view, Event event) {
-        ImageView eventImage = view.findViewById(R.id.eventPic);
+        ImageView eventImage = view.findViewById(R.id.event_pic);
         TextView eventTitle = view.findViewById(R.id.event_text);
         TextView eventDetails = view.findViewById(R.id.event_details);
 
@@ -161,7 +167,18 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         } else {
             eventImage.setImageResource(R.drawable._ukj7h);
         }
+        Button leaveButton = view.findViewById(R.id.leave_button);
+        if (leaveButton != null) {
+            // Check if user is in waiting list to show/hide button
+            boolean isInWaitingList = isUserInWaitingList(event, currentUser != null ? currentUser.getId() : null);
 
+            if (isInWaitingList) {
+                leaveButton.setVisibility(View.VISIBLE);
+                leaveButton.setOnClickListener(v -> handleLeaveButtonClick(event));
+            } else {
+                leaveButton.setVisibility(View.GONE);
+            }
+        }
 
     }
 
@@ -209,37 +226,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         if (joinButton != null) {
             // Stop click propagation so button click doesn't trigger view click
             joinButton.setOnClickListener(v -> {
-                if (currentUser.getRole() == User.Role.ENTRANT) {
-                    Entrant entrant = new Entrant(
-                            currentUser.getId(),
-                            currentUser.getName(),
-                            currentUser.getRole(),
-                            currentUser.getEmail(),
-                            currentUser.getPhone(),
-                            currentUser.getPassword(),
-                            currentUser.getNotificationPreferences(),
-                            currentUser.getDevice()
-                    );
-                    //Create a toast for event.getWaitingList().contains(entrant) to terminal
-                    Toast.makeText(getContext(), "Entrant: " + event.hasEntrant(entrant), Toast.LENGTH_SHORT).show();
-                    if (event.hasEntrant(entrant)){
-                        Toast.makeText(getContext(), "You are already in the waiting list!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    try {
-                        entrant.joinWaitingList(event);
-                        FDatabase.getInstance().updateEvent(event);
-                        Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
-                        notifyDataSetChanged(); // To update the waiting count
-                    } catch (Exception e) {
-                       Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
-                    }
-                } else if (currentUser != null) {
-                    Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
-                }
+                handleJoinButtonClick(event);
             });
         }
 
@@ -290,6 +277,75 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             }
         } else {
             Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
+        }
+    }
+    // Helper method to check if user is in waiting list by comparing IDs
+    private boolean isUserInWaitingList(Event event, String userId) {
+        if (event.getWaitingList() == null || userId == null) {
+            return false;
+        }
+
+        ArrayList<User> users = event.getWaitingList().getUsers();
+        if (users == null) {
+            return false;
+        }
+
+        for (User user : users) {
+            if (user != null && user.getId() != null && user.getId().equals(userId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Helper method to find the User object in the waiting list
+    private User findUserInWaitingList(Event event, String userId) {
+        if (event.getWaitingList() == null || userId == null) {
+            return null;
+        }
+
+        ArrayList<User> users = event.getWaitingList().getUsers();
+        if (users == null) {
+            return null;
+        }
+
+        for (User user : users) {
+            if (user != null && user.getId() != null && user.getId().equals(userId)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    private void handleLeaveButtonClick(Event event) {
+
+        if (currentUser.getRole() != User.Role.ENTRANT) {
+            Toast.makeText(getContext(), "Only entrants can leave events.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Find the user in the waiting list
+        User userInList = findUserInWaitingList(event, currentUser.getId());
+
+        if (userInList == null) {
+            Toast.makeText(getContext(), "You are not in this event's waiting list.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            // Remove the actual user object from the waiting list
+            event.getWaitingList().remove(userInList);
+
+            // Update event in database
+            FDatabase.getInstance().updateEvent(event);
+
+            Toast.makeText(getContext(), "Left waiting list successfully!", Toast.LENGTH_SHORT).show();
+
+            // Refresh the list view
+            notifyDataSetChanged();
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error leaving event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("EventArrayAdapter", "Error leaving event", e);
         }
     }
 }
