@@ -24,12 +24,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private FDatabase fDatabase = FDatabase.getInstance();
+    private final FDatabase fDatabase = FDatabase.getInstance();
     private User.Role currentRole = User.Role.ENTRANT;
     private ActivityMainBinding binding;
 
