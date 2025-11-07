@@ -158,7 +158,8 @@ public class EventCreationFragment extends Fragment {
                         Log.d("PhotoPicker", "Selected URI: " + uri);
                         selectedPhotoTextView.setText(uri.toString());
                         selectedImageUri = uri;
-                    } else {
+                    }
+                    else {
                         Log.d("PhotoPicker", "No media selected");
                     }
                 });
@@ -211,235 +212,290 @@ public class EventCreationFragment extends Fragment {
             editWaitingListLimit.setError(null);
         }
         // endregion
+
+        // region Build canonical timestamps from pickers
+        com.google.firebase.Timestamp eventTs =
+                toTimestamp(selectedDateUtcMs, selectedHour, selectedMinute);
+        com.google.firebase.Timestamp regOpenTs =
+                toTimestamp(regOpenDateUtcMs, regOpenHour, regOpenMinute);
+        com.google.firebase.Timestamp regCloseTs =
+                toTimestamp(regCloseDateUtcMs, regCloseHour, regCloseMinute);
+
+        int catPos = spinnerCategory.getSelectedItemPosition();
+
+        // region Validation for category and also canonical timestamps
+
+        if (catPos <= 0) {
+            View selectedView = spinnerCategory.getSelectedView();
+            if (selectedView instanceof TextView) {
+                ((TextView) selectedView).setError("Pick a category");
+            }
+            spinnerCategory.requestFocus();
+            Toast.makeText(requireContext(), "Please choose a category", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String category = (String) spinnerCategory.getSelectedItem();
+
+        if (eventTs == null) {
+            editTextEventDate.setError("Pick event date");
+            editTextEventTime.setError("Pick event time");
+            editTextEventDate.requestFocus();
+            return;
+        } else {
+            editTextEventDate.setError(null);
+            editTextEventTime.setError(null);
+        }
+
+        // ensure event is in the future
+        if (eventTs.compareTo(com.google.firebase.Timestamp.now()) <= 0) {
+            editTextEventDate.setError("Event must be in the future");
+            editTextEventTime.setError("Event must be in the future");
+            editTextEventDate.requestFocus();
+            return;
+        }
+
+        // Registration presence
+        if (regOpenTs == null) {
+            editRegOpenDate.setError("Pick open date");
+            editRegOpenTime.setError("Pick open time");
+            editRegOpenDate.requestFocus();
+            return;
+        } else {
+            editRegOpenDate.setError(null);
+            editRegOpenTime.setError(null);
+        }
+
+        if (regCloseTs == null) {
+            editRegCloseDate.setError("Pick close date");
+            editRegCloseTime.setError("Pick close time");
+            editRegCloseDate.requestFocus();
+            return;
+        } else {
+            editRegCloseDate.setError(null);
+            editRegCloseTime.setError(null);
+        }
+
+        // Registration ordering
+        if (regOpenTs.compareTo(regCloseTs) >= 0) {
+            editRegCloseDate.setError("Close must be after open");
+            editRegCloseTime.setError("Close must be after open");
+            editRegCloseDate.requestFocus();
+            return;
+        }
+
+        // Registration must end before event starts
+        if (eventTs.compareTo(regCloseTs) <= 0) {
+            editRegCloseDate.setError("Must end before event starts");
+            editRegCloseTime.setError("Must end before event starts");
+            editRegCloseDate.requestFocus();
+            return;
+        }
+        // endregion
+
+        // endregion
+
+        // region Gather form data
+        String eventName = editTextEventName.getText().toString().trim();
+        String eventDescription = editTextEventDescription.getText().toString().trim();
+        String eventLocation = editTextEventLocation.getText().toString().trim();
+        String eventDate = editTextEventDate.getText().toString().trim();
+        String eventTime = editTextEventTime.getText().toString().trim();
+        boolean geoLocation = geoLocationBox.isChecked();
+        boolean qrCode = qrCodeBox.isChecked();
+        // endregion
+
+        // Current user
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String userId = (user != null) ? user.getUid() : null;
+
+        String eventId = UUID.randomUUID().toString();
+
+        // region Build the event payload
+        Map<String, Object> eventDoc = new HashMap<>();
+        eventDoc.put("eventId", eventId);
+        eventDoc.put("name", eventName);
+        eventDoc.put("description", eventDescription);
+        eventDoc.put("location", eventLocation);
+
+        eventDoc.put("date", eventDate);
+        eventDoc.put("time", eventTime);
+
+        eventDoc.put("eventAt", eventTs);
+        eventDoc.put("regOpenAt", regOpenTs);
+        eventDoc.put("regCloseAt", regCloseTs);
+
+        // Numeric fields as numbers
+        eventDoc.put("price", priceVal);
+        eventDoc.put("capacity", capacityVal);
+        if (waitLimitVal[0] == null) {
+            waitLimitVal[0] = 0;
+        }
+        eventDoc.put("waitingListLimit", waitLimitVal[0]);
+
+        eventDoc.put("geoLocation", geoLocation);
+        eventDoc.put("qrCode", qrCode);
+        eventDoc.put("createdBy", userId);
+        eventDoc.put("createdAt", FieldValue.serverTimestamp());
+
+        eventDoc.put("regOpenDate", editRegOpenDate.getText().toString().trim());
+        eventDoc.put("regOpenTime", editRegOpenTime.getText().toString().trim());
+        eventDoc.put("regCloseDate", editRegCloseDate.getText().toString().trim());
+        eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
+        eventDoc.put("category", category);
+
+        UserList waitingList = new UserList(waitLimitVal[0]);
+        eventDoc.put("waitingList", waitingList);
+        // endregion
+
+        submitButton.setEnabled(false);
+
+        // Decide whether to upload poster or generate QR as poster
         if (selectedImageUri != null) {
-            //Create a unique filename for the image
-            String imageName = "posters/" + UUID.randomUUID().toString() + ".png";
-            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child(imageName);
-            storageRef.putFile(selectedImageUri).addOnSuccessListener(taskSnapshot -> {
-                storageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                    String posterDownloadUrl = downloadUri.toString();
-                    // endregion
+            // User uploaded an image - use it as poster
+            uploadPosterAndCreateEvent(eventId, eventDoc, userId, qrCode);
+        } else {
+            // No image uploaded - generate QR and use it as poster
+            generateQRAndCreateEvent(eventId, eventDoc, userId, qrCode);
+        }
+    }
 
-                    // region Build canonical timestamps from pickers
-                    com.google.firebase.Timestamp eventTs =
-                            toTimestamp(selectedDateUtcMs, selectedHour, selectedMinute);
-                    com.google.firebase.Timestamp regOpenTs =
-                            toTimestamp(regOpenDateUtcMs, regOpenHour, regOpenMinute);
-                    com.google.firebase.Timestamp regCloseTs =
-                            toTimestamp(regCloseDateUtcMs, regCloseHour, regCloseMinute);
+    // Upload custom poster image
+    private void uploadPosterAndCreateEvent(String eventId, Map<String, Object> eventDoc, String userId, boolean generateQR) {
+        String imageName = "posters/" + UUID.randomUUID().toString() + ".png";
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference().child(imageName);
 
-                    int catPos = spinnerCategory.getSelectedItemPosition();
+        storageRef.putFile(selectedImageUri).addOnSuccessListener(taskSnapshot -> {
+            storageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                eventDoc.put("posterUri", downloadUri.toString());
 
-                    // region Validation for category and also canonical timestamps
-
-                    if (catPos <= 0) {
-                        View selectedView = spinnerCategory.getSelectedView();
-                        if (selectedView instanceof TextView) {
-                            ((TextView) selectedView).setError("Pick a category");
-                        }
-                        spinnerCategory.requestFocus();
-                        Toast.makeText(requireContext(), "Please choose a category", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    String category = (String) spinnerCategory.getSelectedItem();
-
-                    if (eventTs == null) {
-                        editTextEventDate.setError("Pick event date");
-                        editTextEventTime.setError("Pick event time");
-                        editTextEventDate.requestFocus();
-                        return;
-                    } else {
-                        editTextEventDate.setError(null);
-                        editTextEventTime.setError(null);
-                    }
-
-                    // ensure event is in the future
-                    if (eventTs.compareTo(com.google.firebase.Timestamp.now()) <= 0) {
-                        editTextEventDate.setError("Event must be in the future");
-                        editTextEventTime.setError("Event must be in the future");
-                        editTextEventDate.requestFocus();
-                        return;
-                    }
-
-                    // Registration presence
-                    if (regOpenTs == null) {
-                        editRegOpenDate.setError("Pick open date");
-                        editRegOpenTime.setError("Pick open time");
-                        editRegOpenDate.requestFocus();
-                        return;
-                    } else {
-                        editRegOpenDate.setError(null);
-                        editRegOpenTime.setError(null);
-                    }
-
-                    if (regCloseTs == null) {
-                        editRegCloseDate.setError("Pick close date");
-                        editRegCloseTime.setError("Pick close time");
-                        editRegCloseDate.requestFocus();
-                        return;
-                    } else {
-                        editRegCloseDate.setError(null);
-                        editRegCloseTime.setError(null);
-                    }
-
-                    // Registration ordering
-                    if (regOpenTs.compareTo(regCloseTs) >= 0) {
-                        editRegCloseDate.setError("Close must be after open");
-                        editRegCloseTime.setError("Close must be after open");
-                        editRegCloseDate.requestFocus();
-                        return;
-                    }
-
-                    // Registration must end before event starts
-                    if (eventTs.compareTo(regCloseTs) <= 0) {
-                        editRegCloseDate.setError("Must end before event starts");
-                        editRegCloseTime.setError("Must end before event starts");
-                        editRegCloseDate.requestFocus();
-                        return;
-                    }
-                    // endregion
-
-                    // endregion
-
-                    // region Gather form data
-                    String eventName = editTextEventName.getText().toString().trim();
-                    String eventDescription = editTextEventDescription.getText().toString().trim();
-                    String eventLocation = editTextEventLocation.getText().toString().trim();
-                    String eventDate = editTextEventDate.getText().toString().trim();
-                    String eventTime = editTextEventTime.getText().toString().trim();
-                    String capacityStr = editTextEventCapacity.getText().toString().trim();
-                    String priceStr = editTextEventPrice.getText().toString().trim();
-                    boolean geoLocation = geoLocationBox.isChecked();
-                    boolean qrCode = qrCodeBox.isChecked();
-                    // endregion
-
-                    // Current user
-                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                    String userId = (user != null) ? user.getUid() : null;
-
-                    String eventId = UUID.randomUUID().toString();
-                    String posterUri = (selectedImageUri != null) ? selectedImageUri.toString() : null; // Poster image URI
-
-                    //Build the event payload
-
-                    // region Build the event payload
-                    Map<String, Object> eventDoc = new HashMap<>();
-                    eventDoc.put("eventId", eventId);
-                    eventDoc.put("name", eventName);
-                    eventDoc.put("description", eventDescription);
-                    eventDoc.put("location", eventLocation);
-
-                    eventDoc.put("date", eventDate);
-                    eventDoc.put("time", eventTime);
-
-                    eventDoc.put("eventAt", eventTs);
-                    eventDoc.put("regOpenAt", regOpenTs);
-                    eventDoc.put("regCloseAt", regCloseTs);
-
-                    // Numeric fields as numbers
-                    eventDoc.put("price", priceVal);
-                    eventDoc.put("capacity", capacityVal);
-                    if (waitLimitVal[0] == null) {
-                        waitLimitVal[0] = 0;
-                    }
-                    eventDoc.put("waitingListLimit", waitLimitVal[0]);
-
-                    eventDoc.put("geoLocation", geoLocation);
-                    eventDoc.put("qrCode", qrCode);
-                    eventDoc.put("posterUri", downloadUri);
-                    eventDoc.put("createdBy", userId);
-                    // MARK: can remove this createdAt field if we don't need it
-                    eventDoc.put("createdAt", FieldValue.serverTimestamp());
-
-                    eventDoc.put("regOpenDate", editRegOpenDate.getText().toString().trim());
-                    eventDoc.put("regOpenTime", editRegOpenTime.getText().toString().trim());
-                    eventDoc.put("regCloseDate", editRegCloseDate.getText().toString().trim());
-                    eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
-                    eventDoc.put("category", category);
-                    //Put an empty list of Entrants as a waitinglist.
-                    UserList waitingList = new UserList(waitLimitVal[0]);
-                    eventDoc.put("waitingList", waitingList);
-
-                    // Canonical timestamps for queries/sorting (Future use in this project)
-                    //        eventDoc.put("regOpenAt",  regOpenTs);
-                    //        eventDoc.put("regCloseAt", regCloseTs);
-                    // endregion
-
-                    submitButton.setEnabled(false);
-                    // Write to Firestore - collection "events" with ID
-                    db.collection("events")
-                            .document(eventId)
-                            .set(eventDoc)
-                            .addOnSuccessListener(v -> {
-                                Log.d("EventCreation", "Event created: " + eventId);
-
-                                if (qrCode) {
-                                    // Generate a QR code that links to the event info
-                                    String qrContent = "jackpot://event/" + eventId;
-
-                                    try {
-                                        // Generate QR bitmap
-                                        BitMatrix matrix = new MultiFormatWriter().encode(
-                                                qrContent,
-                                                BarcodeFormat.QR_CODE,
-                                                600,
-                                                600
-                                        );
-                                        BarcodeEncoder encoder = new BarcodeEncoder();
-                                        Bitmap qrBitmap = encoder.createBitmap(matrix);
-
-                                        // Convert bitmap to bytes
-                                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                        qrBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                                        byte[] qrData = baos.toByteArray();
-
-                                        // Upload QR code to Firebase Storage
-                                        String qrName = "qrcodes/" + eventId + ".png";
-                                        StorageReference qrRef = FirebaseStorage.getInstance().getReference().child(qrName);
-
-                                        qrRef.putBytes(qrData)
-                                                .addOnSuccessListener(qrtaskSnapshot -> qrRef.getDownloadUrl().addOnSuccessListener(qrUri -> {
-                                                    Log.d("QRUpload", "QR code uploaded: " + qrUri);
-
-                                                    // Save QR in Firestore as part of the event’s photos
-                                                    Map<String, Object> qrImage = new HashMap<>();
-                                                    qrImage.put("imageID", UUID.randomUUID().toString());
-                                                    qrImage.put("imageUrl", qrUri.toString());
-                                                    qrImage.put("uploadedBy", userId);
-                                                    qrImage.put("type", "qrcode");
-                                                    qrImage.put("createdAt", FieldValue.serverTimestamp());
-
-                                                    db.collection("events")
-                                                            .document(eventId)
-                                                            .collection("images")
-                                                            .add(qrImage)
-                                                            .addOnSuccessListener(docRef -> Log.d("Firestore", "QR image saved to event images"))
-                                                            .addOnFailureListener(e -> Log.e("Firestore", "Failed to add QR image", e));
-
-                                                    // Optionally store in main event document too
-                                                    db.collection("events").document(eventId)
-                                                            .update("qrCodeImage", qrUri.toString());
-                                                }))
-                                                .addOnFailureListener(e -> Log.e("QRUpload", "Failed to upload QR code", e));
-
-                                    } catch (WriterException e) {
-                                        Log.e("QRGen", "Failed to generate QR code", e);
-                                    }
-                                }
-
-                                Toast.makeText(requireContext(), "Event created!", Toast.LENGTH_SHORT).show();
-                                requireActivity().getOnBackPressedDispatcher().onBackPressed();
-                            })
-                            .addOnFailureListener(e -> {
-                                submitButton.setEnabled(true);
-                                Log.e("Firestore", "Failed to create event", e);
-                                Toast.makeText(requireContext(), "Failed to create event: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                            });
-                });
-            }).addOnFailureListener(e -> {
-                Toast.makeText(requireContext(), "Failed to upload image: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                return;
+                // Save event to Firestore
+                saveEventToFirestore(eventId, eventDoc, userId, generateQR);
             });
+        }).addOnFailureListener(e -> {
+            submitButton.setEnabled(true);
+            Toast.makeText(requireContext(), "Failed to upload image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        });
+    }
+
+    // Generate QR code and use it as the poster
+    private void generateQRAndCreateEvent(String eventId, Map<String, Object> eventDoc, String userId, boolean userWantsQR) {
+        String qrContent = "jackpot://event/" + eventId;
+
+        try {
+            // Generate QR bitmap
+            BitMatrix matrix = new MultiFormatWriter().encode(
+                    qrContent,
+                    BarcodeFormat.QR_CODE,
+                    600,
+                    600
+            );
+            BarcodeEncoder encoder = new BarcodeEncoder();
+            Bitmap qrBitmap = encoder.createBitmap(matrix);
+
+            // Convert bitmap to bytes
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            qrBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte[] qrData = baos.toByteArray();
+
+            // Upload QR code as poster
+            String qrName = "posters/" + eventId + "_qr.png";
+            StorageReference qrRef = FirebaseStorage.getInstance().getReference().child(qrName);
+
+            qrRef.putBytes(qrData)
+                    .addOnSuccessListener(taskSnapshot -> qrRef.getDownloadUrl().addOnSuccessListener(qrUri -> {
+                        Log.d("QRUpload", "QR code uploaded as poster: " + qrUri);
+
+                        // Use QR as the poster
+                        eventDoc.put("posterUri", qrUri.toString());
+                        eventDoc.put("qrCodeImage", qrUri.toString());
+
+                        // Save event to Firestore
+                        saveEventToFirestore(eventId, eventDoc, userId, false); // Don't generate another QR
+                    }))
+                    .addOnFailureListener(e -> {
+                        submitButton.setEnabled(true);
+                        Log.e("QRUpload", "Failed to upload QR code", e);
+                        Toast.makeText(requireContext(), "Failed to create QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+
+        } catch (WriterException e) {
+            submitButton.setEnabled(true);
+            Log.e("QRGen", "Failed to generate QR code", e);
+            Toast.makeText(requireContext(), "Failed to generate QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    // Save event to Firestore and optionally generate separate QR
+    private void saveEventToFirestore(String eventId, Map<String, Object> eventDoc, String userId, boolean generateSeparateQR) {
+        db.collection("events")
+                .document(eventId)
+                .set(eventDoc)
+                .addOnSuccessListener(v -> {
+                    Log.d("EventCreation", "Event created: " + eventId);
+
+                    // If user checked QR box AND uploaded custom poster, generate separate QR
+                    if (generateSeparateQR) {
+                        generateSeparateQRCode(eventId, userId);
+                    }
+
+                    Toast.makeText(requireContext(), "Event created!", Toast.LENGTH_SHORT).show();
+                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                })
+                .addOnFailureListener(e -> {
+                    submitButton.setEnabled(true);
+                    Log.e("Firestore", "Failed to create event", e);
+                    Toast.makeText(requireContext(), "Failed to create event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    // Generate a separate QR code (when user has custom poster but also wants QR)
+    private void generateSeparateQRCode(String eventId, String userId) {
+        String qrContent = "jackpot://event/" + eventId;
+
+        try {
+            BitMatrix matrix = new MultiFormatWriter().encode(
+                    qrContent,
+                    BarcodeFormat.QR_CODE,
+                    600,
+                    600
+            );
+            BarcodeEncoder encoder = new BarcodeEncoder();
+            Bitmap qrBitmap = encoder.createBitmap(matrix);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            qrBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte[] qrData = baos.toByteArray();
+
+            String qrName = "qrcodes/" + eventId + ".png";
+            StorageReference qrRef = FirebaseStorage.getInstance().getReference().child(qrName);
+
+            qrRef.putBytes(qrData)
+                    .addOnSuccessListener(taskSnapshot -> qrRef.getDownloadUrl().addOnSuccessListener(qrUri -> {
+                        Log.d("QRUpload", "Separate QR code uploaded: " + qrUri);
+
+                        // Save QR in Firestore as part of the event's images
+                        Map<String, Object> qrImage = new HashMap<>();
+                        qrImage.put("imageID", UUID.randomUUID().toString());
+                        qrImage.put("imageUrl", qrUri.toString());
+                        qrImage.put("uploadedBy", userId);
+                        qrImage.put("type", "qrcode");
+                        qrImage.put("createdAt", FieldValue.serverTimestamp());
+
+                        db.collection("events")
+                                .document(eventId)
+                                .collection("images")
+                                .add(qrImage)
+                                .addOnSuccessListener(docRef -> Log.d("Firestore", "QR image saved to event images"))
+                                .addOnFailureListener(e -> Log.e("Firestore", "Failed to add QR image", e));
+
+                        // Store QR reference in main event document
+                        db.collection("events").document(eventId)
+                                .update("qrCodeImage", qrUri.toString());
+                    }))
+                    .addOnFailureListener(e -> Log.e("QRUpload", "Failed to upload QR code", e));
+
+        } catch (WriterException e) {
+            Log.e("QRGen", "Failed to generate QR code", e);
         }
     }
 
@@ -572,6 +628,4 @@ public class EventCreationFragment extends Fragment {
 
         return new com.google.firebase.Timestamp(cal.getTime());
     }
-    // endregion
-
 }

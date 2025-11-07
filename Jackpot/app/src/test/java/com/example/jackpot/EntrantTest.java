@@ -12,11 +12,6 @@ import java.util.UUID;
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
-import static org.junit.Assert.*;
-import org.junit.Test;
-
-import java.util.Date;
-import java.util.UUID;
 
 public class EntrantTest {
 
@@ -30,7 +25,7 @@ public class EntrantTest {
                 "", "", "", "", new Device()
         );
 
-        EntrantList waitingList = new EntrantList(5);
+        UserList waitingList = new UserList(5);
         Event event = new Event(
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(),
@@ -53,7 +48,7 @@ public class EntrantTest {
                 true
         );
 
-        EntrantList waitingList2 = new EntrantList();
+        UserList waitingList2 = new UserList();
         Event event2 = new Event(
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(),
@@ -76,7 +71,7 @@ public class EntrantTest {
                 true
         );
 
-        EntrantList waitingList3 = new EntrantList(0);
+        UserList waitingList3 = new UserList(0);
         Event event3 = new Event(
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(),
@@ -149,3 +144,4 @@ public class EntrantTest {
         assertThrows(IllegalArgumentException.class, () -> entrant.leaveWaitingList(event));
     }
 }
+
