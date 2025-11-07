@@ -55,6 +55,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private Button updatePhotoBtn;
     private ActivityResultLauncher<Intent> pickImageLauncher;
     private Uri pickedImageUri;
+    private com.google.firebase.storage.UploadTask currentUpload;
 
     private void loadCurrentUser() {
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -111,13 +112,13 @@ public class EventDetailsActivity extends AppCompatActivity {
                         Uri uri = result.getData().getData();
                         if (uri != null) {
                             pickedImageUri = uri;
-                            posterImageView.setImageURI(pickedImageUri);
+                            Glide.with(EventDetailsActivity.this)
+                                    .load(pickedImageUri)
+                                    .centerCrop()
+                                    .into(posterImageView);
 
                             final int takeFlags = result.getData().getFlags()
                                     & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-                            try {
-                                getContentResolver().takePersistableUriPermission(pickedImageUri, takeFlags);
-                            } catch (Exception ignored) {}
 
                             uploadPosterAndSaveUrl(pickedImageUri);
                         }
@@ -363,40 +364,67 @@ public class EventDetailsActivity extends AppCompatActivity {
             return;
         }
 
-        // Store in Storage, same pattern as creation flow (randomized filename)
-        String imageName = "posters/" + java.util.UUID.randomUUID() + ".png";
-        StorageReference ref = FirebaseStorage.getInstance()
-                .getReference()
-                .child(imageName);
+        // If there’s an existing upload, cancel it before starting a new one
+        if (currentUpload != null && currentUpload.isInProgress()) {
+            currentUpload.cancel();
+        }
 
-        ref.putFile(fileUri)
+        updatePhotoBtn.setEnabled(false);
+
+        String imageName = "posters/" + java.util.UUID.randomUUID() + ".png";
+        StorageReference ref = FirebaseStorage.getInstance().getReference().child(imageName);
+
+        currentUpload = ref.putFile(fileUri);
+
+        currentUpload
                 .addOnSuccessListener(taskSnapshot ->
                         ref.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                            String posterDownloadUrl = downloadUri.toString();
+                            if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
 
+                            String posterDownloadUrl = downloadUri.toString();
                             FirebaseFirestore.getInstance()
                                     .collection("events")
                                     .document(eventId)
-                                    .update("posterUri", posterDownloadUrl)   // NOTE: posterUri (matches creation)
+                                    .update("posterUri", posterDownloadUrl)
                                     .addOnSuccessListener(unused -> {
-                                        Glide.with(this).load(posterDownloadUrl).into(posterImageView);
+                                        if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
+
+                                        Glide.with(EventDetailsActivity.this)
+                                                .load(posterDownloadUrl)
+                                                .centerCrop()
+                                                .into(posterImageView);
+
                                         Snackbar.make(posterImageView, "Photo updated", Snackbar.LENGTH_LONG).show();
+                                        updatePhotoBtn.setEnabled(true);
                                     })
-                                    .addOnFailureListener(e ->
-                                            Snackbar.make(posterImageView, "Saved to storage, but failed to update event: " + e.getMessage(),
-                                                    Snackbar.LENGTH_LONG).show()
-                                    );
+                                    .addOnFailureListener(e -> {
+                                        if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
+                                        Snackbar.make(posterImageView, "Saved to storage, but failed to update event: " + e.getMessage(), Snackbar.LENGTH_LONG).show();
+                                        updatePhotoBtn.setEnabled(true);
+                                    });
                         })
                 )
-                .addOnFailureListener(e ->
-                        Snackbar.make(posterImageView, "Upload failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show()
-                );
+                .addOnFailureListener(e -> {
+                    if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
+                    Snackbar.make(posterImageView, "Upload failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();
+                    updatePhotoBtn.setEnabled(true);
+                });
     }
+
 
     private void setDefaultVisibility() {
         deleteButton.setVisibility(View.GONE);
         joinButton.setVisibility(View.GONE);
         updatePhotoBtn.setVisibility(View.GONE);
     }
+
+    @Override
+    protected void onDestroy() {
+        if (currentUpload != null && currentUpload.isInProgress()) {
+            currentUpload.cancel();
+        }
+        super.onDestroy();
+    }
+
 
 }
