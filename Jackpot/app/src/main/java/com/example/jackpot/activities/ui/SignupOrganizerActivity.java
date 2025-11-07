@@ -45,9 +45,12 @@ public class SignupOrganizerActivity extends AppCompatActivity {
             String phone = phoneField.getText().toString().trim();
 
             if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show();
+                showToast("Please fill all required fields");
                 return;
             }
+
+            // Disable button to prevent double-clicks
+            signupBtn.setEnabled(false);
 
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnSuccessListener(authResult -> {
@@ -65,6 +68,11 @@ public class SignupOrganizerActivity extends AppCompatActivity {
                                     signupBtn.setEnabled(true);
                                     showToast("Error: " + e.getMessage());
                                 });
+                    })
+                    .addOnFailureListener(e -> {
+                        // Re-enable button if authentication fails
+                        signupBtn.setEnabled(true);
+                        showToast("Authentication failed: " + e.getMessage());
                     });
         });
     }
