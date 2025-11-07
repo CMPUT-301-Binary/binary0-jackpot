@@ -1,6 +1,7 @@
 package com.example.jackpot;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,19 +20,17 @@ import java.util.Locale;
 public class EventArrayAdapter extends ArrayAdapter<Event> {
     private final int layoutResource;
     private User currentUser;
+
     public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, @Nullable User currentUser) {
         super(context, 0, events);
         this.layoutResource = layoutResource;
-        this.currentUser = null;
+        this.currentUser = currentUser;
     }
-//    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User user) {
-//        super(context, 0, events);
-//        this.layoutResource = layoutResource;
-//        this.currentUser = user;
-//    }
+
     public void setCurrentUser(User user) {
         this.currentUser = user;
     }
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -45,16 +44,36 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         Event event = getItem(position);
         if (event == null) {
             Toast.makeText(getContext(), "Event is null", Toast.LENGTH_SHORT).show();
-            return view; // Return the recycled view as-is if there's no data
+            return view;
         }
+
+        // Make the entire view clickable to navigate to details
+        view.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), EventDetailsActivity.class);
+            // Only pass the event ID instead of the whole object
+            intent.putExtra("EVENT_ID", event.getEventId());
+            // Pass basic data that doesn't need serialization
+            intent.putExtra("EVENT_NAME", event.getName());
+            intent.putExtra("EVENT_DESCRIPTION", event.getDescription());
+            intent.putExtra("EVENT_LOCATION", event.getLocation());
+            intent.putExtra("EVENT_CATEGORY", event.getCategory());
+            intent.putExtra("EVENT_PRICE", event.getPrice());
+            intent.putExtra("EVENT_CAPACITY", event.getCapacity());
+            intent.putExtra("EVENT_DATE", event.getDate() != null ? event.getDate().getTime() : 0L);
+            intent.putExtra("EVENT_REG_OPEN", event.getRegOpenAt() != null ? event.getRegOpenAt().getTime() : 0L);
+            intent.putExtra("EVENT_REG_CLOSE", event.getRegCloseAt() != null ? event.getRegCloseAt().getTime() : 0L);
+            intent.putExtra("EVENT_WAITING_COUNT", event.getWaitingList() != null ? event.getWaitingList().size() : 0);
+            intent.putExtra("EVENT_LAT", event.getLat());
+            intent.putExtra("EVENT_LNG", event.getLng());
+            intent.putExtra("EVENT_GEO_REQUIRED", event.isGeoRequired());
+            getContext().startActivity(intent);
+        });
 
         // Handle the new layout (entrant_event_content.xml)
         TextView eventDetails = view.findViewById(R.id.event_details);
         if (eventDetails != null) {
-            // This is the entrant_event_content.xml layout
             setupEntrantEventView(view, event);
         } else {
-            // This is the event_list_item.xml layout
             setupEventListItemView(view, event);
         }
 
@@ -114,39 +133,49 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
         TextView eventWaiting = view.findViewById(R.id.event_waiting);
         if (eventWaiting != null) {
-            String waiting = (event.getWaitingList() != null) ? String.format(Locale.getDefault(), "%d waiting", event.getWaitingList().size()) : "0 waiting";
+            String waiting = (event.getWaitingList() != null) ?
+                    String.format(Locale.getDefault(), "%d waiting", event.getWaitingList().size()) : "0 waiting";
             eventWaiting.setText(waiting);
         }
 
         Button joinButton = view.findViewById(R.id.join_button);
         if (joinButton != null) {
+            // Stop click propagation so button click doesn't trigger view click
             joinButton.setOnClickListener(v -> {
-                if (currentUser.getRole()==User.Role.ENTRANT) {
-                    Entrant entrant = new Entrant(
-                            currentUser.getId(),
-                            currentUser.getName(),
-                            currentUser.getRole(),
-                            currentUser.getEmail(),
-                            currentUser.getPhone(),
-                            currentUser.getPassword(),
-                            currentUser.getNotificationPreferences(),
-                            currentUser.getDevice()
-                    );
-                    try {
-                        entrant.joinWaitingList(event);
-                        FDatabase.getInstance().updateEvent(event);
-                        Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
-                        notifyDataSetChanged(); // To update the waiting count
-                    } catch (Exception e) {
-//                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
-                    }
-                } else if (currentUser != null) {
-                    Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
-                }
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                handleJoinButtonClick(event);
             });
+        }
+    }
+
+    private void handleJoinButtonClick(Event event) {
+        if (currentUser == null) {
+            Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (currentUser.getRole() == User.Role.ENTRANT) {
+            Entrant entrant = new Entrant(
+                    currentUser.getId(),
+                    currentUser.getName(),
+                    currentUser.getRole(),
+                    currentUser.getEmail(),
+                    currentUser.getPhone(),
+                    currentUser.getPassword(),
+                    currentUser.getNotificationPreferences(),
+                    currentUser.getDevice()
+            );
+            try {
+                entrant.joinWaitingList(event);
+                FDatabase.getInstance().updateEvent(event);
+                Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
+                notifyDataSetChanged();
+            } catch (Exception e) {
+                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
         }
     }
 }
