@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.text.SimpleDateFormat;
@@ -39,7 +40,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private String eventId;
     private User currentUser;
     private int waitingCount;
-    private Event currentEvent; // Store the event for later use
+    private Event currentEvent;
 
 
     private void loadCurrentUser() {
@@ -52,7 +53,6 @@ public class EventDetailsActivity extends AppCompatActivity {
                     if (snapshot.exists()) {
                         currentUser = snapshot.toObject(User.class);
 
-                        // Now we know the role → update UI accordingly
                         if (currentUser.getRole() == User.Role.ADMIN) {
                             deleteButton.setVisibility(View.VISIBLE);
                             joinButton.setVisibility(View.GONE);
@@ -72,7 +72,6 @@ public class EventDetailsActivity extends AppCompatActivity {
         loadEventData();
         setupButtons();
         loadCurrentUser();
-
     }
 
     private void initializeViews() {
@@ -93,7 +92,6 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void loadEventData() {
-        // Get event data from intent
         eventId = getIntent().getStringExtra("EVENT_ID");
 
         Log.d(TAG, "Loading event with ID: " + eventId);
@@ -104,7 +102,6 @@ public class EventDetailsActivity extends AppCompatActivity {
             return;
         }
 
-        // Display the data that was passed via Intent immediately
         String name = getIntent().getStringExtra("EVENT_NAME");
         String description = getIntent().getStringExtra("EVENT_DESCRIPTION");
         String location = getIntent().getStringExtra("EVENT_LOCATION");
@@ -119,15 +116,12 @@ public class EventDetailsActivity extends AppCompatActivity {
         displayEventInfo(name, description, location, category, price, capacity,
                 dateMillis, regOpenMillis, regCloseMillis, waitingCount);
 
-        // Load the full event object from database in the background for joining
         loadFullEventFromDatabase();
     }
 
     private void loadFullEventFromDatabase() {
-        // Check if FDatabase has the getEventById method
         FDatabase db = FDatabase.getInstance();
 
-        // Try to get event from database
         db.getEventById(eventId, new FDatabase.EventCallback() {
             @Override
             public void onSuccess(Event event) {
@@ -140,20 +134,35 @@ public class EventDetailsActivity extends AppCompatActivity {
                         eventWaiting.setText(String.format(Locale.getDefault(),
                                 "%d people waiting", waitingCount));
                     }
+
+                    // Load the event poster image
+                    loadEventPoster(event.getPosterUri());
                 });
             }
 
             @Override
             public void onFailure(String error) {
                 Log.e(TAG, "Failed to load event from database: " + error);
-                // Don't show error to user - they can still see the event info
-                // Just disable the join button
                 runOnUiThread(() -> {
                     joinButton.setEnabled(false);
                     joinButton.setText("Unable to join");
                 });
             }
         });
+    }
+
+    private void loadEventPoster(String posterUri) {
+        if (posterUri != null && !posterUri.isEmpty()) {
+            Log.d(TAG, "Loading poster image: " + posterUri);
+            Glide.with(this)
+                    .load(posterUri)
+                    .placeholder(R.drawable._ukj7h)
+                    .error(R.drawable.jackpottitletext)
+                    .into(eventPoster);
+        } else {
+            Log.d(TAG, "No poster URI available, using default image");
+            eventPoster.setImageResource(R.drawable._ukj7h);
+        }
     }
 
     private void displayEventInfo(String name, String description, String location,
@@ -198,14 +207,17 @@ public class EventDetailsActivity extends AppCompatActivity {
     private void setupButtons() {
         backButton.setOnClickListener(v -> finish());
 
-        // Show delete button for admin
         if (currentUser != null && currentUser.getRole() == User.Role.ADMIN) {
             deleteButton.setVisibility(View.VISIBLE);
-            joinButton.setVisibility(View.GONE); // optional
+            joinButton.setVisibility(View.GONE);
         }
 
-        // Delete event when clicked
         deleteButton.setOnClickListener(v -> {
+            if (eventId == null) {
+                Toast.makeText(this, "Cannot delete: Event ID missing", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             new androidx.appcompat.app.AlertDialog.Builder(this)
                     .setTitle("Delete Event")
                     .setMessage("Are you sure you want to permanently delete this event?")
@@ -214,7 +226,6 @@ public class EventDetailsActivity extends AppCompatActivity {
                     .show();
         });
 
-        // Regular join button behavior (for entrants only)
         joinButton.setOnClickListener(v -> {
             if (currentEvent == null) {
                 Toast.makeText(this, "Event is still loading, please try again", Toast.LENGTH_SHORT).show();
@@ -225,12 +236,6 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void joinWaitingList(Event event) {
-        // TODO: Get current user from your session/database
-        // For now, you'll need to implement getting the current logged-in user
-        // currentUser = SessionManager.getCurrentUser();
-        // or
-        // currentUser = getIntent().getParcelableExtra("CURRENT_USER");
-
         if (currentUser == null) {
             Toast.makeText(this, "Please log in to join events", Toast.LENGTH_SHORT).show();
             return;
@@ -257,7 +262,6 @@ public class EventDetailsActivity extends AppCompatActivity {
             FDatabase.getInstance().updateEvent(event);
             Toast.makeText(this, "Successfully joined waiting list!", Toast.LENGTH_SHORT).show();
 
-            // Update the waiting count display
             waitingCount++;
             eventWaiting.setText(String.format(Locale.getDefault(), "%d people waiting", waitingCount));
 
@@ -267,20 +271,8 @@ public class EventDetailsActivity extends AppCompatActivity {
             Toast.makeText(this, "Failed to join: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
-        deleteButton.setOnClickListener(v -> {
-            if (eventId == null) {
-                Toast.makeText(this, "Cannot delete: Event ID missing", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            new androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("Delete Event")
-                    .setMessage("Are you sure you want to permanently delete this event?")
-                    .setPositiveButton("Delete", (dialog, which) -> deleteEvent(eventId))
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        });
     }
+
     private void deleteEvent(String id) {
         FDatabase.getInstance().deleteEvent(eventId, new FDatabase.StatusCallback() {
             @Override
@@ -298,9 +290,5 @@ public class EventDetailsActivity extends AppCompatActivity {
                 );
             }
         });
-
-
     }
-
-
 }
