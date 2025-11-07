@@ -1,5 +1,7 @@
 package com.example.jackpot;
 
+import static java.security.AccessController.getContext;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -256,6 +258,11 @@ public class EventDetailsActivity extends AppCompatActivity {
                 currentUser.getNotificationPreferences(),
                 currentUser.getDevice()
         );
+        if (event.hasEntrant(entrant)){
+            //Make a toast for already in event
+            Toast.makeText(this, "You are already in this event", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         try {
             entrant.joinWaitingList(event);
