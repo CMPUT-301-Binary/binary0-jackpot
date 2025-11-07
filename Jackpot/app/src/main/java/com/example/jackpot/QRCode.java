@@ -67,7 +67,7 @@ public class QRCode {
 
     /**
      * Sets the URL of the QR code.
-     * @param qrCodeURL
+     * @param qrCodeURL the URL of the QR code.
      */
     public void setQRCodeURL(URL qrCodeURL) {
         this.qrCodeURL = qrCodeURL;
@@ -75,7 +75,7 @@ public class QRCode {
 
     /**
      * Sets the name of the event.
-     * @param eventName
+     * @param eventName the name of the event.
      */
     public void setEventName(String eventName) {
         this.eventName = eventName;
