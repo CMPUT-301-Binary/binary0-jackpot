@@ -24,8 +24,8 @@ import java.util.UUID;
 /**
  * Represents a notification to be sent to a user within the application.
  *
- * <p>Encapsulates recipient, related event, type, payload, and basic delivery state.
- * This is a data model only; transport is handled by services/repositories.</p>
+ * Encapsulates recipient, related event, type, payload, and basic delivery state.
+ * This is a data model only; transport is handled by services/repositories.
  */
 public class Notification {
     private UUID notificationID;

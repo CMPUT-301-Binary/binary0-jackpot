@@ -25,6 +25,32 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+/*
+ * CMPUT 301 – Event Lottery App (“Jackpot”)
+ * File: MainActivity.java
+ *
+ * Purpose/Role:
+ *   Primary post-login UI container. Hosts the NavHostFragment, top app bar, drawer, and
+ *   bottom navigation. Configures menus/FAB by role (Entrant/Organizer/Admin) and handles
+ *   deep links into event details.
+ *
+ * Design Notes:
+ *   - View/Controller layer (MVVM/MVC). Keep business logic in ViewModels/Repositories.
+ *   - Uses Navigation Component. Prefer Safe Args for typed navigation bundles.
+ *   - FAB visibility and menu inflation are role-dependent.
+ */
+
+
+/**
+ * Main application activity that hosts navigation UI and routes users based on their role.
+ *
+ * <p>Responsibilities:
+ * <ul>
+ *   <li>Initialize view binding and Navigation (app bar, drawer, bottom nav).</li>
+ *   <li>Fetch the signed-in user's role and configure menus/FAB accordingly.</li>
+ *   <li>Parse and handle app deep links (e.g., jackpot://event/{id}).</li>
+ * </ul>
+ */
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
@@ -32,6 +58,13 @@ public class MainActivity extends AppCompatActivity {
     private User.Role currentRole = User.Role.ENTRANT;
     private ActivityMainBinding binding;
 
+    /**
+     * Called when the activity is first created. Initializes the view binding, sets up the
+     * toolbar and navigation components, and configures the UI based on the user's role.
+     * @param savedInstanceState If the activity is being re-initialized after previously being
+     *                           shut down, this Bundle contains the data it most recently supplied
+     *                           in onSaveInstanceState(Bundle).
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +128,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Configures the unified navigation components, including the app bar, drawer, and bottom nav.
+     * @param binding The activity's view binding.
+     * @param navController The main NavController.
+     * @param bottomNav The BottomNavigationView.
+     * @param drawerNav The NavigationView for the drawer.
+     */
     private void setupUnifiedNavigation(ActivityMainBinding binding,
                                         NavController navController,
                                         BottomNavigationView bottomNav,
@@ -120,6 +160,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Sets up the navigation menus and Floating Action Button based on the user's role.
+     * @param role The role of the current user.
+     * @param bottomNav The BottomNavigationView to populate.
+     * @param drawerNav The NavigationView (drawer) to populate.
+     */
     private void setupMenusAndFab(User.Role role,
                                   BottomNavigationView bottomNav,
                                   NavigationView drawerNav) {
@@ -157,6 +203,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Initialize the contents of the Activity's standard options menu.
+     * @param menu The options menu in which you place your items.
+     * @return You must return true for the menu to be displayed; if you return false it will not be shown.
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         boolean result = super.onCreateOptionsMenu(menu);
@@ -167,6 +218,11 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
+    /**
+     * This hook is called whenever an item in your options menu is selected.
+     * @param item The menu item that was selected.
+     * @return boolean Return false to allow normal menu processing to proceed, true to consume it here.
+     */
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.drawer_settings) {
@@ -177,6 +233,10 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Handles the Up button behavior to navigate back in the navigation graph.
+     * @return true if navigation was successful, false otherwise.
+     */
     @Override
     public boolean onSupportNavigateUp() {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -184,8 +244,11 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+    /**
+     * Called when the activity is re-launched while at the top of the activity stack.
+     * This is used to handle deep links when the app is already open.
+     * @param intent The new intent that was started for the activity.
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -193,6 +256,10 @@ public class MainActivity extends AppCompatActivity {
         handleDeepLink(intent);
     }
 
+    /**
+     * Parses an intent for a deep link and navigates to the corresponding content.
+     * @param intent The intent to check for a deep link.
+     */
     private void handleDeepLink(Intent intent) {
         if (intent == null) return;
 
@@ -211,6 +278,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Fetches event details from Firestore and launches EventDetailsActivity.
+     * @param eventId The unique ID of the event to open.
+     */
     private void openEventDetails(String eventId) {
         // Fetch the event from Firestore
         FDatabase.getInstance().getEventById(eventId, new FDatabase.EventCallback() {
