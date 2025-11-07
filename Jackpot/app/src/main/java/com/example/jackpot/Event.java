@@ -158,6 +158,7 @@ public class Event implements Serializable {
         } else if (dateObj instanceof String) {
             String dateStr = (String) dateObj;
             SimpleDateFormat[] formats = {
+                    new SimpleDateFormat("MMM d, yyyy", Locale.US),
                     new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US),
                     new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US),
                     new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US),
@@ -184,7 +185,7 @@ public class Event implements Serializable {
     public String getPosterUri() {
         return posterUri;
     }
-    public void setPosterImage(String posterUri) {
+    public void setPosterUri(String posterUri) {
         this.posterUri = posterUri;
     }
     public String getQrCodeId() {
