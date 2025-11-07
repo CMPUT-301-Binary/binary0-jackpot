@@ -48,10 +48,10 @@
 
         <Button
             android:id="@+id/leave_button"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/leave_lottery"
+            android:backgroundTint="@color/gmp_ref_palette_red50"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>

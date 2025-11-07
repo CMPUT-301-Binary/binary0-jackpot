@@ -133,7 +133,18 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         } else {
             eventImage.setImageResource(R.drawable._ukj7h);
         }
+        Button leaveButton = view.findViewById(R.id.leave_button);
+        if (leaveButton != null) {
+            // Check if user is in waiting list to show/hide button
+            boolean isInWaitingList = isUserInWaitingList(event, currentUser != null ? currentUser.getId() : null);
 
+            if (isInWaitingList) {
+                leaveButton.setVisibility(View.VISIBLE);
+                leaveButton.setOnClickListener(v -> handleLeaveButtonClick(event));
+            } else {
+                leaveButton.setVisibility(View.GONE);
+            }
+        }
 
     }
 
@@ -195,6 +206,8 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         }
     }
 
+
+
     private void handleJoinButtonClick(Event event) {
         if (currentUser == null) {
             Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
@@ -223,6 +236,75 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             }
         } else {
             Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
+        }
+    }
+    // Helper method to check if user is in waiting list by comparing IDs
+    private boolean isUserInWaitingList(Event event, String userId) {
+        if (event.getWaitingList() == null || userId == null) {
+            return false;
+        }
+
+        ArrayList<User> users = event.getWaitingList().getUsers();
+        if (users == null) {
+            return false;
+        }
+
+        for (User user : users) {
+            if (user != null && user.getId() != null && user.getId().equals(userId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Helper method to find the User object in the waiting list
+    private User findUserInWaitingList(Event event, String userId) {
+        if (event.getWaitingList() == null || userId == null) {
+            return null;
+        }
+
+        ArrayList<User> users = event.getWaitingList().getUsers();
+        if (users == null) {
+            return null;
+        }
+
+        for (User user : users) {
+            if (user != null && user.getId() != null && user.getId().equals(userId)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    private void handleLeaveButtonClick(Event event) {
+
+        if (currentUser.getRole() != User.Role.ENTRANT) {
+            Toast.makeText(getContext(), "Only entrants can leave events.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Find the user in the waiting list
+        User userInList = findUserInWaitingList(event, currentUser.getId());
+
+        if (userInList == null) {
+            Toast.makeText(getContext(), "You are not in this event's waiting list.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            // Remove the actual user object from the waiting list
+            event.getWaitingList().remove(userInList);
+
+            // Update event in database
+            FDatabase.getInstance().updateEvent(event);
+
+            Toast.makeText(getContext(), "Left waiting list successfully!", Toast.LENGTH_SHORT).show();
+
+            // Refresh the list view
+            notifyDataSetChanged();
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error leaving event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("EventArrayAdapter", "Error leaving event", e);
         }
     }
 }
