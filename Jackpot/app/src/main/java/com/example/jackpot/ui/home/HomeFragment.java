@@ -288,4 +288,10 @@ public class HomeFragment extends Fragment {
             eventAdapter.notifyDataSetChanged();
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadEvents();
+    }
 }

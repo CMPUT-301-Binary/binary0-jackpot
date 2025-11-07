@@ -1,5 +1,7 @@
 package com.example.jackpot;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -9,10 +11,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -42,6 +50,11 @@ public class EventDetailsActivity extends AppCompatActivity {
     private int waitingCount;
     private Event currentEvent;
 
+    // added for functionality to update photo
+    private ImageView posterImageView;
+    private Button updatePhotoBtn;
+    private ActivityResultLauncher<Intent> pickImageLauncher;
+    private Uri pickedImageUri;
 
     private void loadCurrentUser() {
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -50,13 +63,29 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .document(uid)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    if (snapshot.exists()) {
-                        currentUser = snapshot.toObject(User.class);
+                    if (!snapshot.exists()) return;
 
-                        if (currentUser.getRole() == User.Role.ADMIN) {
+                    currentUser = snapshot.toObject(User.class);
+                    if (currentUser == null || currentUser.getRole() == null) return;
+
+                    // reset all buttons to hidden first
+                    setDefaultVisibility();
+
+                    switch (currentUser.getRole()) {
+                        case ADMIN:
+                            // Admin-only: show Delete button
                             deleteButton.setVisibility(View.VISIBLE);
-                            joinButton.setVisibility(View.GONE);
-                        }
+                            break;
+
+                        case ORGANIZER:
+                            // Organizer-only: show Update Photo button
+                            updatePhotoBtn.setVisibility(View.VISIBLE);
+                            break;
+
+                        case ENTRANT:
+                            // Entrant-only: show Join button
+                            joinButton.setVisibility(View.VISIBLE);
+                            break;
                     }
                 })
                 .addOnFailureListener(e -> Log.e(TAG, "Failed to load user", e));
@@ -69,9 +98,34 @@ public class EventDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_event_details);
 
         initializeViews();
-        loadEventData();
+        setDefaultVisibility(); // hides all the buttons until we know the role
+        loadEventData(); // sets eventId and loads details
         setupButtons();
-        loadCurrentUser();
+        loadCurrentUser(); // will show the right button after role is known
+
+        // Register image picker
+        pickImageLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            pickedImageUri = uri;
+                            posterImageView.setImageURI(pickedImageUri);
+
+                            final int takeFlags = result.getData().getFlags()
+                                    & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                            try {
+                                getContentResolver().takePersistableUriPermission(pickedImageUri, takeFlags);
+                            } catch (Exception ignored) {}
+
+                            uploadPosterAndSaveUrl(pickedImageUri);
+                        }
+                    }
+                }
+        );
+
+        updatePhotoBtn.setOnClickListener(v -> openImagePicker());
     }
 
     private void initializeViews() {
@@ -89,6 +143,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         eventPoster = findViewById(R.id.event_details_poster);
         joinButton = findViewById(R.id.event_details_join_button);
         backButton = findViewById(R.id.event_details_back_button);
+
+        posterImageView = eventPoster;
+        updatePhotoBtn = findViewById(R.id.event_details_update_photo_button);
     }
 
     private void loadEventData() {
@@ -291,4 +348,55 @@ public class EventDetailsActivity extends AppCompatActivity {
             }
         });
     }
+
+    // helper functions
+    private void openImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        pickImageLauncher.launch(intent);
+    }
+
+    private void uploadPosterAndSaveUrl(Uri fileUri) {
+        if (eventId == null || eventId.isEmpty()) {
+            Snackbar.make(posterImageView, "Missing event id", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        // Store in Storage, same pattern as creation flow (randomized filename)
+        String imageName = "posters/" + java.util.UUID.randomUUID() + ".png";
+        StorageReference ref = FirebaseStorage.getInstance()
+                .getReference()
+                .child(imageName);
+
+        ref.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot ->
+                        ref.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                            String posterDownloadUrl = downloadUri.toString();
+
+                            FirebaseFirestore.getInstance()
+                                    .collection("events")
+                                    .document(eventId)
+                                    .update("posterUri", posterDownloadUrl)   // NOTE: posterUri (matches creation)
+                                    .addOnSuccessListener(unused -> {
+                                        Glide.with(this).load(posterDownloadUrl).into(posterImageView);
+                                        Snackbar.make(posterImageView, "Photo updated", Snackbar.LENGTH_LONG).show();
+                                    })
+                                    .addOnFailureListener(e ->
+                                            Snackbar.make(posterImageView, "Saved to storage, but failed to update event: " + e.getMessage(),
+                                                    Snackbar.LENGTH_LONG).show()
+                                    );
+                        })
+                )
+                .addOnFailureListener(e ->
+                        Snackbar.make(posterImageView, "Upload failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show()
+                );
+    }
+
+    private void setDefaultVisibility() {
+        deleteButton.setVisibility(View.GONE);
+        joinButton.setVisibility(View.GONE);
+        updatePhotoBtn.setVisibility(View.GONE);
+    }
+
 }
