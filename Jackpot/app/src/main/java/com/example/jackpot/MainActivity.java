@@ -1,10 +1,13 @@
 package com.example.jackpot;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -72,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
                             Bundle bundle = new Bundle();
                             bundle.putString("role", currentRole.name());
                             navController.navigate(R.id.nav_home, bundle);
+
+                            // Handle deep link after navigation is set up
+                            handleDeepLink(getIntent());
                         } else {
                             setupUnifiedNavigation(binding, navController, bottomNav, drawerNav);
                         }
@@ -177,5 +183,79 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
+    }
+
+    private void handleDeepLink(Intent intent) {
+        if (intent == null) return;
+
+        Uri data = intent.getData();
+        if (data != null && "jackpot".equals(data.getScheme())) {
+            String path = data.getHost(); // "event"
+            String eventId = data.getLastPathSegment(); // the event ID
+
+            Log.d("DeepLink", "Received deep link: " + data.toString());
+            Log.d("DeepLink", "Event ID: " + eventId);
+
+            if ("event".equals(path) && eventId != null) {
+                // Load event from database and navigate to EventDetailsActivity
+                openEventDetails(eventId);
+            }
+        }
+    }
+
+    private void openEventDetails(String eventId) {
+        // Fetch the event from Firestore
+        FDatabase.getInstance().getEventById(eventId, new FDatabase.EventCallback() {
+            @Override
+            public void onSuccess(Event event) {
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(MainActivity.this, EventDetailsActivity.class);
+
+                    // Pass all event data to EventDetailsActivity
+                    intent.putExtra("EVENT_ID", event.getEventId());
+                    intent.putExtra("EVENT_NAME", event.getName());
+                    intent.putExtra("EVENT_DESCRIPTION", event.getDescription());
+                    intent.putExtra("EVENT_LOCATION", event.getLocation());
+                    intent.putExtra("EVENT_CATEGORY", event.getCategory());
+                    intent.putExtra("EVENT_PRICE", event.getPrice());
+                    intent.putExtra("EVENT_CAPACITY", event.getCapacity());
+
+                    // Convert timestamps to milliseconds
+                    if (event.getDate() != null) {
+                        intent.putExtra("EVENT_DATE", event.getDate().getTime());
+                    }
+                    if (event.getRegOpenAt() != null) {
+                        intent.putExtra("EVENT_REG_OPEN", event.getRegOpenAt().getTime());
+                    }
+                    if (event.getRegCloseAt() != null) {
+                        intent.putExtra("EVENT_REG_CLOSE", event.getRegCloseAt().getTime());
+                    }
+                    if (event.getWaitingList() != null) {
+                        intent.putExtra("EVENT_WAITING_COUNT", event.getWaitingList().size());
+                    }
+
+                    startActivity(intent);
+                });
+            }
+
+            @Override
+            public void onFailure(String error) {
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this,
+                            "Failed to load event: " + error,
+                            Toast.LENGTH_SHORT).show();
+                    Log.e("DeepLink", "Error loading event: " + error);
+                });
+            }
+        });
     }
 }

@@ -1,5 +1,6 @@
 package com.example.jackpot.ui.event_creation;
 
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -38,12 +39,26 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.util.Log;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
+
+import java.io.ByteArrayOutputStream;
+
 
 public class EventCreationFragment extends Fragment {
 
@@ -369,8 +384,63 @@ public class EventCreationFragment extends Fragment {
                             .document(eventId)
                             .set(eventDoc)
                             .addOnSuccessListener(v -> {
+                                Log.d("EventCreation", "Event created: " + eventId);
+
+                                if (qrCode) {
+                                    // Generate a QR code that links to the event info
+                                    String qrContent = "jackpot://event/" + eventId;
+
+                                    try {
+                                        // Generate QR bitmap
+                                        BitMatrix matrix = new MultiFormatWriter().encode(
+                                                qrContent,
+                                                BarcodeFormat.QR_CODE,
+                                                600,
+                                                600
+                                        );
+                                        BarcodeEncoder encoder = new BarcodeEncoder();
+                                        Bitmap qrBitmap = encoder.createBitmap(matrix);
+
+                                        // Convert bitmap to bytes
+                                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                        qrBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                                        byte[] qrData = baos.toByteArray();
+
+                                        // Upload QR code to Firebase Storage
+                                        String qrName = "qrcodes/" + eventId + ".png";
+                                        StorageReference qrRef = FirebaseStorage.getInstance().getReference().child(qrName);
+
+                                        qrRef.putBytes(qrData)
+                                                .addOnSuccessListener(qrtaskSnapshot -> qrRef.getDownloadUrl().addOnSuccessListener(qrUri -> {
+                                                    Log.d("QRUpload", "QR code uploaded: " + qrUri);
+
+                                                    // Save QR in Firestore as part of the event’s photos
+                                                    Map<String, Object> qrImage = new HashMap<>();
+                                                    qrImage.put("imageID", UUID.randomUUID().toString());
+                                                    qrImage.put("imageUrl", qrUri.toString());
+                                                    qrImage.put("uploadedBy", userId);
+                                                    qrImage.put("type", "qrcode");
+                                                    qrImage.put("createdAt", FieldValue.serverTimestamp());
+
+                                                    db.collection("events")
+                                                            .document(eventId)
+                                                            .collection("images")
+                                                            .add(qrImage)
+                                                            .addOnSuccessListener(docRef -> Log.d("Firestore", "QR image saved to event images"))
+                                                            .addOnFailureListener(e -> Log.e("Firestore", "Failed to add QR image", e));
+
+                                                    // Optionally store in main event document too
+                                                    db.collection("events").document(eventId)
+                                                            .update("qrCodeImage", qrUri.toString());
+                                                }))
+                                                .addOnFailureListener(e -> Log.e("QRUpload", "Failed to upload QR code", e));
+
+                                    } catch (WriterException e) {
+                                        Log.e("QRGen", "Failed to generate QR code", e);
+                                    }
+                                }
+
                                 Toast.makeText(requireContext(), "Event created!", Toast.LENGTH_SHORT).show();
-                                // currently have it just do the back press function
                                 requireActivity().getOnBackPressedDispatcher().onBackPressed();
                             })
                             .addOnFailureListener(e -> {
