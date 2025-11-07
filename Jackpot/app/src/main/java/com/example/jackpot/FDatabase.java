@@ -48,6 +48,7 @@ public class FDatabase {
 
     /**
      * Get a single event by its ID from Firestore
+     * Function creation assisted using Gemini
      * @param eventId The ID of the event to retrieve
      * @param callback Callback to handle success or failure
      */
@@ -93,6 +94,7 @@ public class FDatabase {
 
     /**
      * Queries documents from any collection based on field and value
+     * Function creation assisted using Gemini
      * @param collectionName name of the collection to query
      * @param field parameter to compare
      * @param value value to check in parameter
@@ -123,6 +125,7 @@ public class FDatabase {
 
     /**
      * Queries documents from any collection where a field (array) contains a specific value.
+     * Function creation assisted using Gemini
      * @param collectionName name of the collection to query
      * @param field parameter to compare (must be an array)
      * @param value value to check for in the array
@@ -153,6 +156,7 @@ public class FDatabase {
 
     /**
      * Gets all documents from any collection
+     * Function creation assisted using Gemini
      * @param collectionName name of the collection
      * @param classType the class type to convert documents to
      * @param callback callback to handle results
