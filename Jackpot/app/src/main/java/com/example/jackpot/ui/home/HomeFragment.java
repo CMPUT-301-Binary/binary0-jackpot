@@ -80,7 +80,8 @@ public class HomeFragment extends Fragment {
         }
 
         eventList = root.findViewById(R.id.events_list);
-        eventAdapter = new EventArrayAdapter(requireActivity(), new ArrayList<>(), eventItemLayoutResource, null);
+        eventAdapter = new EventArrayAdapter(requireActivity(), new ArrayList<>(),
+                eventItemLayoutResource, EventArrayAdapter.ViewType.HOME, null);
         eventList.setAdapter(eventAdapter);
 
         searchView = root.findViewById(R.id.searchView);

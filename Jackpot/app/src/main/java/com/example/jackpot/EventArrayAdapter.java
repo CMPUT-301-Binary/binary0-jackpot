@@ -17,16 +17,21 @@ import androidx.annotation.Nullable;
 
 import com.bumptech.glide.Glide;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
+    public enum ViewType {
+        HOME,
+        EVENTS
+    }
+    private final ViewType viewType;
     private final int layoutResource;
     private User currentUser;
 
-    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, @Nullable User currentUser) {
+    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, ViewType type, @Nullable User currentUser) {
         super(context, 0, events);
+        this.viewType = type;
         this.layoutResource = layoutResource;
         this.currentUser = currentUser;
     }
@@ -77,20 +82,21 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             intent.putExtra("EVENT_GEO_REQUIRED", event.isGeoRequired());
             getContext().startActivity(intent);
         });
-
-        // Handle the new layout (entrant_event_content.xml)
-        TextView eventDetails = view.findViewById(R.id.event_details);
-        if (eventDetails != null) {
-            setupEntrantEventView(view, event);
-        } else {
-            setupEventListItemView(view, event);
+        // Handle the correct layout
+        switch (viewType) {
+            case EVENTS:
+                setupEntrantEventView(view, event);
+                break;
+            case HOME:
+            default:
+                setupEventListItemView(view, event);
+                break;
         }
-
         return view;
     }
 
     private void setupEntrantEventView(View view, Event event) {
-        ImageView eventImage = view.findViewById(R.id.eventPic);
+        ImageView eventImage = view.findViewById(R.id.event_pic);
         TextView eventTitle = view.findViewById(R.id.event_text);
         TextView eventDetails = view.findViewById(R.id.event_details);
 
@@ -170,37 +176,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         if (joinButton != null) {
             // Stop click propagation so button click doesn't trigger view click
             joinButton.setOnClickListener(v -> {
-                if (currentUser.getRole() == User.Role.ENTRANT) {
-                    Entrant entrant = new Entrant(
-                            currentUser.getId(),
-                            currentUser.getName(),
-                            currentUser.getRole(),
-                            currentUser.getEmail(),
-                            currentUser.getPhone(),
-                            currentUser.getPassword(),
-                            currentUser.getNotificationPreferences(),
-                            currentUser.getDevice()
-                    );
-                    //Create a toast for event.getWaitingList().contains(entrant) to terminal
-                    Toast.makeText(getContext(), "Entrant: " + event.hasEntrant(entrant), Toast.LENGTH_SHORT).show();
-                    if (event.hasEntrant(entrant)){
-                        Toast.makeText(getContext(), "You are already in the waiting list!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    try {
-                        entrant.joinWaitingList(event);
-                        FDatabase.getInstance().updateEvent(event);
-                        Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
-                        notifyDataSetChanged(); // To update the waiting count
-                    } catch (Exception e) {
-                       Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
-                    }
-                } else if (currentUser != null) {
-                    Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
-                }
+                handleJoinButtonClick(event);
             });
         }
 

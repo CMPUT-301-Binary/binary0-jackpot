@@ -25,8 +25,8 @@
 
         <ImageView
             android:id="@+id/event_details_poster"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
             android:layout_marginTop="16dp"
             android:scaleType="centerCrop"
             android:background="#E0E0E0"
