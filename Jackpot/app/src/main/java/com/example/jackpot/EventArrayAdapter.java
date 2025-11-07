@@ -1,6 +1,7 @@
 package com.example.jackpot;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,18 +14,23 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.bumptech.glide.Glide;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
     private final int layoutResource;
     private User currentUser;
+
     public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, @Nullable User currentUser) {
         super(context, 0, events);
         this.layoutResource = layoutResource;
         this.currentUser = null;
     }
-//    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User user) {
+
+    //    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User user) {
 //        super(context, 0, events);
 //        this.layoutResource = layoutResource;
 //        this.currentUser = user;
@@ -32,6 +38,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
     public void setCurrentUser(User user) {
         this.currentUser = user;
     }
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -84,10 +91,29 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 waitingCount,
                 priceString);
         eventDetails.setText(details);
+
+        //Load the image from the database and show it. Use glide
+        String imageUri = event.getPosterUri();
+        //String imageUri = "https://firebasestorage.googleapis.com/v0/b/jackpot-d3153.firebasestorage.app/o/posters%2F00aec71a-f834-4b8c-8c9b-15391d89583b.png?alt=media&token=ffeded25-46b1-4a17-ae17-5b3e414b1b8f";
+        //Log imageUri for debugging
+        Log.d("EventArrayAdapter", "Image URI: " + details);
+        if (imageUri != null && !imageUri.isEmpty()) {
+            Glide.with(getContext())
+                    .load(imageUri)
+                    .placeholder(R.drawable._ukj7h)
+                    .error(R.drawable.jackpottitletext)
+                    .into(eventImage);
+        } else {
+            eventImage.setImageResource(R.drawable._ukj7h);
+        }
+
+
     }
 
     private void setupEventListItemView(View view, Event event) {
         TextView eventName = view.findViewById(R.id.event_name);
+        ImageView eventImage = view.findViewById(R.id.event_image);
+
         if (eventName != null) {
             eventName.setText(event.getName());
         }
@@ -121,7 +147,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         Button joinButton = view.findViewById(R.id.join_button);
         if (joinButton != null) {
             joinButton.setOnClickListener(v -> {
-                if (currentUser.getRole()==User.Role.ENTRANT) {
+                if (currentUser.getRole() == User.Role.ENTRANT) {
                     Entrant entrant = new Entrant(
                             currentUser.getId(),
                             currentUser.getName(),
@@ -147,6 +173,20 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                     Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+
+        //Load the image from the database and show it. Use glide
+        String imageUri = event.getPosterUri();
+        //String imageUri = "https://firebasestorage.googleapis.com/v0/b/jackpot-d3153.firebasestorage.app/o/posters%2F00aec71a-f834-4b8c-8c9b-15391d89583b.png?alt=media&token=ffeded25-46b1-4a17-ae17-5b3e414b1b8f";
+        //Log imageUri for debugging
+        if (imageUri != null && !imageUri.isEmpty()) {
+            Glide.with(getContext())
+                    .load(imageUri)
+                    .placeholder(R.drawable._ukj7h)
+                    .error(R.drawable.jackpottitletext)
+                    .into(eventImage);
+        } else {
+            eventImage.setImageResource(R.drawable._ukj7h);
         }
     }
 }

@@ -27,7 +27,7 @@ public class Event {
     private int capacity;
     private Date regOpenAt;
     private Date regCloseAt;
-    private Image posterImage;
+    private String posterUri;
     private String qrCodeId;
 //    private GeoPolicy geoPolicy;
     private boolean geoRequired;
@@ -37,7 +37,7 @@ public class Event {
     public Event(String eventId, String organizerId, String name, String description,
                  UserList waitingList, String location, Date date, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
-                 Date regCloseAt, Image posterImage, String qrCodeId, boolean geoRequired, String category){
+                 Date regCloseAt, String posterUri, String qrCodeId, boolean geoRequired, String category){
         this.eventId = eventId;
         this.organizerId = organizerId;
         this.name = name;
@@ -51,7 +51,7 @@ public class Event {
         this.capacity = capacity;
         this.regOpenAt = regOpenAt;
         this.regCloseAt = regCloseAt;
-        this.posterImage = posterImage;
+        this.posterUri = posterUri;
         this.qrCodeId = qrCodeId;
         this.geoRequired = geoRequired;
         this.category = category;
@@ -180,11 +180,11 @@ public class Event {
 
         return null;
     }
-    public Image getPosterImage() {
-        return posterImage;
+    public String getPosterUri() {
+        return posterUri;
     }
-    public void setPosterImage(Image posterImage) {
-        this.posterImage = posterImage;
+    public void setPosterImage(String posterUri) {
+        this.posterUri = posterUri;
     }
     public String getQrCodeId() {
         return qrCodeId;
