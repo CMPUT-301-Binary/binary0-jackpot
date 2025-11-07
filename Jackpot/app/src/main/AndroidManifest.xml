@@ -12,9 +12,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Jackpot">
 
-
-
-        <!-- 🔹 Launch this first -->
         <activity android:name=".activities.ui.LoginActivity"
             android:exported="true">
             <intent-filter>
@@ -27,13 +24,28 @@
         <activity android:name=".activities.ui.SignupEntrantActivity" />
         <activity android:name=".activities.ui.SignupOrganizerActivity" />
 
-        <!-- 🔹 Main screen after login -->
+        <!-- Main screen after login -->
         <activity
             android:name=".MainActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Jackpot.NoActionBar" />
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.Jackpot.NoActionBar">
 
-        <activity    android:name=".EventDetailsActivity"
+            <!-- Deep link intent filter for QR codes -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- This handles jackpot://event/EVENT_ID -->
+                <data
+                    android:scheme="jackpot"
+                    android:host="event" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".EventDetailsActivity"
             android:exported="false" />
 
     </application>

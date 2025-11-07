@@ -56,7 +56,7 @@ dependencies {
 
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
-    
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("androidx.annotation:annotation:1.7.1")
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
     implementation("com.google.firebase:firebase-firestore")
