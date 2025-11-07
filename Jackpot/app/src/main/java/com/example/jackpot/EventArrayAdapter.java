@@ -1,6 +1,7 @@
 package com.example.jackpot;
 
 import android.content.Context;
+import android.util.Log;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.bumptech.glide.Glide;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -27,6 +31,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         this.currentUser = currentUser;
     }
 
+    //    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User user) {
+//        super(context, 0, events);
+//        this.layoutResource = layoutResource;
+//        this.currentUser = user;
+//    }
     public void setCurrentUser(User user) {
         this.currentUser = user;
     }
@@ -103,10 +112,29 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 waitingCount,
                 priceString);
         eventDetails.setText(details);
+
+        //Load the image from the database and show it. Use glide
+        String imageUri = event.getPosterUri();
+        //String imageUri = "https://firebasestorage.googleapis.com/v0/b/jackpot-d3153.firebasestorage.app/o/posters%2F00aec71a-f834-4b8c-8c9b-15391d89583b.png?alt=media&token=ffeded25-46b1-4a17-ae17-5b3e414b1b8f";
+        //Log imageUri for debugging
+        Log.d("EventArrayAdapter", "Image URI: " + details);
+        if (imageUri != null && !imageUri.isEmpty()) {
+            Glide.with(getContext())
+                    .load(imageUri)
+                    .placeholder(R.drawable._ukj7h)
+                    .error(R.drawable.jackpottitletext)
+                    .into(eventImage);
+        } else {
+            eventImage.setImageResource(R.drawable._ukj7h);
+        }
+
+
     }
 
     private void setupEventListItemView(View view, Event event) {
         TextView eventName = view.findViewById(R.id.event_name);
+        ImageView eventImage = view.findViewById(R.id.event_image);
+
         if (eventName != null) {
             eventName.setText(event.getName());
         }
@@ -142,9 +170,46 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         if (joinButton != null) {
             // Stop click propagation so button click doesn't trigger view click
             joinButton.setOnClickListener(v -> {
-                v.getParent().requestDisallowInterceptTouchEvent(true);
-                handleJoinButtonClick(event);
+                if (currentUser.getRole() == User.Role.ENTRANT) {
+                    Entrant entrant = new Entrant(
+                            currentUser.getId(),
+                            currentUser.getName(),
+                            currentUser.getRole(),
+                            currentUser.getEmail(),
+                            currentUser.getPhone(),
+                            currentUser.getPassword(),
+                            currentUser.getNotificationPreferences(),
+                            currentUser.getDevice()
+                    );
+                    try {
+                        entrant.joinWaitingList(event);
+                        FDatabase.getInstance().updateEvent(event);
+                        Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
+                        notifyDataSetChanged(); // To update the waiting count
+                    } catch (Exception e) {
+//                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                } else if (currentUser != null) {
+                    Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
+                }
             });
+        }
+
+        //Load the image from the database and show it. Use glide
+        String imageUri = event.getPosterUri();
+        //String imageUri = "https://firebasestorage.googleapis.com/v0/b/jackpot-d3153.firebasestorage.app/o/posters%2F00aec71a-f834-4b8c-8c9b-15391d89583b.png?alt=media&token=ffeded25-46b1-4a17-ae17-5b3e414b1b8f";
+        //Log imageUri for debugging
+        if (imageUri != null && !imageUri.isEmpty()) {
+            Glide.with(getContext())
+                    .load(imageUri)
+                    .placeholder(R.drawable._ukj7h)
+                    .error(R.drawable.jackpottitletext)
+                    .into(eventImage);
+        } else {
+            eventImage.setImageResource(R.drawable._ukj7h);
         }
     }
 
