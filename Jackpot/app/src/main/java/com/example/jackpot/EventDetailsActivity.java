@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -57,6 +58,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private Uri pickedImageUri;
     private com.google.firebase.storage.UploadTask currentUpload;
 
+
     private void loadCurrentUser() {
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -93,6 +95,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
 
+    // From OpenAI, ChatGPT (GPT-5 Thinking), "Register image picker, show local Glide preview, and hook Update Photo click", 2025-11-07
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,6 +130,19 @@ public class EventDetailsActivity extends AppCompatActivity {
         );
 
         updatePhotoBtn.setOnClickListener(v -> openImagePicker());
+
+        // From OpenAI, ChatGPT (GPT-5 Thinking), "Back press UX: notify upload continues in background", 2025-11-07
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (currentUpload != null && currentUpload.isInProgress()) {
+                    Toast.makeText(EventDetailsActivity.this, "Uploading in background…", Toast.LENGTH_SHORT).show();
+                }
+                // let the system handle the back press
+                setEnabled(false);
+//                EventDetailsActivity.this.onBackPressed();
+            }
+        });
     }
 
     private void initializeViews() {
@@ -358,6 +374,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         pickImageLauncher.launch(intent);
     }
 
+    // From OpenAI, ChatGPT (GPT-5 Thinking), "Upload poster + Firestore update (posterUri) with background-safe callbacks and Glide reload", 2025-11-07
     private void uploadPosterAndSaveUrl(Uri fileUri) {
         if (eventId == null || eventId.isEmpty()) {
             Snackbar.make(posterImageView, "Missing event id", Snackbar.LENGTH_LONG).show();
@@ -377,54 +394,55 @@ public class EventDetailsActivity extends AppCompatActivity {
         currentUpload = ref.putFile(fileUri);
 
         currentUpload
-                .addOnSuccessListener(taskSnapshot ->
-                        ref.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                            if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
+                .addOnSuccessListener(ts -> ref.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                    String posterDownloadUrl = downloadUri.toString();
 
-                            String posterDownloadUrl = downloadUri.toString();
-                            FirebaseFirestore.getInstance()
-                                    .collection("events")
-                                    .document(eventId)
-                                    .update("posterUri", posterDownloadUrl)
-                                    .addOnSuccessListener(unused -> {
-                                        if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
-
-                                        Glide.with(EventDetailsActivity.this)
-                                                .load(posterDownloadUrl)
-                                                .centerCrop()
-                                                .into(posterImageView);
-
-                                        Snackbar.make(posterImageView, "Photo updated", Snackbar.LENGTH_LONG).show();
-                                        updatePhotoBtn.setEnabled(true);
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
-                                        Snackbar.make(posterImageView, "Saved to storage, but failed to update event: " + e.getMessage(), Snackbar.LENGTH_LONG).show();
-                                        updatePhotoBtn.setEnabled(true);
-                                    });
-                        })
-                )
+                    // Always update Firestore, even if Activity is finishing/destroyed.
+                    FirebaseFirestore.getInstance()
+                            .collection("events")
+                            .document(eventId)
+                            .update("posterUri", posterDownloadUrl)
+                            .addOnSuccessListener(unused -> {
+                                // Only touch views if we're still alive
+                                boolean alive = !isFinishing() && !(android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed());
+                                if (alive) {
+                                    Glide.with(this)
+                                            .load(posterDownloadUrl)
+                                            .centerCrop()
+                                            .into(posterImageView);
+                                    com.google.android.material.snackbar.Snackbar
+                                            .make(posterImageView, "Photo updated", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                                            .show();
+                                }
+                                updatePhotoBtn.setEnabled(true);
+                            })
+                            .addOnFailureListener(e -> {
+                                boolean alive = !isFinishing() && !(android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed());
+                                if (alive) {
+                                    com.google.android.material.snackbar.Snackbar
+                                            .make(posterImageView, "Saved to storage, but failed to update event: " + e.getMessage(),
+                                                    com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                                            .show();
+                                }
+                                updatePhotoBtn.setEnabled(true);
+                            });
+                }))
                 .addOnFailureListener(e -> {
-                    if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
-                    Snackbar.make(posterImageView, "Upload failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();
+                    boolean alive = !isFinishing() && !(android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed());
+                    if (alive) {
+                        com.google.android.material.snackbar.Snackbar
+                                .make(posterImageView, "Upload failed: " + e.getMessage(),
+                                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                                .show();
+                    }
                     updatePhotoBtn.setEnabled(true);
                 });
-    }
 
+    }
 
     private void setDefaultVisibility() {
         deleteButton.setVisibility(View.GONE);
         joinButton.setVisibility(View.GONE);
         updatePhotoBtn.setVisibility(View.GONE);
     }
-
-    @Override
-    protected void onDestroy() {
-        if (currentUpload != null && currentUpload.isInProgress()) {
-            currentUpload.cancel();
-        }
-        super.onDestroy();
-    }
-
-
 }
