@@ -10,6 +10,9 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.example.jackpot.R;
 
+/**
+ * Fragment which opens a page, showing a short summary of the privacy policy.
+ */
 public class PrivacyPolicyFragment extends Fragment {
 
     @Nullable

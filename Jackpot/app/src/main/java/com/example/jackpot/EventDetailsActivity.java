@@ -404,6 +404,11 @@ public class EventDetailsActivity extends AppCompatActivity {
                 currentUser.getNotificationPreferences(),
                 currentUser.getDevice()
         );
+        if (event.hasEntrant(entrant)){
+            //Make a toast for already in event
+            Toast.makeText(this, "You are already in this event", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         try {
             entrant.joinWaitingList(event);

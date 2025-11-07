@@ -23,6 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Fragment representing the admin's profile list screen.
+ * This list gives the admin the ability to select and delete profiles.
+ */
 public class ProfileListAdmin extends Fragment {
 
     private RecyclerView recyclerView;
@@ -34,6 +38,19 @@ public class ProfileListAdmin extends Fragment {
     private final List<User> allUsers = new ArrayList<>();
     private final List<User> filteredUsers = new ArrayList<>();
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * Loads the users and sets up the buttons.
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return Return the View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -73,6 +90,9 @@ public class ProfileListAdmin extends Fragment {
         return root;
     }
 
+    /**
+     * Loads the users from the database and adds them to the list.
+     */
     private void loadUsers() {
         db.collection("users")
                 .get()
@@ -93,6 +113,10 @@ public class ProfileListAdmin extends Fragment {
                         Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * Filters the users based on the query.
+     * @param query The search query.
+     */
     private void filterUsers(String query) {
         String lower = query.toLowerCase();
         List<User> filtered = allUsers.stream()
@@ -106,6 +130,9 @@ public class ProfileListAdmin extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
+    /**
+     * Deletes the selected users.
+     */
     private void deleteSelectedUsers() {
         List<User> selected = adapter.getSelectedUsers();
         if (selected.isEmpty()) {

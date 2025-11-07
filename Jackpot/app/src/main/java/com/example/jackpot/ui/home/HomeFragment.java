@@ -47,6 +47,13 @@ public class HomeFragment extends Fragment {
         // Required empty public constructor
     }
 
+    /**
+     * Use this factory method to create a new instance of
+     * this fragment using the provided parameters.
+     *
+     * @param role The role of the user; this determines what the homepage will look like/what fragment to open.
+     * @return A new instance of fragment HomeFragment.
+     */
     public static HomeFragment newInstance(String role) {
         HomeFragment fragment = new HomeFragment();
         Bundle args = new Bundle();
@@ -55,6 +62,19 @@ public class HomeFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * Checks the user's role to inflate the correct fragment.
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return Return the View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,

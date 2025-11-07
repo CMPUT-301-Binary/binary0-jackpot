@@ -47,6 +47,12 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
+
+/**
+ * Fragment which pops up to allow an organizer to create an event. The fragment is a form.
+ * The form has multiple fields which accept the input of various details, and uploading of an image.
+ * The details entered are saved to the database upon the pressing of "Submit"
+ */
 public class EventCreationFragment extends Fragment {
 
     private Button selectPhotoButton;
@@ -77,11 +83,25 @@ public class EventCreationFragment extends Fragment {
     private Long selectedDateUtcMs = null;
     private Integer selectedHour = null, selectedMinute = null;
 
-
+    /**
+     * Required empty public constructor.
+     */
     public EventCreationFragment() {
         // Required empty public constructor
     }
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return The inflated fragment view.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -90,7 +110,12 @@ public class EventCreationFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_event_creation, container, false);
     }
 
-
+    /**
+     * The main logic of the form. The fields are initialized and the photopicker is written.
+     * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     */
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState){
         editTextEventName = view.findViewById(R.id.editTextEventName);
@@ -150,6 +175,8 @@ public class EventCreationFragment extends Fragment {
         selectedPhotoTextView = view.findViewById(R.id.selectedPhotoText);
 
         // Registers a photo picker activity launcher in single-select mode.
+        //Code snippet taken, modified, from the official android studio website:
+        //https://developer.android.com/training/data-storage/shared/photo-picker#java
         ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
                 registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                     // Callback is invoked after the user selects a media item or closes the
@@ -177,6 +204,10 @@ public class EventCreationFragment extends Fragment {
         });
 
     }
+
+    /**
+     * Creates an event and stores it in the database.
+     */
     public void createEvent() {
         // region Validation
 
@@ -359,11 +390,17 @@ public class EventCreationFragment extends Fragment {
         }
     }
 
-    // Upload custom poster image
+    /**
+     * Uploads the image to the database as a public downloadable and creates the event.
+     * @param eventId The id of the event
+     * @param eventDoc The event document (the firebase document)
+     * @param userId The id of the user creating the event
+     * @param generateQR Whether to generate a QR code
+     */
     private void uploadPosterAndCreateEvent(String eventId, Map<String, Object> eventDoc, String userId, boolean generateQR) {
         String imageName = "posters/" + UUID.randomUUID().toString() + ".png";
         StorageReference storageRef = FirebaseStorage.getInstance().getReference().child(imageName);
-
+        //Outline from Google Gemini: Nov 5, 2025. Prompt: "How can I get a public download url for an image in Firebase Storage?"
         storageRef.putFile(selectedImageUri).addOnSuccessListener(taskSnapshot -> {
             storageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
                 eventDoc.put("posterUri", downloadUri.toString());
@@ -377,7 +414,13 @@ public class EventCreationFragment extends Fragment {
         });
     }
 
-    // Generate QR code and use it as the poster
+    /**
+     * Generates a QR code and uses it as the poster.
+     * @param eventId The id of the event
+     * @param eventDoc The event document (the firebase document)
+     * @param userId The id of the user creating the event
+     * @param userWantsQR Whether the user wants a QR code
+     */
     private void generateQRAndCreateEvent(String eventId, Map<String, Object> eventDoc, String userId, boolean userWantsQR) {
         String qrContent = "jackpot://event/" + eventId;
 
@@ -425,7 +468,13 @@ public class EventCreationFragment extends Fragment {
         }
     }
 
-    // Save event to Firestore and optionally generate separate QR
+    /**
+     * Saves the event to the firestore database.
+     * @param eventId The id of the event
+     * @param eventDoc The event document (the firebase document)
+     * @param userId The id of the user creating the event
+     * @param generateSeparateQR Whether to generate a separate QR code
+     */
     private void saveEventToFirestore(String eventId, Map<String, Object> eventDoc, String userId, boolean generateSeparateQR) {
         db.collection("events")
                 .document(eventId)
@@ -448,7 +497,11 @@ public class EventCreationFragment extends Fragment {
                 });
     }
 
-    // Generate a separate QR code (when user has custom poster but also wants QR)
+    /**
+     * Generates a separate QR code for the event.
+     * @param eventId The id of the event
+     * @param userId The id of the user creating the event
+     */
     private void generateSeparateQRCode(String eventId, String userId) {
         String qrContent = "jackpot://event/" + eventId;
 
@@ -499,7 +552,9 @@ public class EventCreationFragment extends Fragment {
         }
     }
 
-    // region Date & Time Pickers (and for Registration Start and End)
+    /**
+     * Opens the date picker. Uses the android built-in date picker methods.
+     */
     private void openDatePicker() {
         var picker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
                 .setTitleText("Select event date")
@@ -511,6 +566,9 @@ public class EventCreationFragment extends Fragment {
         picker.show(getParentFragmentManager(), "event_date_picker");
     }
 
+    /**
+     * Opens the time picker.
+     */
     private void openTimePicker() {
         var picker = new com.google.android.material.timepicker.MaterialTimePicker.Builder()
                 .setTitleText("Select event time")
@@ -526,6 +584,10 @@ public class EventCreationFragment extends Fragment {
         picker.show(getParentFragmentManager(), "event_time_picker");
     }
 
+    /**
+     * Opens the date picker for registration.
+     * @param isOpen Whether the date picker is opening or closing
+     */
     private void openRegDatePicker(boolean isOpen) {
         MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText(isOpen ? "Select registration OPEN date" : "Select registration CLOSE date")
@@ -544,6 +606,10 @@ public class EventCreationFragment extends Fragment {
         picker.show(getParentFragmentManager(), isOpen ? "reg_open_date" : "reg_close_date");
     }
 
+    /**
+     * Opens the time picker for registration.
+     * @param isOpen Whether the time picker is opening or closing
+     */
     private void openRegTimePicker(boolean isOpen) {
         int defHour = isOpen ? (regOpenHour  == null ? 9  : regOpenHour)  : (regCloseHour  == null ? 17 : regCloseHour);
         int defMinute = isOpen ? (regOpenMinute== null ? 0  : regOpenMinute): (regCloseMinute== null ? 0  : regCloseMinute);
@@ -571,6 +637,12 @@ public class EventCreationFragment extends Fragment {
     }
     // endregion
 
+    /**
+     * A checker for whether or not a field is required
+     * @param et The editText field
+     * @param msg The message to display if the field is empty
+     * @return Whether or not a said field is required
+     */
     private boolean requireText(EditText et, String msg) {
         if (et.getText().toString().trim().isEmpty()) {
             et.setError(msg);
@@ -581,13 +653,22 @@ public class EventCreationFragment extends Fragment {
         return true;
     }
 
-    // region Helper functions
+    /**
+     * Parses a string to an integer.
+     * @param s the string to process
+     * @return the result
+     */
     @Nullable
     private Integer parseIntOrNull(String s) {
         try { return s.trim().isEmpty() ? null : Integer.parseInt(s.trim()); }
         catch (NumberFormatException e) { return null; }
     }
 
+    /**
+     * Parses a string to a double.
+     * @param s The string to parse
+     * @return the result.
+     */
     @Nullable
     private Double parseDoubleOrNull(String s) {
         try { return s.trim().isEmpty() ? null : Double.parseDouble(s.trim()); }

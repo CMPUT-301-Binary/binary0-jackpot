@@ -15,6 +15,11 @@ import com.example.jackpot.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+/**
+ * SignUp activity for the organizer. The organizer will be prompted to enter details, which will be stored in the database.
+ *
+ */
+
 public class SignupOrganizerActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
@@ -23,6 +28,14 @@ public class SignupOrganizerActivity extends AppCompatActivity {
     private EditText nameField, emailField, passwordField, phoneField;
     private Toast currentToast;
 
+    /**
+     * Called when the activity is first created.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down then this Bundle contains the data it most
+     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+     *
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +90,11 @@ public class SignupOrganizerActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Show a toast message.
+     *
+     * @param message The message to display
+     */
     private void showToast(String message) {
         if (currentToast != null) {
             currentToast.cancel();

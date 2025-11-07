@@ -10,6 +10,9 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.example.jackpot.R;
 
+/**
+ * Map fragment, used to display the map.
+ */
 public class MapFragment extends Fragment {
 
     @Nullable

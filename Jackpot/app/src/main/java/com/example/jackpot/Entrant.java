@@ -46,10 +46,19 @@ public class Entrant extends User {
         }
     }
 
+    /**
+     * Entrant joins an event.
+     * @param eventId The event to join.
+     *
+     */
     public void acceptInvitation(String eventId) {
         // TODO: mark invitation as accepted
     }
 
+    /**
+     * Entrant leaves an event.
+     * @param eventId The event to leave.
+     */
     public void declineInvitation(String eventId) {
         // TODO: mark invitation as declined
     }

@@ -14,7 +14,11 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-
+/**
+ * The activity for the entrant pages.
+ * The entrants have general permission to view and join events..
+ * Todo: Find a way to integrate this class with the current login system.
+ */
 public class EntrantActivity extends AppCompatActivity {
     private DatabaseReference db;
 

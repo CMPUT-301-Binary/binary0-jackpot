@@ -6,6 +6,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.jackpot.R;
 
+
+/**
+ * The activity for the admin pages.
+ * The admins have specific permissions that are not given to other users.
+ * Todo: Find a way to integrate this class with the current login system.
+ */
 public class AdminActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {

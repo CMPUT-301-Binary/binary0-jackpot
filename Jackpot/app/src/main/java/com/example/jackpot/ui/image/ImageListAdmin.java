@@ -25,6 +25,9 @@ import com.google.firebase.storage.StorageReference;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The list of images the admin is able to see, and delete if the admin wants.
+ */
 public class ImageListAdmin extends Fragment {
 
     private RecyclerView recyclerView;
@@ -36,6 +39,18 @@ public class ImageListAdmin extends Fragment {
 
     private final List<Image> allImages = new ArrayList<>();
 
+    /**
+     * Loads the images,a nd sets up the list.
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return Return the View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -61,6 +76,9 @@ public class ImageListAdmin extends Fragment {
         return root;
     }
 
+    /**
+     * Loads the images from the database.
+     */
     private void loadImages() {
         db.collection("images")
                 .get()
@@ -77,6 +95,9 @@ public class ImageListAdmin extends Fragment {
                         Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * Deletes the selected images.
+     */
     private void deleteSelectedImages() {
         List<Image> selected = adapter.getSelectedImages();
         if (selected.isEmpty()) {

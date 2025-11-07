@@ -12,12 +12,22 @@ import com.example.jackpot.MainActivity;
 import com.example.jackpot.R;
 import com.google.firebase.auth.FirebaseAuth;
 
+/**
+ * The activity for the login page.
+ * The user can login with their email and password.
+ * Upon successful login, the user is then redirected to the home page.
+ */
+
 public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private EditText emailField, passwordField;
 
 
+    /**
+     * Checks if the user is already logged in.
+     * If so, the user is redirected to the home page.
+     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -27,6 +37,16 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         }
     }
+
+    /**
+     * Called when the activity is first created.
+     * Sets up the login page.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down then this Bundle contains the data it most
+     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+     *
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
