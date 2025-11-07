@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import static androidx.test.espresso.Espresso.onData;
+import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
@@ -34,6 +35,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -59,13 +61,10 @@ public class TestEventsUI {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        // Disable reCAPTCHA for testing, as seen in SignupEntrantActivity
         mAuth.getFirebaseAuthSettings().setAppVerificationDisabledForTesting(true);
 
         createAndLoginTestUser();
 
-        // Allow time for the HomeFragment to fetch the user and load events.
-        // In a production-level test suite, this should be replaced with an IdlingResource.
         Thread.sleep(4000);
     }
 
@@ -73,57 +72,83 @@ public class TestEventsUI {
         String email = "testuser-" + UUID.randomUUID().toString() + "@example.com";
         String password = "password123";
 
-        // 1. Create user in Firebase Auth (logic from SignupEntrantActivity)
         AuthResult authResult = Tasks.await(mAuth.createUserWithEmailAndPassword(email, password), 10, TimeUnit.SECONDS);
         String uid = authResult.getUser().getUid();
 
-        // 2. Create user document in Firestore (logic from SignupEntrantActivity)
         this.testUser = new User(uid, "Test Entrant", User.Role.ENTRANT, email, "1234567890", "", "default", null);
         Tasks.await(db.collection("users").document(uid).set(this.testUser), 10, TimeUnit.SECONDS);
     }
 
     @Test
     public void testEntrantJoinsEventFromHome() throws Exception {
-        // We need the ID of the event we're about to click.
-        // Let's fetch the first event from the database to get its ID,
-        // assuming the adapter and this query have the same ordering.
         QuerySnapshot eventsSnapshot = Tasks.await(db.collection("events").limit(1).get());
         assertNotNull("No events found in the database for testing.", eventsSnapshot);
         assertFalse("No events found in the database for testing.", eventsSnapshot.isEmpty());
         String eventId = eventsSnapshot.getDocuments().get(0).getId();
 
-        // With a user now logged in, HomeFragment will load events.
-        // Find the first event in the list and click its "Join" button.
         onData(anything())
                 .inAdapterView(withId(R.id.events_list))
-                .atPosition(0) // Get the first item
-                .onChildView(withId(R.id.join_button)) // Find the button within that item
+                .atPosition(0)
+                .onChildView(withId(R.id.join_button))
                 .perform(click());
 
-        // Give Firestore time to process the update.
         Thread.sleep(2000);
 
-        // Verify that the entrant is now in the event's waiting list in the database.
         DocumentSnapshot updatedEventDoc = Tasks.await(db.collection("events").document(eventId).get());
         assertTrue("Event document could not be found after joining.", updatedEventDoc.exists());
         Event updatedEvent = updatedEventDoc.toObject(Event.class);
         assertNotNull("Event object could not be deserialized.", updatedEvent);
         assertNotNull("Waiting list is null.", updatedEvent.getWaitingList());
 
-        // Check if our test user is in the waiting list
         boolean isUserInWaitingList = updatedEvent.getWaitingList().getUsers().stream()
                 .anyMatch(entrant -> entrant.getId().equals(testUser.getId()));
 
         assertTrue("Test user was not found in the waiting list after clicking join.", isUserInWaitingList);
 
-        // Verify that clicking "Join" does NOT start the EventDetailsActivity.
-        // This confirms the button's OnClickListener is correctly decoupled from the view's OnClickListener.
         intended(not(hasComponent(EventDetailsActivity.class.getName())));
+    }
+
+    @Test
+    public void testEntrantLeavesEventFromEventsFragment() throws Exception {
+        // 1. Setup: Create an event and add the test user to its waiting list.
+        String eventId = "leave-test-event-" + UUID.randomUUID().toString();
+        Event testEvent = new Event(eventId, "organizer-id", "Test Event for Leaving",
+                "Desc", new UserList(), "Location", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), null, "qr", false, "");
+
+        Entrant entrantUser = new Entrant(testUser.getName(), testUser.getId(), testUser.getRole(), testUser.getEmail(), testUser.getPhone(), testUser.getPassword(), testUser.getNotificationPreferences(), testUser.getDevice());
+        testEvent.addEntrantWaitingList(entrantUser);
+
+        Tasks.await(db.collection("events").document(eventId).set(testEvent));
+
+        // 2. Navigate to the Events Fragment.
+        onView(withId(R.id.nav_events_entrant)).perform(click());
+        Thread.sleep(3000); // Wait for fragment to load and fetch data.
+
+        // 3. Find the event and click the "Leave Lottery" button.
+        onData(anything())
+                .inAdapterView(withId(R.id.entrant_events))
+                .atPosition(0)
+                .onChildView(withId(R.id.leave_button))
+                .perform(click());
+
+        Thread.sleep(2000); // Wait for Firestore update.
+
+        // 4. Verification: Fetch the event and verify the user is no longer in the waiting list.
+        DocumentSnapshot updatedEventDoc = Tasks.await(db.collection("events").document(eventId).get());
+        Event updatedEvent = updatedEventDoc.toObject(Event.class);
+        assertNotNull(updatedEvent);
+
+        boolean isUserInWaitingList = updatedEvent.getWaitingList().getUsers().stream()
+                .anyMatch(entrant -> entrant.getId().equals(testUser.getId()));
+
+        assertFalse("Test user should NOT be in the waiting list after leaving.", isUserInWaitingList);
+
+        // 5. Cleanup: Delete the test event.
+        Tasks.await(db.collection("events").document(eventId).delete());
     }
 
     @After
     public void tearDown() throws Exception {
-        // Delete the user from Firebase to keep the database clean for the next test run.
         if (mAuth.getCurrentUser() != null) {
             Tasks.await(mAuth.getCurrentUser().delete(), 10, TimeUnit.SECONDS);
         }
@@ -132,7 +157,6 @@ public class TestEventsUI {
 
     @Test
     public void useAppContext() {
-        // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         assertEquals("com.example.jackpot", appContext.getPackageName());
     }
