@@ -6,9 +6,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,9 +21,12 @@ import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.jackpot.Entrant;
+import com.example.jackpot.UserList;
 import com.example.jackpot.Event;
 import com.example.jackpot.Image;
 import com.example.jackpot.R;
+import com.example.jackpot.User;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
@@ -33,7 +38,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -56,7 +64,7 @@ public class EventCreationFragment extends Fragment {
     private EditText editWaitingListLimit;
     // UI refs
     private EditText editRegOpenDate, editRegOpenTime, editRegCloseDate, editRegCloseTime;
-
+    private Spinner spinnerCategory;
 
     // Registration picker state
     private Long regOpenDateUtcMs = null, regCloseDateUtcMs = null;
@@ -103,6 +111,21 @@ public class EventCreationFragment extends Fragment {
             createEvent();
         });
         db = FirebaseFirestore.getInstance();
+
+        spinnerCategory = view.findViewById(R.id.spinnerCategory);
+
+        List<String> categories = Arrays.asList(
+                "Select a category…", // INDEX 0 is just a hint
+                "Party", "Concert", "Charity", "Fair"
+        );
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                categories
+        );
+
+        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCategory.setAdapter(catAdapter);
 
         editTextEventDate.setFocusable(false);
         editTextEventDate.setClickable(true);
@@ -176,18 +199,16 @@ public class EventCreationFragment extends Fragment {
         if (capacityVal < 1)     { editTextEventCapacity.setError("Must be ≥ 1");       editTextEventCapacity.requestFocus(); return; }
 
         // Waiting List Limit: optional, but if entered must be integer >= 0
-        Integer waitLimitVal;
+        final Integer[] waitLimitVal = {null};
         String waitStr = editWaitingListLimit.getText().toString().trim();
         if (!waitStr.isEmpty()) {
-            waitLimitVal = parseIntOrNull(waitStr);
-            if (waitLimitVal == null) { editWaitingListLimit.setError("Enter an integer"); editWaitingListLimit.requestFocus(); return; }
-            if (waitLimitVal < 0)     { editWaitingListLimit.setError("Must be ≥ 0");      editWaitingListLimit.requestFocus(); return; }
+            waitLimitVal[0] = parseIntOrNull(waitStr);
+            if (waitLimitVal[0] == null) { editWaitingListLimit.setError("Enter an integer"); editWaitingListLimit.requestFocus(); return; }
+            if (waitLimitVal[0] < 0)     { editWaitingListLimit.setError("Must be ≥ 0");      editWaitingListLimit.requestFocus(); return; }
         } else {
-            waitLimitVal = null;
             editWaitingListLimit.setError(null);
         }
         // endregion
-        //Check if an image was a selected for upload
         if (selectedImageUri != null) {
             //Create a unique filename for the image
             String imageName = "posters/" + UUID.randomUUID().toString() + ".png";
@@ -195,6 +216,8 @@ public class EventCreationFragment extends Fragment {
             storageRef.putFile(selectedImageUri).addOnSuccessListener(taskSnapshot -> {
                 storageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
                     String posterDownloadUrl = downloadUri.toString();
+                    // endregion
+
                     // region Build canonical timestamps from pickers
                     com.google.firebase.Timestamp eventTs =
                             toTimestamp(selectedDateUtcMs, selectedHour, selectedMinute);
@@ -203,7 +226,21 @@ public class EventCreationFragment extends Fragment {
                     com.google.firebase.Timestamp regCloseTs =
                             toTimestamp(regCloseDateUtcMs, regCloseHour, regCloseMinute);
 
-                    // region Validation for canonical timestamps
+                    int catPos = spinnerCategory.getSelectedItemPosition();
+
+                    // region Validation for category and also canonical timestamps
+
+                    if (catPos <= 0) {
+                        View selectedView = spinnerCategory.getSelectedView();
+                        if (selectedView instanceof TextView) {
+                            ((TextView) selectedView).setError("Pick a category");
+                        }
+                        spinnerCategory.requestFocus();
+                        Toast.makeText(requireContext(), "Please choose a category", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    String category = (String) spinnerCategory.getSelectedItem();
+
                     if (eventTs == null) {
                         editTextEventDate.setError("Pick event date");
                         editTextEventTime.setError("Pick event time");
@@ -228,14 +265,20 @@ public class EventCreationFragment extends Fragment {
                         editRegOpenTime.setError("Pick open time");
                         editRegOpenDate.requestFocus();
                         return;
-                    } else { editRegOpenDate.setError(null); editRegOpenTime.setError(null); }
+                    } else {
+                        editRegOpenDate.setError(null);
+                        editRegOpenTime.setError(null);
+                    }
 
                     if (regCloseTs == null) {
                         editRegCloseDate.setError("Pick close date");
                         editRegCloseTime.setError("Pick close time");
                         editRegCloseDate.requestFocus();
                         return;
-                    } else { editRegCloseDate.setError(null); editRegCloseTime.setError(null); }
+                    } else {
+                        editRegCloseDate.setError(null);
+                        editRegCloseTime.setError(null);
+                    }
 
                     // Registration ordering
                     if (regOpenTs.compareTo(regCloseTs) >= 0) {
@@ -273,8 +316,9 @@ public class EventCreationFragment extends Fragment {
                     String userId = (user != null) ? user.getUid() : null;
 
                     String eventId = UUID.randomUUID().toString();
-                    //String posterUri = (selectedImageUri != null) ? selectedImageUri.toString() : null; // Poster image URI
+                    String posterUri = (selectedImageUri != null) ? selectedImageUri.toString() : null; // Poster image URI
 
+                    //Build the event payload
 
                     // region Build the event payload
                     Map<String, Object> eventDoc = new HashMap<>();
@@ -286,30 +330,37 @@ public class EventCreationFragment extends Fragment {
                     eventDoc.put("date", eventDate);
                     eventDoc.put("time", eventTime);
 
-                    eventDoc.put("eventAt",   eventTs);
-                    eventDoc.put("regOpenAt",  regOpenTs);
+                    eventDoc.put("eventAt", eventTs);
+                    eventDoc.put("regOpenAt", regOpenTs);
                     eventDoc.put("regCloseAt", regCloseTs);
 
                     // Numeric fields as numbers
                     eventDoc.put("price", priceVal);
                     eventDoc.put("capacity", capacityVal);
-                    if (waitLimitVal != null) eventDoc.put("waitingListLimit", waitLimitVal);
+                    if (waitLimitVal[0] == null) {
+                        waitLimitVal[0] = 0;
+                    }
+                    eventDoc.put("waitingListLimit", waitLimitVal[0]);
 
                     eventDoc.put("geoLocation", geoLocation);
                     eventDoc.put("qrCode", qrCode);
-                    eventDoc.put("posterUri", posterDownloadUrl);
+                    eventDoc.put("posterUri", downloadUri);
                     eventDoc.put("createdBy", userId);
                     // MARK: can remove this createdAt field if we don't need it
                     eventDoc.put("createdAt", FieldValue.serverTimestamp());
 
-                    eventDoc.put("regOpenDate",  editRegOpenDate.getText().toString().trim());
-                    eventDoc.put("regOpenTime",  editRegOpenTime.getText().toString().trim());
+                    eventDoc.put("regOpenDate", editRegOpenDate.getText().toString().trim());
+                    eventDoc.put("regOpenTime", editRegOpenTime.getText().toString().trim());
                     eventDoc.put("regCloseDate", editRegCloseDate.getText().toString().trim());
                     eventDoc.put("regCloseTime", editRegCloseTime.getText().toString().trim());
+                    eventDoc.put("category", category);
+                    //Put an empty list of Entrants as a waitinglist.
+                    UserList waitingList = new UserList(waitLimitVal[0]);
+                    eventDoc.put("waitingList", waitingList);
 
                     // Canonical timestamps for queries/sorting (Future use in this project)
-//        eventDoc.put("regOpenAt",  regOpenTs);
-//        eventDoc.put("regCloseAt", regCloseTs);
+                    //        eventDoc.put("regOpenAt",  regOpenTs);
+                    //        eventDoc.put("regCloseAt", regCloseTs);
                     // endregion
 
                     submitButton.setEnabled(false);
@@ -319,7 +370,6 @@ public class EventCreationFragment extends Fragment {
                             .set(eventDoc)
                             .addOnSuccessListener(v -> {
                                 Toast.makeText(requireContext(), "Event created!", Toast.LENGTH_SHORT).show();
-                                // TODO: optionally navigate back or clear the form
                                 // currently have it just do the back press function
                                 requireActivity().getOnBackPressedDispatcher().onBackPressed();
                             })
@@ -328,22 +378,12 @@ public class EventCreationFragment extends Fragment {
                                 Log.e("Firestore", "Failed to create event", e);
                                 Toast.makeText(requireContext(), "Failed to create event: " + e.getMessage(), Toast.LENGTH_LONG).show();
                             });
-
                 });
             }).addOnFailureListener(e -> {
                 Toast.makeText(requireContext(), "Failed to upload image: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 return;
             });
-
         }
-
-        // endregion
-
-
-
-
-
-
     }
 
     // region Date & Time Pickers (and for Registration Start and End)
@@ -392,7 +432,7 @@ public class EventCreationFragment extends Fragment {
     }
 
     private void openRegTimePicker(boolean isOpen) {
-        int defHour   = isOpen ? (regOpenHour  == null ? 9  : regOpenHour)  : (regCloseHour  == null ? 17 : regCloseHour);
+        int defHour = isOpen ? (regOpenHour  == null ? 9  : regOpenHour)  : (regCloseHour  == null ? 17 : regCloseHour);
         int defMinute = isOpen ? (regOpenMinute== null ? 0  : regOpenMinute): (regCloseMinute== null ? 0  : regCloseMinute);
 
         MaterialTimePicker picker = new MaterialTimePicker.Builder()

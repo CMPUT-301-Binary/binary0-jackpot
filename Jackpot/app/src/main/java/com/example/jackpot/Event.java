@@ -1,17 +1,26 @@
 package com.example.jackpot;
+import android.util.Log;
+
+import java.io.Serializable;
+import java.security.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
-public class Event {
+public class Event implements Serializable {
     private String eventId;
     private String organizerId;
-    private String title;
+    private String name;
     private String description;
-    private EntrantList waitingList;
-    private String locationAddress;
+    private UserList waitingList;
+    private String location;
+    private Date date;
     private Double lat;
     private Double lng;
 //    private com.google.android.libraries.places.api.model.Money price;
@@ -19,30 +28,31 @@ public class Event {
     private int capacity;
     private Date regOpenAt;
     private Date regCloseAt;
-    private Image posterImage;
+    private String posterUri;
     private String qrCodeId;
 //    private GeoPolicy geoPolicy;
     private boolean geoRequired;
     private String category;
     public Event() {}
 
-    public Event(String eventId, String organizerId, String title, String description,
-                 EntrantList waitingList, String locationAddress, Double lat,
+    public Event(String eventId, String organizerId, String name, String description,
+                 UserList waitingList, String location, Date date, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
-                 Date regCloseAt, Image posterImage, String qrCodeId, boolean geoRequired){
+                 Date regCloseAt, String posterUri, String qrCodeId, boolean geoRequired, String category){
         this.eventId = eventId;
         this.organizerId = organizerId;
-        this.title = title;
+        this.name = name;
         this.description = description;
         this.waitingList = waitingList;
-        this.locationAddress = locationAddress;
+        this.location = location;
+        this.date = date;
         this.lat = lat;
         this.lng = lng;
         this.price = price;
         this.capacity = capacity;
         this.regOpenAt = regOpenAt;
         this.regCloseAt = regCloseAt;
-        this.posterImage = posterImage;
+        this.posterUri = posterUri;
         this.qrCodeId = qrCodeId;
         this.geoRequired = geoRequired;
         this.category = category;
@@ -59,11 +69,11 @@ public class Event {
     public void setOrganizerId(String organizerId) {
         this.organizerId = organizerId;
     }
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
-    public void setTitle(String title) {
-        this.title = title;
+    public void setName(String name) {
+        this.name = name;
     }
     public String getDescription() {
         return description;
@@ -71,18 +81,22 @@ public class Event {
     public void setDescription(String description) {
         this.description = description;
     }
-    public EntrantList getWaitingList() {
+    public UserList getWaitingList() {
         return waitingList;
     }
-    public void setWaitingList(EntrantList waitingList) {
+    public void setWaitingList(UserList waitingList) {
         this.waitingList = waitingList;
     }
-    public String getLocationAddress() {
-        return locationAddress;
+    public String getLocation() {
+        return location;
     }
-    public void setLocationAddress(String locationAddress) {
-        this.locationAddress = locationAddress;
+    public void setLocation(String location) {
+        this.location = location;
     }
+    public Date getDate() {
+        return date;
+    }
+
     public Double getLat() {
         return lat;
     }
@@ -110,23 +124,74 @@ public class Event {
     public Date getRegOpenAt() {
         return regOpenAt;
     }
-    public void setRegOpenAt(Date regOpenAt) {
-        this.regOpenAt = regOpenAt;
+    public void setDate(Object date) {
+        this.date = convertToDate(date);
     }
-    public Date getRegCloseAt() {
-        return regCloseAt;
+
+    public void setRegOpenAt(Object regOpenAt) {
+        this.regOpenAt = convertToDate(regOpenAt);
     }
-    public void setRegCloseAt(Date regCloseAt) {
-        this.regCloseAt = regCloseAt;
+
+    public void setRegCloseAt(Object regCloseAt) {
+        this.regCloseAt = convertToDate(regCloseAt);
     }
-    public Image getPosterImage() {
-        return posterImage;
+
+    private Date convertToDate(Object dateObj) {
+        if (dateObj == null) {
+            return null;
+        }
+
+        if (dateObj instanceof Date) {
+            return (Date) dateObj;
+        } else if (dateObj instanceof com.google.firebase.Timestamp) {
+            return ((com.google.firebase.Timestamp) dateObj).toDate();
+        } else if (dateObj instanceof Map) {
+            // Firestore Timestamp as Map
+            Map<String, Object> timestampMap = (Map<String, Object>) dateObj;
+            if (timestampMap.containsKey("seconds")) {
+                long seconds = ((Number) timestampMap.get("seconds")).longValue();
+                int nanoseconds = timestampMap.containsKey("nanoseconds")
+                        ? ((Number) timestampMap.get("nanoseconds")).intValue()
+                        : 0;
+                return new Date(seconds * 1000 + nanoseconds / 1000000);
+            }
+        } else if (dateObj instanceof String) {
+            String dateStr = (String) dateObj;
+            SimpleDateFormat[] formats = {
+                    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US),
+                    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US),
+                    new SimpleDateFormat("yyyy-MM-dd", Locale.US),
+                    new SimpleDateFormat("MM/dd/yyyy", Locale.US)
+            };
+
+            for (SimpleDateFormat format : formats) {
+                try {
+                    return format.parse(dateStr);
+                } catch (ParseException e) {
+                    // Try next format
+                }
+            }
+
+            Log.e("Event", "Failed to parse date string: " + dateStr);
+            return null;
+        } else if (dateObj instanceof Long) {
+            return new Date((Long) dateObj);
+        }
+
+        return null;
     }
-    public void setPosterImage(Image posterImage) {
-        this.posterImage = posterImage;
+    public String getPosterUri() {
+        return posterUri;
+    }
+    public void setPosterImage(String posterUri) {
+        this.posterUri = posterUri;
     }
     public String getQrCodeId() {
         return qrCodeId;
+    }
+    public Date getRegCloseAt() {
+        return regCloseAt;
     }
     public void setQrCodeId(String qrCodeId) {
         this.qrCodeId = qrCodeId;
@@ -238,14 +303,14 @@ public class Event {
      * @throws IllegalArgumentException If there are not enough entrants in the waiting list.
      * @return A list of entrants.
      */
-    public ArrayList<Entrant> drawEvent(int amountEntrants){
+    public ArrayList<User> drawEvent(int amountEntrants){
         if(amountEntrants>waitingList.size()){
             throw new IllegalArgumentException("Too few entrants in waiting list");
         }
-        ArrayList<Entrant> list = new ArrayList<>();
+        ArrayList<User> list = new ArrayList<>();
         for(int i = 0; i < amountEntrants; i++){
             int index = (int)(Math.random()*waitingList.size());
-            Entrant e = waitingList.get(index);
+            User e = waitingList.get(index);
             list.add(e);
             waitingList.remove(e);
         }
