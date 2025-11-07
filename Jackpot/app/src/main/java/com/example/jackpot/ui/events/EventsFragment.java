@@ -11,8 +11,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.example.jackpot.Entrant;
 import com.example.jackpot.Event;
 import com.example.jackpot.EventArrayAdapter;
 import com.example.jackpot.EventList;
@@ -68,7 +70,11 @@ public class EventsFragment extends Fragment {
         }
         assert root != null;
         eventList = root.findViewById(R.id.entrant_events);
-        eventAdapter = new EventArrayAdapter(requireActivity(), displayedEvents.getEvents(), eventItemLayoutResource, null);
+        eventAdapter = new EventArrayAdapter(requireActivity(),
+                displayedEvents.getEvents(),
+                eventItemLayoutResource,
+                EventArrayAdapter.ViewType.EVENTS,
+                null);
         eventList.setAdapter(eventAdapter);
 
         setupTabs(root);
@@ -81,16 +87,54 @@ public class EventsFragment extends Fragment {
         Button wishlistButton = root.findViewById(R.id.wishlist_events_button);
         Button invitsButton = root.findViewById(R.id.invits_events_button);
 
+        // Define colours for the buttons
+        int activeColor = ContextCompat.getColor(requireContext(), R.color.black);
+        int inactiveColor = ContextCompat.getColor(requireContext(), R.color.white);
+        int activeTextColor = ContextCompat.getColor(requireContext(), R.color.white);
+        int inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.black);
+
+        // set initial state
+        wishlistButton.setBackgroundColor(activeColor);
+        wishlistButton.setTextColor(activeTextColor);
+        joinedButton.setBackgroundColor(inactiveColor);
+        joinedButton.setTextColor(inactiveTextColor);
+        invitsButton.setBackgroundColor(inactiveColor);
+        invitsButton.setTextColor(inactiveTextColor);
+
         joinedButton.setOnClickListener(v -> {
             currentTab = EventTab.JOINED;
+            // Set active state for Joined button
+            joinedButton.setBackgroundColor(activeColor);
+            joinedButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
+            wishlistButton.setBackgroundColor(inactiveColor);
+            wishlistButton.setTextColor(inactiveTextColor);
+            invitsButton.setBackgroundColor(inactiveColor);
+            invitsButton.setTextColor(inactiveTextColor);
             loadEventsForTab();
         });
         wishlistButton.setOnClickListener(v -> {
             currentTab = EventTab.WISHLIST;
+            // Set active state for Wishlist button
+            wishlistButton.setBackgroundColor(activeColor);
+            wishlistButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
+            joinedButton.setBackgroundColor(inactiveColor);
+            joinedButton.setTextColor(inactiveTextColor);
+            invitsButton.setBackgroundColor(inactiveColor);
+            invitsButton.setTextColor(inactiveTextColor);
             loadEventsForTab();
         });
         invitsButton.setOnClickListener(v -> {
             currentTab = EventTab.INVITATIONS;
+            // Set active state for Invitations button
+            invitsButton.setBackgroundColor(activeColor);
+            invitsButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
+            wishlistButton.setBackgroundColor(inactiveColor);
+            wishlistButton.setTextColor(inactiveTextColor);
+            joinedButton.setBackgroundColor(inactiveColor);
+            joinedButton.setTextColor(inactiveTextColor);
             loadEventsForTab();
         });
     }
@@ -129,7 +173,23 @@ public class EventsFragment extends Fragment {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
-                    updateEventList(events);
+                    ArrayList<Event> wishlistEvents = new ArrayList<>();
+                    Entrant check = new Entrant(
+                            currentUser.getId(),
+                            currentUser.getName(),
+                            currentUser.getRole(),
+                            currentUser.getEmail(),
+                            currentUser.getPhone(),
+                            currentUser.getPassword(),
+                            currentUser.getNotificationPreferences(),
+                            currentUser.getDevice()
+                    );
+                    for (Event event : events) {
+                        if (event.getWaitingList() != null && event.hasEntrant(check)) {
+                            wishlistEvents.add(event);
+                        }
+                    }
+                    updateEventList(wishlistEvents);
                 }
             }
 
@@ -146,7 +206,9 @@ public class EventsFragment extends Fragment {
                 Toast.makeText(getContext(), "TODO: Joined Events", Toast.LENGTH_SHORT).show();
                 break;
             case WISHLIST:
-                fDatabase.queryEventsWithArrayContains("waitingList", currentUser, callback);
+//                fDatabase.queryEventsWithArrayContains("waitingList", currentUser, callback);
+                fDatabase.getAllEvents(callback);
+
                 break;
             case INVITATIONS:
                 Toast.makeText(getContext(), "TODO: Invitations Events", Toast.LENGTH_SHORT).show();
@@ -154,7 +216,11 @@ public class EventsFragment extends Fragment {
         }
     }
     private void updateEventList(ArrayList<Event> events) {
-        displayedEvents.setEvents(events);
+        ArrayList<Event> adapterList = displayedEvents.getEvents();
+        adapterList.clear();
+        if (events != null) {
+            adapterList.addAll(events);
+        }
         eventAdapter.notifyDataSetChanged();
         if (events.isEmpty()) {
             Toast.makeText(getContext(), "No events found.", Toast.LENGTH_SHORT).show();
