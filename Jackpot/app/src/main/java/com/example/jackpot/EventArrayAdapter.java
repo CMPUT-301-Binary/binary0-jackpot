@@ -170,7 +170,37 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         if (joinButton != null) {
             // Stop click propagation so button click doesn't trigger view click
             joinButton.setOnClickListener(v -> {
-                handleJoinButtonClick(event);
+                if (currentUser.getRole() == User.Role.ENTRANT) {
+                    Entrant entrant = new Entrant(
+                            currentUser.getId(),
+                            currentUser.getName(),
+                            currentUser.getRole(),
+                            currentUser.getEmail(),
+                            currentUser.getPhone(),
+                            currentUser.getPassword(),
+                            currentUser.getNotificationPreferences(),
+                            currentUser.getDevice()
+                    );
+                    //Create a toast for event.getWaitingList().contains(entrant) to terminal
+                    Toast.makeText(getContext(), "Entrant: " + event.hasEntrant(entrant), Toast.LENGTH_SHORT).show();
+                    if (event.hasEntrant(entrant)){
+                        Toast.makeText(getContext(), "You are already in the waiting list!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    try {
+                        entrant.joinWaitingList(event);
+                        FDatabase.getInstance().updateEvent(event);
+                        Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
+                        notifyDataSetChanged(); // To update the waiting count
+                    } catch (Exception e) {
+                       Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                } else if (currentUser != null) {
+                    Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
+                }
             });
         }
 

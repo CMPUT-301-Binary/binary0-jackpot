@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Event implements Serializable {
@@ -239,7 +240,13 @@ public class Event implements Serializable {
         return 0;
     }
     public boolean hasEntrant(Entrant entrant) {
-        return waitingList.contains(entrant);
+        //Loop through the waiting list and see if an identical entrant is in there
+        for (int i = 0; i < waitingList.size(); i++) {
+            if (Objects.equals(waitingList.get(i).getId(), entrant.getId())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -256,7 +263,7 @@ public class Event implements Serializable {
         if (waitingList == null) {
             throw  new NullPointerException("Waiting list is null");
         }
-        if (waitingList.getCapacity()==null || waitingList.size() < waitingList.getCapacity()) {
+        if (waitingList.getCapacity()== 0 || waitingList.size() < waitingList.getCapacity()) {
             waitingList.add(entrant);
         } else {
             throw new IllegalStateException("Waiting list is full");
