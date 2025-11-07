@@ -10,11 +10,25 @@
     <ListView
         android:id="@+id/events_list"
         android:layout_width="match_parent"
-        android:layout_height="380dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/eventText"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <TextView
+        android:id="@+id/eventText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="36dp"
+        android:text="@string/events"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/categories_scroll_view" />
 
     <SearchView
         android:id="@+id/searchView"
@@ -30,32 +44,37 @@
         android:id="@+id/timeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="8dp"
         android:text="Time"
-        app:layout_constraintEnd_toStartOf="@+id/locationButton"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/searchView" />
 
     <Button
         android:id="@+id/locationButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
+        android:layout_marginStart="8dp"
         android:text="Location"
-        app:layout_constraintEnd_toStartOf="@+id/historyButton"
-        app:layout_constraintHorizontal_bias="0.907"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@+id/timeButton"
+        app:layout_constraintTop_toTopOf="@+id/timeButton" />
 
     <Button
         android:id="@+id/historyButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
+        android:layout_marginStart="8dp"
         android:text="History"
+        app:layout_constraintStart_toEndOf="@+id/locationButton"
+        app:layout_constraintTop_toTopOf="@+id/locationButton" />
+
+    <Button
+        android:id="@+id/clear_filters_button"
+        android:layout_width="145dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="272dp"
+        android:text="Clear filters"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.762"
+        app:layout_constraintHorizontal_bias="0.961"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -92,6 +111,7 @@
                 android:orientation="vertical">
 
                 <ImageButton
+                    android:id="@+id/party_button"
                     style="?android:attr/borderlessButtonStyle"
                     android:layout_width="85dp"
                     android:layout_height="85dp"
@@ -112,6 +132,7 @@
                 android:orientation="vertical">
 
                 <ImageButton
+                    android:id="@+id/concert_button"
                     style="?android:attr/borderlessButtonStyle"
                     android:layout_width="85dp"
                     android:layout_height="85dp"
@@ -132,6 +153,7 @@
                 android:orientation="vertical">
 
                 <ImageButton
+                    android:id="@+id/charity_button"
                     style="?android:attr/borderlessButtonStyle"
                     android:layout_width="85dp"
                     android:layout_height="85dp"
@@ -152,6 +174,7 @@
                 android:orientation="vertical">
 
                 <ImageButton
+                    android:id="@+id/fair_button"
                     style="?android:attr/borderlessButtonStyle"
                     android:layout_width="85dp"
                     android:layout_height="85dp"
@@ -164,29 +187,7 @@
                     android:text="@string/fair" />
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"/>
-
         </LinearLayout>
     </HorizontalScrollView>
-
-    <TextView
-        android:id="@+id/eventText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/events"
-        android:textColor="@color/black"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/categories_scroll_view" />
-
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
