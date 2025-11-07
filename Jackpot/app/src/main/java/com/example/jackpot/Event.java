@@ -1,6 +1,7 @@
 package com.example.jackpot;
 import android.util.Log;
 
+import java.io.Serializable;
 import java.security.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -12,7 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public class Event {
+public class Event implements Serializable {
     private String eventId;
     private String organizerId;
     private String name;
@@ -188,6 +189,9 @@ public class Event {
     }
     public String getQrCodeId() {
         return qrCodeId;
+    }
+    public Date getRegCloseAt() {
+        return regCloseAt;
     }
     public void setQrCodeId(String qrCodeId) {
         this.qrCodeId = qrCodeId;

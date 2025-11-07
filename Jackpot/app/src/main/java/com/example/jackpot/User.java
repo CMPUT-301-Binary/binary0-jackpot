@@ -1,6 +1,8 @@
 package com.example.jackpot;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
     protected String id;  // Changed from UUID to String
     protected String name;
     protected Role role;

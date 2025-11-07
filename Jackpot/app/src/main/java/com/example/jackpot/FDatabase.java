@@ -35,6 +35,62 @@ public class FDatabase {
         void onFailure(Exception e);
     }
 
+    public interface StatusCallback {
+        void onSuccess();
+        void onFailure(String error);
+    }
+
+    // Single event callback interface
+    public interface EventCallback {
+        void onSuccess(Event event);
+        void onFailure(String error);
+    }
+
+    /**
+     * Get a single event by its ID from Firestore
+     * @param eventId The ID of the event to retrieve
+     * @param callback Callback to handle success or failure
+     */
+    public void getEventById(String eventId, EventCallback callback) {
+        if (eventId == null || eventId.isEmpty()) {
+            callback.onFailure("Event ID is null or empty");
+            return;
+        }
+
+        Log.d("FDatabase", "Fetching event with ID: " + eventId);
+
+        db.collection("events").document(eventId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        try {
+                            Event event = documentSnapshot.toObject(Event.class);
+                            if (event != null) {
+                                // Make sure the eventId is set
+                                if (event.getEventId() == null || event.getEventId().isEmpty()) {
+                                    event.setEventId(documentSnapshot.getId());
+                                }
+                                Log.d("FDatabase", "Event found: " + event.getName());
+                                callback.onSuccess(event);
+                            } else {
+                                Log.e("FDatabase", "Event object is null after conversion");
+                                callback.onFailure("Failed to parse event data");
+                            }
+                        } catch (Exception e) {
+                            Log.e("FDatabase", "Error parsing event: " + e.getMessage());
+                            callback.onFailure("Error parsing event: " + e.getMessage());
+                        }
+                    } else {
+                        Log.e("FDatabase", "Event document does not exist for ID: " + eventId);
+                        callback.onFailure("Event not found in database");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FDatabase", "Error fetching event: " + e.getMessage());
+                    callback.onFailure("Database error: " + e.getMessage());
+                });
+    }
+
     /**
      * Queries documents from any collection based on field and value
      * @param collectionName name of the collection to query
@@ -150,5 +206,13 @@ public class FDatabase {
     // Convenience methods for Users
     public void getUserById(String uid, DataCallback<User> callback) {
         queryCollection("users", "id", uid, User.class, callback);
+    }
+
+
+    public void deleteEvent(String eventId, StatusCallback callback) {
+        db.collection("events").document(eventId)
+                .delete()
+                .addOnSuccessListener(aVoid -> callback.onSuccess())
+                .addOnFailureListener(e -> callback.onFailure(e.getMessage()));
     }
 }

@@ -8,21 +8,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.jackpot.Event;
 import com.example.jackpot.EventArrayAdapter;
 import com.example.jackpot.EventList;
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
+import com.example.jackpot.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.example.jackpot.User;
-import com.example.jackpot.Event;
 
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -34,11 +36,12 @@ public class HomeFragment extends Fragment {
     private FDatabase fDatabase = FDatabase.getInstance();
     private User currentUser;
     private EventList dataList = new EventList(new ArrayList<>());
-
+    private SearchView searchView;
 
     public HomeFragment() {
         // Required empty public constructor
     }
+
     public static HomeFragment newInstance(String role) {
         HomeFragment fragment = new HomeFragment();
         Bundle args = new Bundle();
@@ -54,7 +57,6 @@ public class HomeFragment extends Fragment {
         String roleName = getArguments() != null ? getArguments().getString("role") : User.Role.ENTRANT.name();
         User.Role role = User.Role.valueOf(roleName);
 
-        // Inflate the correct layout for this fragment
         View root;
         int eventItemLayoutResource;
         switch (role) {
@@ -72,15 +74,15 @@ public class HomeFragment extends Fragment {
                 break;
         }
 
-        // Initialize the event list and adapter immediately.
-        assert root != null;
         eventList = root.findViewById(R.id.events_list);
         eventAdapter = new EventArrayAdapter(requireActivity(), new ArrayList<>(), eventItemLayoutResource, null);
         eventList.setAdapter(eventAdapter);
 
+        searchView = root.findViewById(R.id.searchView);
+
         fetchUserAndLoadEvents();
-        // Fetch the current user and update the adapter when done.
         setupFilterButtons(root);
+        setupSearchView();
 
         return root;
     }
@@ -89,7 +91,7 @@ public class HomeFragment extends Fragment {
         fDatabase.getAllEvents(new FDatabase.DataCallback<Event>() {
             @Override
             public void onSuccess(ArrayList<Event> data) {
-                if (eventAdapter != null) {
+                if (isAdded()) {
                     dataList.getEvents().clear();
                     dataList.getEvents().addAll(data);
                     updateEventList(dataList.getEvents());
@@ -97,46 +99,64 @@ public class HomeFragment extends Fragment {
             }
             @Override
             public void onFailure(Exception e) {
-                // Handle failure
-                e.printStackTrace();
+                Log.e("HomeFragment", "Failed to load events", e);
             }
         });
     }
+
     private void fetchUserAndLoadEvents() {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
             fDatabase.getUserById(firebaseUser.getUid(), new FDatabase.DataCallback<>() {
                 @Override
                 public void onSuccess(ArrayList<User> data) {
-                    if (!data.isEmpty()) {
-                        Log.d("HomeFragment", "User data: " + data.get(0));
+                    if (isAdded() && !data.isEmpty()) {
                         currentUser = data.get(0);
                         if (eventAdapter != null) {
                             eventAdapter.setCurrentUser(currentUser);
                         }
-                    } else {
-                        Log.d("HomeFragment", "No user data found.");
                     }
                     loadEvents();
                 }
                 @Override
                 public void onFailure(Exception e) {
-                    // Handle user not found or other errors
-                    Log.d("HomeFragment", "Error fetching user: " + e.getMessage());
+                    Log.e("HomeFragment", "Error fetching user", e);
+                    loadEvents();
                 }
             });
         } else {
-            Log.d("HomeFragment", "No user logged in.");
-
+            loadEvents();
         }
     }
+
     private void setupFilterButtons(View root) {
+        ImageButton partyButton = root.findViewById(R.id.party_button);
+        ImageButton concertButton = root.findViewById(R.id.concert_button);
+        ImageButton charityButton = root.findViewById(R.id.charity_button);
+        ImageButton fairButton = root.findViewById(R.id.fair_button);
+        Button clearFiltersButton = root.findViewById(R.id.clear_filters_button);
+
+        partyButton.setOnClickListener(v -> filterByCategory("Party"));
+        concertButton.setOnClickListener(v -> filterByCategory("Concert"));
+        charityButton.setOnClickListener(v -> filterByCategory("Charity"));
+        fairButton.setOnClickListener(v -> filterByCategory("Fair"));
+
+        clearFiltersButton.setOnClickListener(v -> {
+            updateEventList(dataList.getEvents());
+            searchView.setQuery("", false);
+            searchView.clearFocus();
+        });
+
         Button timeButton = root.findViewById(R.id.timeButton);
         Button locationButton = root.findViewById(R.id.locationButton);
         Button historyButton = root.findViewById(R.id.historyButton);
 
-        timeButton.setOnClickListener(v -> {showFilterDialog("time");});
-        locationButton.setOnClickListener(v -> {showFilterDialog("location");});
+        timeButton.setOnClickListener(v -> {
+            showFilterDialog("time");
+        });
+        locationButton.setOnClickListener(v -> {
+            showFilterDialog("location");
+        });
 
         historyButton.setOnClickListener(v -> {
             if (currentUser != null) {
@@ -146,6 +166,49 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterEventsBySearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterEventsBySearch(newText);
+                return true;
+            }
+        });
+    }
+
+    private void filterEventsBySearch(String query) {
+        if (dataList == null || dataList.getEvents() == null) return;
+
+        String lowerCaseQuery = query.toLowerCase();
+
+        ArrayList<Event> filteredList = dataList.getEvents().stream()
+                .filter(event -> (event.getName() != null && event.getName().toLowerCase().contains(lowerCaseQuery)) ||
+                        (event.getDescription() != null && event.getDescription().toLowerCase().contains(lowerCaseQuery)) ||
+                        (event.getLocation() != null && event.getLocation().toLowerCase().contains(lowerCaseQuery)) ||
+                        (event.getCategory() != null && event.getCategory().toLowerCase().contains(lowerCaseQuery)))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        updateEventList(filteredList);
+    }
+
+    private void filterByCategory(String category) {
+        if (dataList == null || dataList.getEvents() == null) return;
+
+        ArrayList<Event> filteredList = dataList.getEvents().stream()
+                .filter(event -> category.equalsIgnoreCase(event.getCategory()))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        updateEventList(filteredList);
+        Toast.makeText(getContext(), "Showing " + category + " events", Toast.LENGTH_SHORT).show();
+    }
+
     private void showFilterDialog(String filterType) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Filter by " + filterType);
@@ -167,7 +230,7 @@ public class HomeFragment extends Fragment {
                     else if (filterType.equals("time") &&
                             event.getDate() != null &&
                             event.getDate().toString().toLowerCase().contains(filterValue)) {
-                            filteredEvents.add(event);
+                        filteredEvents.add(event);
                     }
                 }
                 updateEventList(filteredEvents);
@@ -180,6 +243,7 @@ public class HomeFragment extends Fragment {
 
         builder.show();
     }
+
     private void filterByHistory() {
         if (currentUser == null) return;
 
@@ -188,13 +252,14 @@ public class HomeFragment extends Fragment {
                 .collect(Collectors.toCollection(ArrayList::new));
 
         updateEventList(filteredList);
-        Toast.makeText(getContext(), "Showing events you're in", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Showing events you\'re in", Toast.LENGTH_SHORT).show();
     }
+
     private void updateEventList(ArrayList<Event> newList) {
         if (eventAdapter != null) {
             eventAdapter.clear();
             eventAdapter.addAll(newList);
+            eventAdapter.notifyDataSetChanged();
         }
     }
-
 }
