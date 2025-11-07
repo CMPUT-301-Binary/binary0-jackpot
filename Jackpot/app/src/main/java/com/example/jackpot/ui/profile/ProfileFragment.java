@@ -31,6 +31,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * ProfileFragment, which actually displays the profile information, and has functionalities.
+ * These functionalities include delete account, logout button, image picker, and showing the profile details
+ */
 public class ProfileFragment extends Fragment {
 
     private ImageView profileImage;
@@ -41,6 +45,19 @@ public class ProfileFragment extends Fragment {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * Authenticates the firebase instance and loads the info to the view
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return Return the View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -89,6 +106,10 @@ public class ProfileFragment extends Fragment {
     }
 
     // 🔹 Fetch data from Firestore
+
+    /**
+     * Load the user profile information from Firestore.
+     */
     private void loadUserProfile() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) return;
@@ -110,11 +131,17 @@ public class ProfileFragment extends Fragment {
                         Toast.makeText(requireContext(), "Failed to load profile: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * Open the gallery to select an image.
+     */
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         imagePickerLauncher.launch(intent);
     }
 
+    /**
+     * Logout the current user and redirect to the login screen.
+     */
     private void logout() {
         mAuth.signOut();
         Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
@@ -126,6 +153,9 @@ public class ProfileFragment extends Fragment {
         requireActivity().finish();
     }
 
+    /**
+     * Save the user profile information to Firestore.
+     */
     private void saveUserProfile() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) return;
@@ -145,6 +175,9 @@ public class ProfileFragment extends Fragment {
                         Toast.makeText(requireContext(), "Failed to update profile: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * Show a dialog to confirm the deletion of the account.
+     */
     private void showDeleteAccountDialog() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete Account")
@@ -155,6 +188,9 @@ public class ProfileFragment extends Fragment {
                 .show();
     }
 
+    /**
+     * Delete the current user's account from Firestore and Firebase Auth.
+     */
     private void deleteAccount() {
         FirebaseUser user = mAuth.getCurrentUser();
 

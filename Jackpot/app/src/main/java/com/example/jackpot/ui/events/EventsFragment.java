@@ -34,9 +34,21 @@ public class EventsFragment extends Fragment {
         JOINED, WISHLIST, INVITATIONS
     }
     private EventTab currentTab = EventTab.WISHLIST;
+
+    /**
+     * Required empty public constructor
+     */
     public EventsFragment() {
         // Required empty public constructor
     }
+
+    /**
+     * Use this factory method to create a new instance of
+     * this fragment using the provided parameters.
+     *
+     * @param role The role of the user.
+     * @return A new instance of fragment EventsFragment.
+     */
     public static EventsFragment newInstance(String role) {
         EventsFragment fragment = new EventsFragment();
         Bundle args = new Bundle();
@@ -44,6 +56,21 @@ public class EventsFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
+
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * This will check the user's role to ensure the correct layout is inflated.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -76,6 +103,10 @@ public class EventsFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Sets up the tabs for the event list.
+     * @param root The root view of the fragment.
+     */
     private void setupTabs(View root) {
         Button joinedButton = root.findViewById(R.id.joined_events_button);
         Button wishlistButton = root.findViewById(R.id.wishlist_events_button);
@@ -94,6 +125,10 @@ public class EventsFragment extends Fragment {
             loadEventsForTab();
         });
     }
+
+    /**
+     * Gets the current user and loads their events. Loads the events from firebase.
+     */
     private void getUserAndLoadEvents() {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null && firebaseUser.getUid() != null) {
@@ -119,6 +154,10 @@ public class EventsFragment extends Fragment {
             Log.d("EventsFragment", "No Firebase user logged in.");
         }
     }
+
+    /**
+     * Loads the events for the current tab.
+     */
     private void loadEventsForTab() {
         if (currentUser == null) {
             Log.d("EventsFragment", "User null");
@@ -153,6 +192,11 @@ public class EventsFragment extends Fragment {
                 break;
         }
     }
+
+    /**
+     * Updates the event list with the given events.
+     * @param events The events to update the list with.
+     */
     private void updateEventList(ArrayList<Event> events) {
         displayedEvents.setEvents(events);
         eventAdapter.notifyDataSetChanged();

@@ -21,10 +21,21 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
+/**
+ * The adapter for an event array. This is used to help display the events in the event list.
+ */
+
 public class EventArrayAdapter extends ArrayAdapter<Event> {
     private final int layoutResource;
     private User currentUser;
 
+    /**
+     * Constructor for the adapter.
+     * @param context The context of the activity.
+     * @param events The list of events to display.
+     * @param layoutResource The layout resource to use.
+     * @param currentUser The current user.
+     */
     public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, @Nullable User currentUser) {
         super(context, 0, events);
         this.layoutResource = layoutResource;
@@ -36,10 +47,28 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 //        this.layoutResource = layoutResource;
 //        this.currentUser = user;
 //    }
+
+    /**
+     * Set the current user.
+     * @param user The user to set.
+     */
     public void setCurrentUser(User user) {
         this.currentUser = user;
     }
 
+    /**
+     * Get the view for the event at the given position.
+     * @param position The position of the item within the adapter's data set of the item whose view
+     *        we want.
+     * @param convertView The old view to reuse, if possible. Note: You should check that this view
+     *        is non-null and of an appropriate type before using. If it is not possible to convert
+     *        this view to display the correct data, this method can create a new view.
+     *        Heterogeneous lists can specify their number of view types, so that this View is
+     *        always of the right type (see {@link #getViewTypeCount()} and
+     *        {@link #getItemViewType(int)}).
+     * @param parent The parent that this view will eventually be attached to
+     * @return A View corresponding to the data at the specified position.
+     */
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -89,6 +118,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         return view;
     }
 
+    /**
+     * Set up the view for an entrant event.
+     * @param view The view to set up.
+     * @param event The event to set up the view for.
+     */
     private void setupEntrantEventView(View view, Event event) {
         ImageView eventImage = view.findViewById(R.id.eventPic);
         TextView eventTitle = view.findViewById(R.id.event_text);
@@ -131,6 +165,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
     }
 
+    /**
+     * Set up the view for a regular event.
+     * @param view The view to set up.
+     * @param event The event to set up the view for.
+     */
     private void setupEventListItemView(View view, Event event) {
         TextView eventName = view.findViewById(R.id.event_name);
         ImageView eventImage = view.findViewById(R.id.event_image);
@@ -219,6 +258,10 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         }
     }
 
+    /**
+     * Handle the click event for the join button.
+     * @param event The event to join.
+     */
     private void handleJoinButtonClick(Event event) {
         if (currentUser == null) {
             Toast.makeText(getContext(), "No user logged in.", Toast.LENGTH_SHORT).show();
