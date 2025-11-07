@@ -29,6 +29,7 @@ import java.util.Locale;
 
 public class EventDetailsActivity extends AppCompatActivity {
 
+    // TODO: Fix bug: User should only press back once to go to previous screen. Currently user needs to press back twice.
     private static final String TAG = "EventDetailsActivity";
 
     private TextView eventName;
