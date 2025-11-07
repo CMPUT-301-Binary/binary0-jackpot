@@ -260,7 +260,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         try {
             entrant.joinWaitingList(event);
             FDatabase.getInstance().updateEvent(event);
-            Toast.makeText(this, "Successfully joined waiting list!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Object ID:", Toast.LENGTH_SHORT).show();
 
             waitingCount++;
             eventWaiting.setText(String.format(Locale.getDefault(), "%d people waiting", waitingCount));
