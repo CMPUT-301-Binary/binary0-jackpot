@@ -41,8 +41,8 @@ public class Organizer extends User {
      * @param notificationPreferences The notification preferences for the organizer.
      * @param device The device associated with the organizer.
      */
-    public Organizer(String name, String id, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
-        super(id, name, Role.ORGANIZER, email, phone, password, notificationPreferences, device);
+    public Organizer(String name, String id, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device) {
+        super(id, name, Role.ORGANIZER, email, phone, profileImageUrl, password, notificationPreferences, device);
         this.managedEventIds = new ArrayList<>();
     }
 

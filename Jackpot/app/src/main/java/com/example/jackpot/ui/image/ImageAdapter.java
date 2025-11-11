@@ -52,25 +52,25 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
                     Log.d("ImageAdapter", "Resolved URL: " + uri.toString());
                     Glide.with(holder.itemView.getContext())
                             .load(uri.toString())
-                            .placeholder(R.drawable._ukj7h)
-                            .error(R.drawable._ukj7h)
+                            .placeholder(R.drawable.avatar_1)
+                            .error(R.drawable.avatar_1)
                             .into(holder.image);
                 }).addOnFailureListener(e -> {
                     Log.e("ImageAdapter", "Failed to resolve gs:// link", e);
-                    holder.image.setImageResource(R.drawable._ukj7h);
+                    holder.image.setImageResource(R.drawable.avatar_1);
                 });
             } catch (Exception e) {
                 Log.e("ImageAdapter", "Invalid Firebase Storage reference", e);
-                holder.image.setImageResource(R.drawable._ukj7h);
+                holder.image.setImageResource(R.drawable.avatar_1);
             }
         } else if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(imageUrl)
-                    .placeholder(R.drawable._ukj7h)
-                    .error(R.drawable._ukj7h)
+                    .placeholder(R.drawable.avatar_1)
+                    .error(R.drawable.avatar_1)
                     .into(holder.image);
         } else {
-            holder.image.setImageResource(R.drawable._ukj7h);
+            holder.image.setImageResource(R.drawable.avatar_1);
         }
 
         // Checkbox handling

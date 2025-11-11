@@ -400,6 +400,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                 currentUser.getRole(),
                 currentUser.getEmail(),
                 currentUser.getPhone(),
+                currentUser.getProfileImageUrl(),
                 currentUser.getPassword(),
                 currentUser.getNotificationPreferences(),
                 currentUser.getDevice()

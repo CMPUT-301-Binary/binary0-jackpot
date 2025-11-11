@@ -5,6 +5,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.ImageView;
+import com.bumptech.glide.Glide;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -111,6 +113,7 @@ public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ViewHold
      * ViewHolder for displaying user profiles.
      */
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView profileImage;
         TextView name, email, role;
         CheckBox checkBox;
 
@@ -121,6 +124,7 @@ public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ViewHold
          */
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            profileImage = itemView.findViewById(R.id.profile_image);
             name = itemView.findViewById(R.id.profile_name);
             email = itemView.findViewById(R.id.profile_email);
             role = itemView.findViewById(R.id.profile_role);

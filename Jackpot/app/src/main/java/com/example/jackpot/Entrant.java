@@ -8,8 +8,8 @@ public class Entrant extends User {
     //private boolean notificationsOptOut;
     private List<String> historyEventIds; //Should be in database
 
-    public Entrant(String id, String name, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
-        super(id, name, role, email, phone, password, notificationPreferences, device);
+    public Entrant(String id, String name, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device) {
+        super(id, name, role, email, phone, profileImageUrl, password, notificationPreferences, device);
         //this.notificationsOptOut = false;
         this.historyEventIds = new ArrayList<>();
     }
