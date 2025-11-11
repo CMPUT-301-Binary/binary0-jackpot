@@ -18,8 +18,8 @@ public class Admin extends User {
      * @param notificationPreferences Notification preferences of the admin.
      * @param device Device of the admin.
      */
-    public Admin(String name, String id, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
-        super(id, "TestAdmin",Role.ADMIN, email, phone, password, notificationPreferences, device);
+    public Admin(String name, String id, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device) {
+        super(id, "TestAdmin",Role.ADMIN, email, phone, "default", password, notificationPreferences, device);
     }
 
     /**

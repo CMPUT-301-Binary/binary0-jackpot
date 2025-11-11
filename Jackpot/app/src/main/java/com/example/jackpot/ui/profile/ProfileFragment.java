@@ -11,15 +11,18 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.example.jackpot.FDatabase;
 
 import com.example.jackpot.R;
@@ -27,6 +30,8 @@ import com.example.jackpot.activities.ui.LoginActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,10 +45,12 @@ public class ProfileFragment extends Fragment {
     private ImageView profileImage;
     private EditText nameField, emailField, phoneField, bioField;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
-    private Button deleteAccountButton;
-    private Button logoutButton;
+    private Button deleteAccountButton, logoutButton;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+    private FirebaseStorage storage;
+    private FirebaseUser user;
+    private Uri imageUri;
 
     /**
      * Called to have the fragment instantiate its user interface view.
@@ -69,6 +76,8 @@ public class ProfileFragment extends Fragment {
         // Firebase setup
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+        storage = FirebaseStorage.getInstance();
+        user = mAuth.getCurrentUser();
 
         // UI references
         profileImage = root.findViewById(R.id.profile_image);
@@ -79,8 +88,7 @@ public class ProfileFragment extends Fragment {
         logoutButton = root.findViewById(R.id.logout_button);
         deleteAccountButton = root.findViewById(R.id.delete_account_button);
         Button saveProfileButton = root.findViewById(R.id.save_profile_button);
-        saveProfileButton.setOnClickListener(v -> saveUserProfile());
-
+        //saveProfileButton.setOnClickListener(v -> saveUserProfile());
 
         // Load user info
         loadUserProfile();
@@ -90,14 +98,15 @@ public class ProfileFragment extends Fragment {
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        Uri selectedImageUri = result.getData().getData();
-                        profileImage.setImageURI(selectedImageUri);
+                        imageUri = result.getData().getData();
+                        profileImage.setImageURI(imageUri);
+                        uploadProfileImage(); // auto-upload after selection
                     }
                 });
 
-        // Open gallery on image click
+        // Open gallery on image click and save profile
         profileImage.setOnClickListener(v -> openGallery());
-
+        saveProfileButton.setOnClickListener(v -> saveUserProfile());
         // Logout and Delete account
         logoutButton.setOnClickListener(v -> logout());
         deleteAccountButton.setOnClickListener(v -> showDeleteAccountDialog());
@@ -105,7 +114,6 @@ public class ProfileFragment extends Fragment {
         return root;
     }
 
-    // 🔹 Fetch data from Firestore
 
     /**
      * Load the user profile information from Firestore.
@@ -122,7 +130,16 @@ public class ProfileFragment extends Fragment {
                         nameField.setText(snapshot.getString("name"));
                         emailField.setText(snapshot.getString("email"));
                         phoneField.setText(snapshot.getString("phone"));
-                        bioField.setText(snapshot.getString("notificationPreferences")); // reuse as bio if needed
+                        bioField.setText(snapshot.getString("notificationPreferences"));
+                        String profileImageUrl = snapshot.getString("profileImageUrl");
+                        if (profileImageUrl == null || profileImageUrl.equals("default") || profileImageUrl.isEmpty()) {
+                            profileImage.setImageResource(R.drawable.avatar_1);
+                        } else {
+                            Glide.with(this)
+                                    .load(profileImageUrl)
+                                    .placeholder(R.drawable.avatar_1)
+                                    .into(profileImage);
+                        }
                     } else {
                         Toast.makeText(requireContext(), "User data not found", Toast.LENGTH_SHORT).show();
                     }
@@ -137,21 +154,35 @@ public class ProfileFragment extends Fragment {
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         imagePickerLauncher.launch(intent);
+
     }
 
     /**
-     * Logout the current user and redirect to the login screen.
+     * Uploads selected image to Firebase Storage and saves URL.
      */
-    private void logout() {
-        mAuth.signOut();
-        Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
+    private void uploadProfileImage() {
+        if (imageUri == null || user == null) return;
 
-        // Redirect to login
-        Intent intent = new Intent(requireActivity(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        requireActivity().finish();
+        StorageReference storageRef = storage.getReference()
+                .child("posters/" + user.getUid() + "_profile.jpg");
+        storageRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl()
+                        .addOnSuccessListener(uri -> {
+                                    String downloadUrl = uri.toString();
+
+                                    // Update Firestore user profile
+                                    db.collection("users")
+                                            .document(user.getUid())
+                                            .update("profileImageUrl", downloadUrl)
+                                            .addOnSuccessListener(aVoid ->
+                                                    Toast.makeText(requireContext(), "Profile photo updated!", Toast.LENGTH_SHORT).show())
+                                            .addOnFailureListener(e ->
+                                                    Toast.makeText(requireContext(), "Failed to update photo URL: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                }))
+                        .addOnFailureListener(e ->
+                                Toast.makeText(requireContext(), "Upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
+
 
     /**
      * Save the user profile information to Firestore.
@@ -175,6 +206,22 @@ public class ProfileFragment extends Fragment {
                         Toast.makeText(requireContext(), "Failed to update profile: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
+
+    /**
+     * Logout the current user and redirect to the login screen.
+     */
+    private void logout() {
+        mAuth.signOut();
+        Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
+
+        // Redirect to login
+        Intent intent = new Intent(requireActivity(), LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        requireActivity().finish();
+    }
+
+
     /**
      * Show a dialog to confirm the deletion of the account.
      */
@@ -192,26 +239,24 @@ public class ProfileFragment extends Fragment {
      * Delete the current user's account from Firestore and Firebase Auth.
      */
     private void deleteAccount() {
-        FirebaseUser user = mAuth.getCurrentUser();
-
-        if (user == null) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
             Toast.makeText(requireContext(), "No user logged in", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String uid = user.getUid();
-
         // Show progress
+        String uid = currentUser.getUid();
         Toast.makeText(requireContext(), "Deleting account...", Toast.LENGTH_SHORT).show();
 
-        // Step 1: Delete user data from Firestore
+        // Delete user data from Firestore
         FDatabase.getInstance().getDb()
                 .collection("users")
                 .document(uid)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    // Step 2: Delete Firebase Auth account
-                    user.delete()
+                    // Delete Firebase Auth account
+                    currentUser.delete()
                             .addOnSuccessListener(aVoid2 -> {
                                 Toast.makeText(requireContext(),
                                         "Account deleted successfully",

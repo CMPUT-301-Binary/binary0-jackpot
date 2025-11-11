@@ -60,6 +60,9 @@ public class SignupEntrantActivity extends AppCompatActivity {
         emailField = findViewById(R.id.emailfld);
         passwordField = findViewById(R.id.passwordfld);
         phoneField = findViewById(R.id.phonefld);
+
+        String profileImageUrl = "default";
+
         Button signupBtn = findViewById(R.id.signupbtn);
 
         signupBtn.setOnClickListener(v -> {
@@ -85,7 +88,7 @@ public class SignupEntrantActivity extends AppCompatActivity {
                     .addOnSuccessListener(authResult -> {
                         String uid = mAuth.getCurrentUser().getUid();
 
-                        User user = new User(uid, name, User.Role.ENTRANT, email, phone, "", "default", null);
+                        User user = new User(uid, name, User.Role.ENTRANT, email, phone, profileImageUrl, "", "default", null);
 
                         fDatabase.getDb().collection("users").document(uid).set(user)
                                 .addOnSuccessListener(aVoid -> {

@@ -14,6 +14,7 @@ public class User implements Serializable {
     protected Role role;
     protected String email;
     protected String phone; //Could be NULL
+    protected String profileImageUrl; // New field for Firebase image URL
     protected String password;
     protected String notificationPreferences;
     protected Device device;
@@ -35,17 +36,19 @@ public class User implements Serializable {
      * @param role The user's role within the application (e.g., ENTRANT, ORGANIZER).
      * @param email The user's email address.
      * @param phone The user's phone number (can be null).
+     * @param profileImageUrl The URL of the user's profile image.
      * @param password The user's password.
      * @param notificationPreferences User's preferences for notifications.
      * @param device The device associated with the user for notifications.
      */
 
-    public User(String id, String name, Role role, String email, String phone, String password, String notificationPreferences, Device device) {
+    public User(String id, String name, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device) {
         this.id = id;
         this.name = name;
         this.role = role;
         this.email = email;
         this.phone = phone;
+        this.profileImageUrl = profileImageUrl;
         this.password = password;
         this.notificationPreferences = notificationPreferences;
         this.device = device;
@@ -132,6 +135,22 @@ public class User implements Serializable {
      */
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    /**
+     * Gets the URL of the user's profile image.
+     * @return The URL of the user's profile image.
+     */
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    /**
+     * Sets the URL of the user's profile image.
+     * @param profileImageUrl The new URL for the user's profile image.
+     */
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 
     /**

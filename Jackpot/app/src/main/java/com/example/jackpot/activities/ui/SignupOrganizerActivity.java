@@ -69,7 +69,7 @@ public class SignupOrganizerActivity extends AppCompatActivity {
                     .addOnSuccessListener(authResult -> {
                         String uid = mAuth.getCurrentUser().getUid();
 
-                        User user = new User(uid, name, User.Role.ORGANIZER, email, phone, "", "default", null);
+                        User user = new User(uid, name, User.Role.ORGANIZER, email, phone, "default","", "default", null);
 
                         fDatabase.getDb().collection("users").document(uid).set(user)
                                 .addOnSuccessListener(aVoid -> {

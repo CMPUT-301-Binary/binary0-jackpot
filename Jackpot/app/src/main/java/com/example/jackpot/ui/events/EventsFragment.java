@@ -219,6 +219,7 @@ public class EventsFragment extends Fragment {
                             currentUser.getRole(),
                             currentUser.getEmail(),
                             currentUser.getPhone(),
+                            currentUser.getProfileImageUrl(),
                             currentUser.getPassword(),
                             currentUser.getNotificationPreferences(),
                             currentUser.getDevice()

@@ -262,6 +262,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                     currentUser.getRole(),
                     currentUser.getEmail(),
                     currentUser.getPhone(),
+                    currentUser.getProfileImageUrl(),
                     currentUser.getPassword(),
                     currentUser.getNotificationPreferences(),
                     currentUser.getDevice()

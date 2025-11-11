@@ -80,19 +80,43 @@ public class ImageListAdmin extends Fragment {
      * Loads the images from the database.
      */
     private void loadImages() {
+        // Load event images from "images" collection
         db.collection("images")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
-                    allImages.clear();
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         Image image = doc.toObject(Image.class);
                         allImages.add(image);
                     }
-                    adapter.notifyDataSetChanged();
+
+                    // Then load user profile images from "users" collection
+                    db.collection("users")
+                            .get()
+                            .addOnSuccessListener(userSnapshot -> {
+                                for (QueryDocumentSnapshot userDoc : userSnapshot) {
+                                    String profileUrl = userDoc.getString("profileImageUrl");
+                                    if (profileUrl != null && !profileUrl.isEmpty()) {
+                                        // Reuse Image class to hold user profile image
+                                        Image profileImage = new Image();
+                                        profileImage.setImageUrl(profileUrl);
+                                        profileImage.setUploadedBy(userDoc.getString("email"));
+                                        profileImage.setImageID(userDoc.getId());
+                                        allImages.add(profileImage);
+                                    }
+                                }
+
+                                // Notify adapter AFTER both are loaded
+                                adapter.notifyDataSetChanged();
+                            })
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(requireContext(),
+                                            "Failed to load user profiles: " + e.getMessage(),
+                                            Toast.LENGTH_LONG).show());
                 })
-                .addOnFailureListener(e -> Toast.makeText(requireContext(),
-                        "Failed to load images: " + e.getMessage(),
-                        Toast.LENGTH_LONG).show());
+                .addOnFailureListener(e ->
+                        Toast.makeText(requireContext(),
+                                "Failed to load images: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show());
     }
 
     /**
@@ -112,7 +136,7 @@ public class ImageListAdmin extends Fragment {
             String imageId = image.getImageID();
             String imageUrl = image.getImageUrl();
 
-            // Step 1: Delete Firestore document by field match
+            // Delete Firestore document by field match
             firestore.collection("images")
                     .whereEqualTo("imageID", imageId)
                     .get()
@@ -127,7 +151,7 @@ public class ImageListAdmin extends Fragment {
                     .addOnFailureListener(e ->
                             Log.e("Firestore", "Failed to delete Firestore record", e));
 
-            // Step 2: Delete from Storage
+            // Delete from Storage
             if (imageUrl != null && !imageUrl.isEmpty()) {
                 try {
                     StorageReference imageRef = storage.getReferenceFromUrl(imageUrl);
@@ -140,6 +164,19 @@ public class ImageListAdmin extends Fragment {
                     Log.e("Storage", "Invalid Storage URL: " + imageUrl, e);
                 }
             }
+            // If the deleted image was a user profile, reset to default
+            firestore.collection("users")
+                    .whereEqualTo("profileImageUrl", imageUrl)
+                    .get()
+                    .addOnSuccessListener(userSnapshot -> {
+                        for (DocumentSnapshot userDoc : userSnapshot) {
+                            userDoc.getReference().update("profileImageUrl", "default");
+                            Log.d("Firestore", "Reset user profile image to default for: " + userDoc.getId());
+                        }
+                    })
+                    .addOnFailureListener(e ->
+                            Log.e("Firestore", "Failed to reset profile image", e));
+
         }
 
         Toast.makeText(requireContext(), "Selected images deleted", Toast.LENGTH_SHORT).show();
