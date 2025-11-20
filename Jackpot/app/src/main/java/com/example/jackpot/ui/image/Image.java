@@ -38,6 +38,8 @@ public class Image {
     private String imageUrl;
     private String imageType;
     private int displayOrder;
+    private String eventId;
+
 
 
 
@@ -57,13 +59,15 @@ public class Image {
      * @param imageUrl   The public URL where the image is stored and can be retrieved.
      * @param imageType  The type of the image (e.g., "poster" or "QR_code").
      * @param displayOrder The order in which the image should be displayed.
+     * @param eventId    The identifier of the event associated with the image.
      */
-    public Image(String imageID, String uploadedBy, String imageUrl, String imageType, int displayOrder) {
+    public Image(String imageID, String uploadedBy, String imageUrl, String imageType, int displayOrder, String eventId) {
         this.imageID = imageID;
         this.uploadedBy = uploadedBy;
         this.imageUrl = imageUrl;
         this.imageType = imageType; //poster or QR_code, (later add profile)
         this.displayOrder = displayOrder; // 0 = poster, 1 = QR_code
+        this.eventId = eventId; //event ID
     }
 
     /**
@@ -140,8 +144,6 @@ public class Image {
 
     /**
      * Gets the display order of the image.
-     *
-     * @return An integer representing the display order of the image.
     */
     public int getDisplayOrder() {
         return displayOrder;
@@ -175,5 +177,19 @@ public class Image {
      */
     public boolean isValidType() {
         return TYPE_POSTER.equals(imageType) || TYPE_QR_CODE.equals(imageType);
+    }
+
+    /**
+     * Gets the identifier of the event associated with the image.
+     */
+    public String getEventId() {
+        return eventId;
+    }
+
+    /**
+     * Sets the identifier of the event associated with the image.
+     */
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
     }
 }

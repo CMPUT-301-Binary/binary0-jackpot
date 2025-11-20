@@ -379,7 +379,8 @@ public class EventCreationFragment extends Fragment {
                         userId,
                         posterUrl,
                         Image.TYPE_POSTER,
-                        Image.ORDER_POSTER
+                        Image.ORDER_POSTER,
+                        eventId
                 );
 
                 // Save poster image to images collection
@@ -402,6 +403,7 @@ public class EventCreationFragment extends Fragment {
         posterDoc.put("imageType", posterImage.getImageType());
         posterDoc.put("displayOrder", posterImage.getDisplayOrder());
         posterDoc.put("createdAt", FieldValue.serverTimestamp());
+        posterDoc.put("eventId", posterImage.getEventId());
 
         db.collection("images")
                 .document(posterImage.getImageID())
@@ -461,7 +463,8 @@ public class EventCreationFragment extends Fragment {
                                 userId,
                                 qrUrl,
                                 Image.TYPE_QR_CODE,
-                                Image.ORDER_QR_CODE
+                                Image.ORDER_QR_CODE,
+                                eventId
                         );
 
                         // Save QR image document
@@ -492,6 +495,8 @@ public class EventCreationFragment extends Fragment {
         qrDoc.put("imageType", qrImage.getImageType());
         qrDoc.put("displayOrder", qrImage.getDisplayOrder());
         qrDoc.put("createdAt", FieldValue.serverTimestamp());
+        qrDoc.put("eventId", qrImage.getEventId());
+
 
         db.collection("images")
                 .document(qrImage.getImageID())

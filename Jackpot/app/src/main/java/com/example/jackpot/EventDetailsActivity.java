@@ -262,26 +262,25 @@ public class EventDetailsActivity extends AppCompatActivity {
      */
     private void loadEventImages(Event event) {
         pagerImages.clear();
-
         if (event == null) {
             setupOrRefreshPager();
             return;
         }
-
-        // 1) Poster at index 0
+        // Poster at index 0
         String posterUri = event.getPosterUri();
-        if (posterUri != null && !posterUri.isEmpty()) {
+        if (posterUri == null || posterUri.isEmpty() || posterUri.equals("default")) {
+            // Load placeholder for deleted/missing poster
+            pagerImages.add("default");
+        } else {
             pagerImages.add(posterUri);
         }
-
-        // 2) QR code at index 1 (lookup in Firestore 'images' collection)
+        // QR code at index 1 (lookup via QR Code ID)
         String qrCodeId = event.getQrCodeId();
         if (qrCodeId == null || qrCodeId.isEmpty()) {
-            // No QR code attached; just show poster (if any)
+            // No QR code — finish with only poster image
             setupOrRefreshPager();
             return;
         }
-
         FirebaseFirestore.getInstance()
                 .collection("images")
                 .whereEqualTo("imageType", Image.TYPE_QR_CODE)
@@ -293,16 +292,25 @@ public class EventDetailsActivity extends AppCompatActivity {
                         Image img = querySnapshot.getDocuments()
                                 .get(0)
                                 .toObject(Image.class);
-                        if (img != null &&
-                                img.getImageUrl() != null &&
-                                !img.getImageUrl().isEmpty()) {
-                            pagerImages.add(img.getImageUrl());
+                        if (img != null) {
+                            String qrUrl = img.getImageUrl();
+                            if (qrUrl == null || qrUrl.isEmpty() || qrUrl.equals("default")) {
+                                pagerImages.add("default"); // default placeholder image
+                            } else {
+                                pagerImages.add(qrUrl);
+                            }
+                        } else {
+                            pagerImages.add("default");
                         }
+                    } else {
+                        // QR entry missing from Firestore
+                        pagerImages.add("default");
                     }
                     setupOrRefreshPager();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to load QR image metadata", e);
+                    pagerImages.add("default");
                     setupOrRefreshPager();
                 });
     }

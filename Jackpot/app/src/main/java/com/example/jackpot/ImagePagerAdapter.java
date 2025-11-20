@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 import java.util.List;
 
 public class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.ViewHolder> {
@@ -32,9 +34,17 @@ public class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        String url = imageUrls.get(position);
+
+        if (url.equals("default")) {
+            holder.imageView.setImageResource(R.drawable.image_removed);
+            return;
+        }
+
         Glide.with(context)
-                .load(imageUrls.get(position))
-                .centerCrop()
+                .load(url)
+                .placeholder(R.drawable.image_removed)
+                .error(R.drawable.image_removed)
                 .into(holder.imageView);
     }
 
