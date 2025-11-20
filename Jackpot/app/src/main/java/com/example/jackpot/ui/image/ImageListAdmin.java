@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.jackpot.R;
-import com.example.jackpot.Image;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -31,7 +30,7 @@ import java.util.List;
 public class ImageListAdmin extends Fragment {
 
     private RecyclerView recyclerView;
-    private ImageAdapter adapter;
+    private ImageListAdapter adapter;
     private Button buttonSelectAll, buttonDelete;
     private FirebaseFirestore db;
 
@@ -41,14 +40,14 @@ public class ImageListAdmin extends Fragment {
 
     /**
      * Loads the images,a nd sets up the list.
-     * @param inflater The LayoutInflater object that can be used to inflate
-     * any views in the fragment,
-     * @param container If non-null, this is the parent view that the fragment's
-     * UI should be attached to.  The fragment should not add the view itself,
-     * but this can be used to generate the LayoutParams of the view.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     * from a previous saved state as given here.
      *
+     * @param inflater           The LayoutInflater object that can be used to inflate
+     *                           any views in the fragment,
+     * @param container          If non-null, this is the parent view that the fragment's
+     *                           UI should be attached to.  The fragment should not add the view itself,
+     *                           but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     *                           from a previous saved state as given here.
      * @return Return the View for the fragment's UI, or null.
      */
     @Nullable
@@ -65,7 +64,7 @@ public class ImageListAdmin extends Fragment {
         storage = FirebaseStorage.getInstance();
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new ImageAdapter(allImages);
+        adapter = new ImageListAdapter(allImages);
         recyclerView.setAdapter(adapter);
 
         loadImages();
@@ -80,43 +79,36 @@ public class ImageListAdmin extends Fragment {
      * Loads the images from the database.
      */
     private void loadImages() {
-        // Load event images from "images" collection
+        allImages.clear();  // clear old data
         db.collection("images")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         Image image = doc.toObject(Image.class);
+
+                        // skip QR code images
+                        if (Image.TYPE_QR_CODE.equals(image.getImageType())) {
+                            continue;
+                        }
+
                         allImages.add(image);
                     }
-
-                    // Then load user profile images from "users" collection
                     db.collection("users")
                             .get()
                             .addOnSuccessListener(userSnapshot -> {
                                 for (QueryDocumentSnapshot userDoc : userSnapshot) {
                                     String profileUrl = userDoc.getString("profileImageUrl");
-                                    if (profileUrl != null && !profileUrl.isEmpty()) {
-                                        // Reuse Image class to hold user profile image
+                                    if (profileUrl != null && !profileUrl.isEmpty() && !profileUrl.equals("default")) {
                                         Image profileImage = new Image();
                                         profileImage.setImageUrl(profileUrl);
-                                        profileImage.setUploadedBy(userDoc.getString("email"));
-                                        profileImage.setImageID(userDoc.getId());
+                                        profileImage.setUploadedBy(userDoc.getId());
+                                        profileImage.setImageID("profile_" + userDoc.getId());
                                         allImages.add(profileImage);
                                     }
                                 }
-
-                                // Notify adapter AFTER both are loaded
-                                adapter.notifyDataSetChanged();
-                            })
-                            .addOnFailureListener(e ->
-                                    Toast.makeText(requireContext(),
-                                            "Failed to load user profiles: " + e.getMessage(),
-                                            Toast.LENGTH_LONG).show());
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(requireContext(),
-                                "Failed to load images: " + e.getMessage(),
-                                Toast.LENGTH_LONG).show());
+                                adapter.notifyDataSetChanged();  // Update UI after ALL DONE
+                            });
+                });
     }
 
     /**
@@ -142,8 +134,19 @@ public class ImageListAdmin extends Fragment {
                     .get()
                     .addOnSuccessListener(querySnapshot -> {
                         for (DocumentSnapshot doc : querySnapshot) {
+                            // DELETE THE IMAGE DOCUMENT
                             doc.getReference().delete();
                             Log.d("Firestore", "Deleted Firestore document: " + doc.getId());
+
+                            // UPDATE EVENT TO REMOVE POSTER
+                            String eventId = doc.getString("eventId");   // Now doc exists
+                            if (eventId != null) {
+                                firestore.collection("events")
+                                        .document(eventId)
+                                        .update("posterUri", "default")
+                                        .addOnSuccessListener(v ->
+                                                Log.d("EventUpdate", "Cleared poster for event " + eventId));
+                            }
                         }
                         allImages.remove(image);
                         adapter.notifyDataSetChanged();
@@ -151,7 +154,7 @@ public class ImageListAdmin extends Fragment {
                     .addOnFailureListener(e ->
                             Log.e("Firestore", "Failed to delete Firestore record", e));
 
-            // Delete from Storage
+            // Delete from Firebase Storage
             if (imageUrl != null && !imageUrl.isEmpty()) {
                 try {
                     StorageReference imageRef = storage.getReferenceFromUrl(imageUrl);
@@ -164,21 +167,33 @@ public class ImageListAdmin extends Fragment {
                     Log.e("Storage", "Invalid Storage URL: " + imageUrl, e);
                 }
             }
-            // If the deleted image was a user profile, reset to default
+
+            // Reset USER profile images if matched
             firestore.collection("users")
                     .whereEqualTo("profileImageUrl", imageUrl)
                     .get()
                     .addOnSuccessListener(userSnapshot -> {
                         for (DocumentSnapshot userDoc : userSnapshot) {
                             userDoc.getReference().update("profileImageUrl", "default");
-                            Log.d("Firestore", "Reset user profile image to default for: " + userDoc.getId());
+                            Log.d("Firestore", "Reset profile image for: " + userDoc.getId());
                         }
-                    })
-                    .addOnFailureListener(e ->
-                            Log.e("Firestore", "Failed to reset profile image", e));
+                    });
 
+            // Clear POSTER and QR code fields in EVENTS
+            String eventId = image.getEventId();
+            if (eventId != null && !eventId.isEmpty()) {
+
+                // If this is a POSTER
+                if (Image.TYPE_POSTER.equals(image.getImageType())) {
+                    firestore.collection("events")
+                            .document(eventId)
+                            .update("posterUri", "default")
+                            .addOnSuccessListener(a ->
+                                    Log.d("EventUpdate", "Cleared poster for event " + eventId));
+                }
+
+            }
+            Toast.makeText(requireContext(), "Selected images deleted", Toast.LENGTH_SHORT).show();
         }
-
-        Toast.makeText(requireContext(), "Selected images deleted", Toast.LENGTH_SHORT).show();
     }
 }

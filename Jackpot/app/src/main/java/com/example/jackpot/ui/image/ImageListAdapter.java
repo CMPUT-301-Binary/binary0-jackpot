@@ -13,37 +13,50 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.jackpot.R;
-import com.example.jackpot.Image;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
+public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.ViewHolder> {
 
     private final List<Image> imageList;
     private final List<Image> selectedImages = new ArrayList<>();
     private boolean allSelected = false;
 
-    public ImageAdapter(List<Image> imageList) {
+    public ImageListAdapter(List<Image> imageList) {
         this.imageList = imageList;
     }
 
     @NonNull
     @Override
-    public ImageAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ImageListAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_image, parent, false);
-        return new ImageAdapter.ViewHolder(view);
+        return new ImageListAdapter.ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Image image = imageList.get(position);
         String imageUrl = image.getImageUrl();
+        String uploaderId = image.getUploadedBy();
 
-        holder.email.setText("Uploaded by: " + image.getUploadedBy());
+        // Get email from Firestore
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uploaderId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        String email = doc.getString("email");
+                        if (email != null) {
+                            holder.email.setText("Uploaded by: " + email);
+                        }
+                    }
+                });
 
         if (imageUrl != null && imageUrl.startsWith("gs://")) {
             try {

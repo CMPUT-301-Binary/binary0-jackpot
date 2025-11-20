@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 
 import com.example.jackpot.UserList;
 import com.example.jackpot.R;
+import com.example.jackpot.ui.image.Image;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
@@ -52,6 +53,7 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
  * Fragment which pops up to allow an organizer to create an event. The fragment is a form.
  * The form has multiple fields which accept the input of various details, and uploading of an image.
  * The details entered are saved to the database upon the pressing of "Submit"
+ * Modified to require poster upload and create separate Image documents in Firestore.
  */
 public class EventCreationFragment extends Fragment {
 
@@ -92,15 +94,6 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Called to have the fragment instantiate its user interface view.
-     * @param inflater The LayoutInflater object that can be used to inflate
-     * any views in the fragment,
-     * @param container If non-null, this is the parent view that the fragment's
-     * UI should be attached to.  The fragment should not add the view itself,
-     * but this can be used to generate the LayoutParams of the view.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     * from a previous saved state as given here.
-     *
-     * @return The inflated fragment view.
      */
     @Nullable
     @Override
@@ -112,9 +105,6 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * The main logic of the form. The fields are initialized and the photopicker is written.
-     * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     * from a previous saved state as given here.
      */
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState){
@@ -134,13 +124,10 @@ public class EventCreationFragment extends Fragment {
         editRegCloseTime = view.findViewById(R.id.editRegCloseTime);
         editWaitingListLimit = view.findViewById(R.id.editWaitingListLimit);
 
-        submitButton.setOnClickListener(v -> {
-            createEvent();
-        });
+        submitButton.setOnClickListener(v -> createEvent());
         db = FirebaseFirestore.getInstance();
 
         spinnerCategory = view.findViewById(R.id.spinnerCategory);
-
         List<String> categories = Arrays.asList(
                 "Select a category…", // INDEX 0 is just a hint
                 "Party", "Concert", "Charity", "Fair"
@@ -171,19 +158,14 @@ public class EventCreationFragment extends Fragment {
         editRegCloseDate.setOnClickListener(v -> openRegDatePicker(false));
         editRegCloseTime.setOnClickListener(v -> openRegTimePicker(false));
 
-        super.onViewCreated(view, savedInstanceState);
         selectedPhotoTextView = view.findViewById(R.id.selectedPhotoText);
 
         // Registers a photo picker activity launcher in single-select mode.
-        //Code snippet taken, modified, from the official android studio website:
-        //https://developer.android.com/training/data-storage/shared/photo-picker#java
         ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
                 registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
-                    // Callback is invoked after the user selects a media item or closes the
-                    // photo picker.
                     if (uri != null) {
                         Log.d("PhotoPicker", "Selected URI: " + uri);
-                        selectedPhotoTextView.setText(uri.toString());
+                        selectedPhotoTextView.setText("Photo selected: " + uri.getLastPathSegment());
                         selectedImageUri = uri;
                     }
                     else {
@@ -192,17 +174,13 @@ public class EventCreationFragment extends Fragment {
                 });
 
         selectPhotoButton = view.findViewById(R.id.uploadImageButton);
-        //THIS IS TO BE MODIFIED IF THE FAB BUTTON'S ID HAS CHANGED
         selectPhotoButton.setOnClickListener(v -> {
-            //If the button is clicked, open up the photo picker
-            // Launch the photo picker and let the user choose only images.
             pickMedia.launch(new PickVisualMediaRequest.Builder()
                     .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                     .build());
-
-
         });
 
+        super.onViewCreated(view, savedInstanceState);
     }
 
     /**
@@ -210,6 +188,13 @@ public class EventCreationFragment extends Fragment {
      */
     public void createEvent() {
         // region Validation
+
+        // POSTER IS REQUIRED
+        if (selectedImageUri == null) {
+            Toast.makeText(requireContext(), "Please select a poster image", Toast.LENGTH_SHORT).show();
+            selectPhotoButton.requestFocus();
+            return;
+        }
 
         // region Required text fields (ensure they are entered)
         if (!requireText(editTextEventName, "Required")) return;
@@ -222,17 +207,14 @@ public class EventCreationFragment extends Fragment {
         // endregion
 
         // region checking for Numerical fields
-        // Price: required, numeric, >= 0
         Double priceVal = parseDoubleOrNull(editTextEventPrice.getText().toString());
         if (priceVal == null) { editTextEventPrice.setError("Enter a number"); editTextEventPrice.requestFocus(); return; }
         if (priceVal < 0)      { editTextEventPrice.setError("Must be ≥ 0");   editTextEventPrice.requestFocus(); return; }
 
-        // Capacity: required, integer, >= 1
         Integer capacityVal = parseIntOrNull(editTextEventCapacity.getText().toString());
         if (capacityVal == null) { editTextEventCapacity.setError("Enter an integer"); editTextEventCapacity.requestFocus(); return; }
         if (capacityVal < 1)     { editTextEventCapacity.setError("Must be ≥ 1");       editTextEventCapacity.requestFocus(); return; }
 
-        // Waiting List Limit: optional, but if entered must be integer >= 0
         final Integer[] waitLimitVal = {null};
         String waitStr = editWaitingListLimit.getText().toString().trim();
         if (!waitStr.isEmpty()) {
@@ -255,7 +237,6 @@ public class EventCreationFragment extends Fragment {
         int catPos = spinnerCategory.getSelectedItemPosition();
 
         // region Validation for category and also canonical timestamps
-
         if (catPos <= 0) {
             View selectedView = spinnerCategory.getSelectedView();
             if (selectedView instanceof TextView) {
@@ -277,7 +258,6 @@ public class EventCreationFragment extends Fragment {
             editTextEventTime.setError(null);
         }
 
-        // ensure event is in the future
         if (eventTs.compareTo(com.google.firebase.Timestamp.now()) <= 0) {
             editTextEventDate.setError("Event must be in the future");
             editTextEventTime.setError("Event must be in the future");
@@ -285,7 +265,6 @@ public class EventCreationFragment extends Fragment {
             return;
         }
 
-        // Registration presence
         if (regOpenTs == null) {
             editRegOpenDate.setError("Pick open date");
             editRegOpenTime.setError("Pick open time");
@@ -306,7 +285,6 @@ public class EventCreationFragment extends Fragment {
             editRegCloseTime.setError(null);
         }
 
-        // Registration ordering
         if (regOpenTs.compareTo(regCloseTs) >= 0) {
             editRegCloseDate.setError("Close must be after open");
             editRegCloseTime.setError("Close must be after open");
@@ -314,7 +292,6 @@ public class EventCreationFragment extends Fragment {
             return;
         }
 
-        // Registration must end before event starts
         if (eventTs.compareTo(regCloseTs) <= 0) {
             editRegCloseDate.setError("Must end before event starts");
             editRegCloseTime.setError("Must end before event starts");
@@ -355,7 +332,6 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("regOpenAt", regOpenTs);
         eventDoc.put("regCloseAt", regCloseTs);
 
-        // Numeric fields as numbers
         eventDoc.put("price", priceVal);
         eventDoc.put("capacity", capacityVal);
         if (waitLimitVal[0] == null) {
@@ -380,129 +356,79 @@ public class EventCreationFragment extends Fragment {
 
         submitButton.setEnabled(false);
 
-        // Decide whether to upload poster or generate QR as poster
-        if (selectedImageUri != null) {
-            // User uploaded an image - use it as poster
-            uploadPosterAndCreateEvent(eventId, eventDoc, userId, qrCode);
-        } else {
-            // No image uploaded - generate QR and use it as poster
-            generateQRAndCreateEvent(eventId, eventDoc, userId, qrCode);
-        }
+        // Upload poster (now required) and create event
+        uploadPosterAndCreateEvent(eventId, eventDoc, userId, qrCode);
     }
 
     /**
-     * Uploads the image to the database as a public downloadable and creates the event.
-     * @param eventId The id of the event
-     * @param eventDoc The event document (the firebase document)
-     * @param userId The id of the user creating the event
-     * @param generateQR Whether to generate a QR code
+     * Uploads the poster image and creates separate Image documents in Firestore.
      */
     private void uploadPosterAndCreateEvent(String eventId, Map<String, Object> eventDoc, String userId, boolean generateQR) {
         String imageName = "posters/" + UUID.randomUUID().toString() + ".png";
         StorageReference storageRef = FirebaseStorage.getInstance().getReference().child(imageName);
-        //Outline from Google Gemini: Nov 5, 2025. Prompt: "How can I get a public download url for an image in Firebase Storage?"
+
         storageRef.putFile(selectedImageUri).addOnSuccessListener(taskSnapshot -> {
             storageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                eventDoc.put("posterUri", downloadUri.toString());
+                String posterUrl = downloadUri.toString();
+                eventDoc.put("posterUri", posterUrl);
 
-                // Save event to Firestore
-                saveEventToFirestore(eventId, eventDoc, userId, generateQR);
+                // Create Image document for poster
+                String posterImageId = UUID.randomUUID().toString();
+                Image posterImage = new Image(
+                        posterImageId,
+                        userId,
+                        posterUrl,
+                        Image.TYPE_POSTER,
+                        Image.ORDER_POSTER,
+                        eventId
+                );
+
+                // Save poster image to images collection
+                savePosterImageDocument(eventId, posterImage, eventDoc, userId, generateQR);
             });
         }).addOnFailureListener(e -> {
             submitButton.setEnabled(true);
-            Toast.makeText(requireContext(), "Failed to upload image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(), "Failed to upload poster: " + e.getMessage(), Toast.LENGTH_LONG).show();
         });
     }
 
     /**
-     * Generates a QR code and uses it as the poster.
-     * @param eventId The id of the event
-     * @param eventDoc The event document (the firebase document)
-     * @param userId The id of the user creating the event
-     * @param userWantsQR Whether the user wants a QR code
+     * Saves the poster Image document to Firestore.
      */
-    private void generateQRAndCreateEvent(String eventId, Map<String, Object> eventDoc, String userId, boolean userWantsQR) {
-        String qrContent = "jackpot://event/" + eventId;
+    private void savePosterImageDocument(String eventId, Image posterImage, Map<String, Object> eventDoc, String userId, boolean generateQR) {
+        Map<String, Object> posterDoc = new HashMap<>();
+        posterDoc.put("imageID", posterImage.getImageID());
+        posterDoc.put("uploadedBy", posterImage.getUploadedBy());
+        posterDoc.put("imageUrl", posterImage.getImageUrl());
+        posterDoc.put("imageType", posterImage.getImageType());
+        posterDoc.put("displayOrder", posterImage.getDisplayOrder());
+        posterDoc.put("createdAt", FieldValue.serverTimestamp());
+        posterDoc.put("eventId", posterImage.getEventId());
 
-        try {
-            // Generate QR bitmap
-            BitMatrix matrix = new MultiFormatWriter().encode(
-                    qrContent,
-                    BarcodeFormat.QR_CODE,
-                    600,
-                    600
-            );
-            BarcodeEncoder encoder = new BarcodeEncoder();
-            Bitmap qrBitmap = encoder.createBitmap(matrix);
-
-            // Convert bitmap to bytes
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            qrBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-            byte[] qrData = baos.toByteArray();
-
-            // Upload QR code as poster
-            String qrName = "posters/" + eventId + "_qr.png";
-            StorageReference qrRef = FirebaseStorage.getInstance().getReference().child(qrName);
-
-            qrRef.putBytes(qrData)
-                    .addOnSuccessListener(taskSnapshot -> qrRef.getDownloadUrl().addOnSuccessListener(qrUri -> {
-                        Log.d("QRUpload", "QR code uploaded as poster: " + qrUri);
-
-                        // Use QR as the poster
-                        eventDoc.put("posterUri", qrUri.toString());
-                        eventDoc.put("qrCodeImage", qrUri.toString());
-
-                        // Save event to Firestore
-                        saveEventToFirestore(eventId, eventDoc, userId, false); // Don't generate another QR
-                    }))
-                    .addOnFailureListener(e -> {
-                        submitButton.setEnabled(true);
-                        Log.e("QRUpload", "Failed to upload QR code", e);
-                        Toast.makeText(requireContext(), "Failed to create QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    });
-
-        } catch (WriterException e) {
-            submitButton.setEnabled(true);
-            Log.e("QRGen", "Failed to generate QR code", e);
-            Toast.makeText(requireContext(), "Failed to generate QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /**
-     * Saves the event to the firestore database.
-     * @param eventId The id of the event
-     * @param eventDoc The event document (the firebase document)
-     * @param userId The id of the user creating the event
-     * @param generateSeparateQR Whether to generate a separate QR code
-     */
-    private void saveEventToFirestore(String eventId, Map<String, Object> eventDoc, String userId, boolean generateSeparateQR) {
-        db.collection("events")
-                .document(eventId)
-                .set(eventDoc)
+        db.collection("images")
+                .document(posterImage.getImageID())
+                .set(posterDoc)
                 .addOnSuccessListener(v -> {
-                    Log.d("EventCreation", "Event created: " + eventId);
+                    Log.d("ImageSave", "Poster image document created: " + posterImage.getImageID());
 
-                    // If user checked QR box AND uploaded custom poster, generate separate QR
-                    if (generateSeparateQR) {
-                        generateSeparateQRCode(eventId, userId);
+                    // Now save the event
+                    if (generateQR) {
+                        generateQRAndSaveEvent(eventId, eventDoc, userId);
+                    } else {
+                        saveEventToFirestore(eventId, eventDoc);
                     }
-
-                    Toast.makeText(requireContext(), "Event created!", Toast.LENGTH_SHORT).show();
-                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
                 })
                 .addOnFailureListener(e -> {
                     submitButton.setEnabled(true);
-                    Log.e("Firestore", "Failed to create event", e);
-                    Toast.makeText(requireContext(), "Failed to create event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Log.e("ImageSave", "Failed to save poster image document", e);
+                    Toast.makeText(requireContext(), "Failed to save poster image: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
     /**
-     * Generates a separate QR code for the event.
-     * @param eventId The id of the event
-     * @param userId The id of the user creating the event
+     * Generates a QR code and saves it as a separate Image document.
      */
-    private void generateSeparateQRCode(String eventId, String userId) {
+    private void generateQRAndSaveEvent(String eventId, Map<String, Object> eventDoc, String userId) {
         String qrContent = "jackpot://event/" + eventId;
 
         try {
@@ -524,36 +450,91 @@ public class EventCreationFragment extends Fragment {
 
             qrRef.putBytes(qrData)
                     .addOnSuccessListener(taskSnapshot -> qrRef.getDownloadUrl().addOnSuccessListener(qrUri -> {
-                        Log.d("QRUpload", "Separate QR code uploaded: " + qrUri);
-
-                        // Save QR in Firestore as part of the event's images
-                        Map<String, Object> qrImage = new HashMap<>();
-                        qrImage.put("imageID", UUID.randomUUID().toString());
-                        qrImage.put("imageUrl", qrUri.toString());
-                        qrImage.put("uploadedBy", userId);
-                        qrImage.put("type", "qrcode");
-                        qrImage.put("createdAt", FieldValue.serverTimestamp());
-
-                        db.collection("events")
-                                .document(eventId)
-                                .collection("images")
-                                .add(qrImage)
-                                .addOnSuccessListener(docRef -> Log.d("Firestore", "QR image saved to event images"))
-                                .addOnFailureListener(e -> Log.e("Firestore", "Failed to add QR image", e));
+                        String qrUrl = qrUri.toString();
+                        Log.d("QRUpload", "QR code uploaded: " + qrUrl);
 
                         // Store QR reference in main event document
-                        db.collection("events").document(eventId)
-                                .update("qrCodeImage", qrUri.toString());
+                        eventDoc.put("qrCodeImage", qrUrl);
+
+                        // Create Image document for QR code
+                        String qrImageId = UUID.randomUUID().toString();
+                        Image qrImage = new Image(
+                                qrImageId,
+                                userId,
+                                qrUrl,
+                                Image.TYPE_QR_CODE,
+                                Image.ORDER_QR_CODE,
+                                eventId
+                        );
+
+                        // Save QR image document
+                        eventDoc.put("qrCodeId", qrImageId);
+                        saveQRImageDocument(eventId, qrImage, eventDoc);
                     }))
-                    .addOnFailureListener(e -> Log.e("QRUpload", "Failed to upload QR code", e));
+                    .addOnFailureListener(e -> {
+                        submitButton.setEnabled(true);
+                        Log.e("QRUpload", "Failed to upload QR code", e);
+                        Toast.makeText(requireContext(), "Failed to create QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
 
         } catch (WriterException e) {
+            submitButton.setEnabled(true);
             Log.e("QRGen", "Failed to generate QR code", e);
+            Toast.makeText(requireContext(), "Failed to generate QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     /**
-     * Opens the date picker. Uses the android built-in date picker methods.
+     * Saves the QR code Image document to Firestore.
+     */
+    private void saveQRImageDocument(String eventId, Image qrImage, Map<String, Object> eventDoc) {
+        Map<String, Object> qrDoc = new HashMap<>();
+        qrDoc.put("imageID", qrImage.getImageID());
+        qrDoc.put("uploadedBy", qrImage.getUploadedBy());
+        qrDoc.put("imageUrl", qrImage.getImageUrl());
+        qrDoc.put("imageType", qrImage.getImageType());
+        qrDoc.put("displayOrder", qrImage.getDisplayOrder());
+        qrDoc.put("createdAt", FieldValue.serverTimestamp());
+        qrDoc.put("eventId", qrImage.getEventId());
+
+
+        db.collection("images")
+                .document(qrImage.getImageID())
+                .set(qrDoc)
+                .addOnSuccessListener(v -> {
+                    Log.d("ImageSave", "QR code image document created: " + qrImage.getImageID());
+
+                    // Finally save the event
+                    saveEventToFirestore(eventId, eventDoc);
+                })
+                .addOnFailureListener(e -> {
+                    submitButton.setEnabled(true);
+                    Log.e("ImageSave", "Failed to save QR image document", e);
+                    Toast.makeText(requireContext(), "Failed to save QR image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    /**
+     * Saves the event to Firestore.
+     */
+    private void saveEventToFirestore(String eventId, Map<String, Object> eventDoc) {
+        db.collection("events")
+                .document(eventId)
+                .set(eventDoc)
+                .addOnSuccessListener(v -> {
+                    Log.d("EventCreation", "Event created: " + eventId);
+                    Toast.makeText(requireContext(), "Event created successfully!", Toast.LENGTH_SHORT).show();
+                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                })
+                .addOnFailureListener(e -> {
+                    submitButton.setEnabled(true);
+                    Log.e("Firestore", "Failed to create event", e);
+                    Toast.makeText(requireContext(), "Failed to create event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    /**
+     * Opens the date picker.
      */
     private void openDatePicker() {
         var picker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
@@ -586,7 +567,6 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Opens the date picker for registration.
-     * @param isOpen Whether the date picker is opening or closing
      */
     private void openRegDatePicker(boolean isOpen) {
         MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
@@ -608,7 +588,6 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Opens the time picker for registration.
-     * @param isOpen Whether the time picker is opening or closing
      */
     private void openRegTimePicker(boolean isOpen) {
         int defHour = isOpen ? (regOpenHour  == null ? 9  : regOpenHour)  : (regCloseHour  == null ? 17 : regCloseHour);
@@ -635,13 +614,9 @@ public class EventCreationFragment extends Fragment {
 
         picker.show(getParentFragmentManager(), isOpen ? "reg_open_time" : "reg_close_time");
     }
-    // endregion
 
     /**
-     * A checker for whether or not a field is required
-     * @param et The editText field
-     * @param msg The message to display if the field is empty
-     * @return Whether or not a said field is required
+     * Checks if a field has text.
      */
     private boolean requireText(EditText et, String msg) {
         if (et.getText().toString().trim().isEmpty()) {
@@ -655,8 +630,6 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Parses a string to an integer.
-     * @param s the string to process
-     * @return the result
      */
     @Nullable
     private Integer parseIntOrNull(String s) {
@@ -666,8 +639,6 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Parses a string to a double.
-     * @param s The string to parse
-     * @return the result.
      */
     @Nullable
     private Double parseDoubleOrNull(String s) {
@@ -675,24 +646,8 @@ public class EventCreationFragment extends Fragment {
         catch (NumberFormatException e) { return null; }
     }
 
-
     /**
-     * Makes a Firestore Timestamp from a picked date and a picked time.
-     *
-     * How it works:
-     * - The date comes from the MaterialDatePicker (as UTC milliseconds for the selected day).
-     * - The time comes from the MaterialTimePicker (hour and minute).
-     * - We combine them using the phone’s current time zone to get one exact moment.
-     *
-     * Why use this:
-     * - Firestore Timestamps sort and filter correctly (e.g., upcoming events).
-     * - Text strings like "11/05/2025" don’t sort reliably across formats/locales.
-     *
-     * @param dateUtcMs The selected day in milliseconds (value you get from MaterialDatePicker).
-     * @param hour      Hour of day in 24-hour format (0–23) from MaterialTimePicker.
-     * @param minute    Minute of the hour (0–59) from MaterialTimePicker.
-     * @return A Firestore Timestamp for the combined date and time,
-     *      or {@code null} if any input is missing.
+     * Converts date and time picker values to a Firestore Timestamp.
      */
     @Nullable
     private com.google.firebase.Timestamp toTimestamp(@Nullable Long dateUtcMs,
