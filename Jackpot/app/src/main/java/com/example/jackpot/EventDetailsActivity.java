@@ -17,7 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.bumptech.glide.Glide; // used in adapter, but not directly here
 import com.example.jackpot.ui.image.Image;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -440,7 +439,6 @@ public class EventDetailsActivity extends AppCompatActivity {
             joinButton.setText("Joined");
         } catch (Exception e) {
             Toast.makeText(this, "Failed to join: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
         }
     }
 

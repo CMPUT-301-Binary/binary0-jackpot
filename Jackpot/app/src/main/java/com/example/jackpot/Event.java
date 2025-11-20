@@ -267,7 +267,7 @@ public class Event implements Serializable {
     /**
      * Sets the capacity of the event
      *
-     * @param capacity
+     * @param capacity The capacity to set
      */
     public void setCapacity(int capacity) {
         this.capacity = capacity;

@@ -53,7 +53,6 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
  * Fragment which pops up to allow an organizer to create an event. The fragment is a form.
  * The form has multiple fields which accept the input of various details, and uploading of an image.
  * The details entered are saved to the database upon the pressing of "Submit"
- *
  * Modified to require poster upload and create separate Image documents in Firestore.
  */
 public class EventCreationFragment extends Fragment {
