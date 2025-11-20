@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.jackpot.R;
-import com.example.jackpot.Image;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -31,7 +30,7 @@ import java.util.List;
 public class ImageListAdmin extends Fragment {
 
     private RecyclerView recyclerView;
-    private ImageAdapter adapter;
+    private ImageListAdapter adapter;
     private Button buttonSelectAll, buttonDelete;
     private FirebaseFirestore db;
 
@@ -65,7 +64,7 @@ public class ImageListAdmin extends Fragment {
         storage = FirebaseStorage.getInstance();
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new ImageAdapter(allImages);
+        adapter = new ImageListAdapter(allImages);
         recyclerView.setAdapter(adapter);
 
         loadImages();
@@ -80,43 +79,36 @@ public class ImageListAdmin extends Fragment {
      * Loads the images from the database.
      */
     private void loadImages() {
-        // Load event images from "images" collection
+        allImages.clear();  // clear old data
         db.collection("images")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         Image image = doc.toObject(Image.class);
+
+                        // skip QR code images
+                        if (Image.TYPE_QR_CODE.equals(image.getImageType())) {
+                            continue;
+                        }
+
                         allImages.add(image);
                     }
-
-                    // Then load user profile images from "users" collection
                     db.collection("users")
                             .get()
                             .addOnSuccessListener(userSnapshot -> {
                                 for (QueryDocumentSnapshot userDoc : userSnapshot) {
                                     String profileUrl = userDoc.getString("profileImageUrl");
-                                    if (profileUrl != null && !profileUrl.isEmpty()) {
-                                        // Reuse Image class to hold user profile image
+                                    if (profileUrl != null && !profileUrl.isEmpty() && !profileUrl.equals("default")) {
                                         Image profileImage = new Image();
                                         profileImage.setImageUrl(profileUrl);
-                                        profileImage.setUploadedBy(userDoc.getString("email"));
-                                        profileImage.setImageID(userDoc.getId());
+                                        profileImage.setUploadedBy(userDoc.getId());
+                                        profileImage.setImageID("profile_" + userDoc.getId());
                                         allImages.add(profileImage);
                                     }
                                 }
-
-                                // Notify adapter AFTER both are loaded
-                                adapter.notifyDataSetChanged();
-                            })
-                            .addOnFailureListener(e ->
-                                    Toast.makeText(requireContext(),
-                                            "Failed to load user profiles: " + e.getMessage(),
-                                            Toast.LENGTH_LONG).show());
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(requireContext(),
-                                "Failed to load images: " + e.getMessage(),
-                                Toast.LENGTH_LONG).show());
+                                adapter.notifyDataSetChanged();  // Update UI after ALL DONE
+                            });
+                });
     }
 
     /**

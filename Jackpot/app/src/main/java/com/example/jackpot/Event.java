@@ -1,14 +1,14 @@
 package com.example.jackpot;
 import android.util.Log;
 
+import com.example.jackpot.ui.image.Image;
+
 import java.io.Serializable;
-import java.security.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;

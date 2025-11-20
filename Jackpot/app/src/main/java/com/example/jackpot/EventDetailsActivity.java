@@ -2,12 +2,12 @@ package com.example.jackpot;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,8 +15,10 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager2.widget.ViewPager2;
 
-import com.bumptech.glide.Glide;
+import com.bumptech.glide.Glide; // used in adapter, but not directly here
+import com.example.jackpot.ui.image.Image;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -24,40 +26,21 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
-
-/*
- * CMPUT 301 – Event Lottery App (“Jackpot”)
- * File: EventDetailsActivity.java
- *
- * Purpose/Role:
- *   Detail screen for a single Event. Displays event metadata (name, date, price, capacity,
- *   category, registration window, poster image) and exposes role-specific actions:
- *   - Entrant: join waiting list
- *   - Organizer: update poster image
- *   - Admin: delete event
- *
- * Design Notes:
- *   - View/Controller layer (Android Activity). Business/persistence logic delegated to FDatabase.
- *   - Uses Glide for image loading, Firebase Storage for uploads, and Firestore for posterUri updates.
- *   - Receives initial event data via Intent extras; refreshes full record from Firestore on load.
- *   - Runtime image-picker via Activity Result API; upload continues even if user navigates back.
- *
- * Outstanding Issues / TODOs:
- *   - TODO: Fix back-press UX (currently requires two presses to exit this screen).
- *   - TODO: Add basic error/empty states for missing event or network failures.
- */
-
+import java.util.UUID;
 
 /**
  * Activity that presents the details of a single {@link Event} and routes role-specific actions.
+ * Displays a primary poster and a QR code in a ViewPager2.
  */
 public class EventDetailsActivity extends AppCompatActivity {
 
-    // TODO: Fix bug: User should only press back once to go to previous screen. Currently user needs to press back twice.
     private static final String TAG = "EventDetailsActivity";
 
+    // Text UI
     private TextView eventName;
     private TextView eventDescription;
     private TextView eventLocation;
@@ -68,80 +51,38 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView eventCategory;
     private TextView eventRegOpen;
     private TextView eventRegClose;
-    private ImageView eventPoster;
+
     private Button joinButton;
     private ImageButton backButton;
     private Button deleteButton;
+    private Button updatePhotoBtn;
 
+    // NEW: ViewPager2 for poster + QR code
+    private ViewPager2 eventPager;
+    private ImagePagerAdapter imagePagerAdapter;
+    private final List<String> pagerImages = new ArrayList<>(); // index 0 = poster, 1 = QR (if exists)
+
+    // Data
     private String eventId;
     private User currentUser;
     private int waitingCount;
     private Event currentEvent;
 
-    // added for functionality to update photo
-    private ImageView posterImageView;
-    private Button updatePhotoBtn;
+    // Image picker / upload
     private ActivityResultLauncher<Intent> pickImageLauncher;
     private Uri pickedImageUri;
     private com.google.firebase.storage.UploadTask currentUpload;
 
-    /**
-     * Load the current user from Firestore.
-     */
-    private void loadCurrentUser() {
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-        FDatabase.getInstance().getDb().collection("users")
-                .document(uid)
-                .get()
-                .addOnSuccessListener(snapshot -> {
-                    if (!snapshot.exists()) return;
-
-                    currentUser = snapshot.toObject(User.class);
-                    if (currentUser == null || currentUser.getRole() == null) return;
-
-                    // reset all buttons to hidden first
-                    setDefaultVisibility();
-
-                    switch (currentUser.getRole()) {
-                        case ADMIN:
-                            // Admin-only: show Delete button
-                            deleteButton.setVisibility(View.VISIBLE);
-                            break;
-
-                        case ORGANIZER:
-                            // Organizer-only: show Update Photo button
-                            updatePhotoBtn.setVisibility(View.VISIBLE);
-                            break;
-
-                        case ENTRANT:
-                            // Entrant-only: show Join button
-                            joinButton.setVisibility(View.VISIBLE);
-                            break;
-                    }
-                })
-                .addOnFailureListener(e -> Log.e(TAG, "Failed to load user", e));
-    }
-
-    /**
-     * Called when the activity is first created.
-     *
-     * @param savedInstanceState If the activity is being re-initialized after
-     *     previously being shut down then this Bundle contains the data it most
-     *     recently supplied in {@link #onSaveInstanceState}. Otherwise it is null.
-     *
-     */
-    // From OpenAI, ChatGPT (GPT-5 Thinking), "Register image picker, show local Glide preview, and hook Update Photo click", 2025-11-07
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_details);
 
         initializeViews();
-        setDefaultVisibility(); // hides all the buttons until we know the role
-        loadEventData(); // sets eventId and loads details
+        setDefaultVisibility(); // hide role-based buttons until we know the role
+        loadEventData();        // sets eventId + basic info from intent
         setupButtons();
-        loadCurrentUser(); // will show the right button after role is known
+        loadCurrentUser();      // shows the proper button based on role
 
         // Register image picker
         pickImageLauncher = registerForActivityResult(
@@ -151,14 +92,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                         Uri uri = result.getData().getData();
                         if (uri != null) {
                             pickedImageUri = uri;
-                            Glide.with(EventDetailsActivity.this)
-                                    .load(pickedImageUri)
-                                    .centerCrop()
-                                    .into(posterImageView);
-
-                            final int takeFlags = result.getData().getFlags()
-                                    & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-
+                            // Just upload; the pager will refresh once Firestore is updated
                             uploadPosterAndSaveUrl(pickedImageUri);
                         }
                     }
@@ -167,22 +101,22 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         updatePhotoBtn.setOnClickListener(v -> openImagePicker());
 
-        // From OpenAI, ChatGPT (GPT-5 Thinking), "Back press UX: notify upload continues in background", 2025-11-07
+        // Back press UX (notify if upload in progress, then go back once)
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 if (currentUpload != null && currentUpload.isInProgress()) {
-                    Toast.makeText(EventDetailsActivity.this, "Uploading in background…", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EventDetailsActivity.this,
+                            "Uploading in background…", Toast.LENGTH_SHORT).show();
                 }
-                // let the system handle the back press
                 setEnabled(false);
-//                EventDetailsActivity.this.onBackPressed();
+                getOnBackPressedDispatcher().onBackPressed();
             }
         });
     }
 
     /**
-     * Initialize the views in the activity.
+     * Initialize all views.
      */
     private void initializeViews() {
         deleteButton = findViewById(R.id.event_details_delete_button);
@@ -196,16 +130,64 @@ public class EventDetailsActivity extends AppCompatActivity {
         eventCategory = findViewById(R.id.event_details_category);
         eventRegOpen = findViewById(R.id.event_details_reg_open);
         eventRegClose = findViewById(R.id.event_details_reg_close);
-        eventPoster = findViewById(R.id.event_details_poster);
         joinButton = findViewById(R.id.event_details_join_button);
         backButton = findViewById(R.id.event_details_back_button);
-
-        posterImageView = eventPoster;
         updatePhotoBtn = findViewById(R.id.event_details_update_photo_button);
+
+        // ViewPager2
+        eventPager = findViewById(R.id.event_details_pager);
     }
 
     /**
-     * Load the event data from Firestore.
+     * Hide all role-based buttons initially.
+     */
+    private void setDefaultVisibility() {
+        deleteButton.setVisibility(View.GONE);
+        joinButton.setVisibility(View.GONE);
+        updatePhotoBtn.setVisibility(View.GONE);
+    }
+
+    /**
+     * Load the currently authenticated user and show the correct button.
+     */
+    private void loadCurrentUser() {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            Log.w(TAG, "No authenticated user; role-based buttons remain hidden.");
+            return;
+        }
+
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        FDatabase.getInstance().getDb().collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (!snapshot.exists()) return;
+
+                    currentUser = snapshot.toObject(User.class);
+                    if (currentUser == null || currentUser.getRole() == null) return;
+
+                    setDefaultVisibility();
+
+                    switch (currentUser.getRole()) {
+                        case ADMIN:
+                            deleteButton.setVisibility(View.VISIBLE);
+                            break;
+
+                        case ORGANIZER:
+                            updatePhotoBtn.setVisibility(View.VISIBLE);
+                            break;
+
+                        case ENTRANT:
+                            joinButton.setVisibility(View.VISIBLE);
+                            break;
+                    }
+                })
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to load user", e));
+    }
+
+    /**
+     * Read basic event info from Intent and then fetch full event from DB.
      */
     private void loadEventData() {
         eventId = getIntent().getStringExtra("EVENT_ID");
@@ -222,7 +204,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         String description = getIntent().getStringExtra("EVENT_DESCRIPTION");
         String location = getIntent().getStringExtra("EVENT_LOCATION");
         String category = getIntent().getStringExtra("EVENT_CATEGORY");
-        Double price = getIntent().hasExtra("EVENT_PRICE") ? getIntent().getDoubleExtra("EVENT_PRICE", 0.0) : null;
+        Double price = getIntent().hasExtra("EVENT_PRICE")
+                ? getIntent().getDoubleExtra("EVENT_PRICE", 0.0)
+                : null;
         int capacity = getIntent().getIntExtra("EVENT_CAPACITY", 0);
         long dateMillis = getIntent().getLongExtra("EVENT_DATE", 0L);
         long regOpenMillis = getIntent().getLongExtra("EVENT_REG_OPEN", 0L);
@@ -236,7 +220,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Load the full event from Firestore.
+     * Fetch full event from Firestore (including waitingList, posterUri, qrCodeId).
      */
     private void loadFullEventFromDatabase() {
         FDatabase db = FDatabase.getInstance();
@@ -254,8 +238,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 "%d people waiting", waitingCount));
                     }
 
-                    // Load the event poster image
-                    loadEventPoster(event.getPosterUri());
+                    // Load poster + QR code into ViewPager2
+                    loadEventImages(event);
                 });
             }
 
@@ -265,55 +249,92 @@ public class EventDetailsActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     joinButton.setEnabled(false);
                     joinButton.setText("Unable to join");
+                    Snackbar.make(eventPager, "Failed to load event details",
+                            Snackbar.LENGTH_LONG).show();
                 });
             }
         });
     }
 
     /**
-     * Loads and displays the poster image for the current event into {@link #eventPoster}.
-     *
-     * If {@code posterUri} is non-null and non-empty, the image is fetched with Glide
-     * using a placeholder and an error fallback. Otherwise, a default drawable is shown.
-     *
-     * @param posterUri The URI of the event poster image
+     * Populate ViewPager2 with:
+     *  - Index 0: Poster image (event.posterUri, if present)
+     *  - Index 1: QR code image (from 'images' collection, if present)
      */
-    private void loadEventPoster(String posterUri) {
+    private void loadEventImages(Event event) {
+        pagerImages.clear();
+
+        if (event == null) {
+            setupOrRefreshPager();
+            return;
+        }
+
+        // 1) Poster at index 0
+        String posterUri = event.getPosterUri();
         if (posterUri != null && !posterUri.isEmpty()) {
-            Log.d(TAG, "Loading poster image: " + posterUri);
-            Glide.with(this)
-                    .load(posterUri)
-                    .placeholder(R.drawable._ukj7h)
-                    .error(R.drawable.jackpottitletext)
-                    .into(eventPoster);
+            pagerImages.add(posterUri);
+        }
+
+        // 2) QR code at index 1 (lookup in Firestore 'images' collection)
+        String qrCodeId = event.getQrCodeId();
+        if (qrCodeId == null || qrCodeId.isEmpty()) {
+            // No QR code attached; just show poster (if any)
+            setupOrRefreshPager();
+            return;
+        }
+
+        FirebaseFirestore.getInstance()
+                .collection("images")
+                .whereEqualTo("imageType", Image.TYPE_QR_CODE)
+                .whereEqualTo("imageID", qrCodeId)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!querySnapshot.isEmpty()) {
+                        Image img = querySnapshot.getDocuments()
+                                .get(0)
+                                .toObject(Image.class);
+                        if (img != null &&
+                                img.getImageUrl() != null &&
+                                !img.getImageUrl().isEmpty()) {
+                            pagerImages.add(img.getImageUrl());
+                        }
+                    }
+                    setupOrRefreshPager();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to load QR image metadata", e);
+                    setupOrRefreshPager();
+                });
+    }
+
+    /**
+     * Attach or refresh the ViewPager2 adapter.
+     */
+    private void setupOrRefreshPager() {
+        if (imagePagerAdapter == null) {
+            imagePagerAdapter = new ImagePagerAdapter(this, pagerImages);
+            eventPager.setAdapter(imagePagerAdapter);
         } else {
-            Log.d(TAG, "No poster URI available, using default image");
-            eventPoster.setImageResource(R.drawable._ukj7h);
+            imagePagerAdapter.notifyDataSetChanged();
         }
     }
 
     /**
-     * Display event information in the UI.
-     *
-     * @param name Name of the event
-     * @param description Event description
-     * @param location Event location
-     * @param category Event category
-     * @param price Event price
-     * @param capacity Event capacity
-     * @param dateMillis Event date
-     * @param regOpenMillis Event registration open time
-     * @param regCloseMillis Event registration close time
-     * @param waitingCount Number of people waiting to join
+     * Display basic event info in the UI.
      */
     private void displayEventInfo(String name, String description, String location,
                                   String category, Double price, int capacity,
                                   long dateMillis, long regOpenMillis, long regCloseMillis,
                                   int waitingCount) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault());
+        SimpleDateFormat dateFormat =
+                new SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault());
 
         eventName.setText(name != null ? name : "Event Name");
-        eventDescription.setText(description != null && !description.isEmpty() ? description : "No description available");
+        eventDescription.setText(
+                description != null && !description.isEmpty()
+                        ? description
+                        : "No description available");
         eventLocation.setText(location != null ? location : "Location TBD");
         eventCategory.setText(category != null ? category : "Uncategorized");
 
@@ -329,8 +350,10 @@ public class EventDetailsActivity extends AppCompatActivity {
             eventPrice.setText("Free");
         }
 
-        eventCapacity.setText(String.format(Locale.getDefault(), "%d spots available", capacity));
-        eventWaiting.setText(String.format(Locale.getDefault(), "%d people waiting", waitingCount));
+        eventCapacity.setText(String.format(Locale.getDefault(),
+                "%d spots available", capacity));
+        eventWaiting.setText(String.format(Locale.getDefault(),
+                "%d people waiting", waitingCount));
 
         if (regOpenMillis > 0) {
             eventRegOpen.setText(dateFormat.format(new Date(regOpenMillis)));
@@ -346,15 +369,10 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Set up the buttons in the UI.
+     * Wire up buttons: back, delete, join.
      */
     private void setupButtons() {
         backButton.setOnClickListener(v -> finish());
-
-        if (currentUser != null && currentUser.getRole() == User.Role.ADMIN) {
-            deleteButton.setVisibility(View.VISIBLE);
-            joinButton.setVisibility(View.GONE);
-        }
 
         deleteButton.setOnClickListener(v -> {
             if (eventId == null) {
@@ -380,8 +398,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Join the current event's waiting list.
-     * @param event The event to join
+     * Entrant joins waiting list.
      */
     private void joinWaitingList(Event event) {
         if (currentUser == null) {
@@ -405,8 +422,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                 currentUser.getNotificationPreferences(),
                 currentUser.getDevice()
         );
-        if (event.hasEntrant(entrant)){
-            //Make a toast for already in event
+
+        if (event.hasEntrant(entrant)) {
             Toast.makeText(this, "You are already in this event", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -414,10 +431,10 @@ public class EventDetailsActivity extends AppCompatActivity {
         try {
             entrant.joinWaitingList(event);
             FDatabase.getInstance().updateEvent(event);
-            Toast.makeText(this, "Object ID:", Toast.LENGTH_SHORT).show();
 
             waitingCount++;
-            eventWaiting.setText(String.format(Locale.getDefault(), "%d people waiting", waitingCount));
+            eventWaiting.setText(String.format(Locale.getDefault(),
+                    "%d people waiting", waitingCount));
 
             joinButton.setEnabled(false);
             joinButton.setText("Joined");
@@ -429,40 +446,29 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     /**
      * Delete the current event.
-     * @param id The ID of the event to delete
      */
     private void deleteEvent(String id) {
-        FDatabase.getInstance().deleteEvent(eventId, new FDatabase.StatusCallback() {
-
-            /**
-             * Callback for when the delete operation succeeds.
-             */
+        FDatabase.getInstance().deleteEvent(id, new FDatabase.StatusCallback() {
             @Override
             public void onSuccess() {
                 runOnUiThread(() -> {
-                    Toast.makeText(EventDetailsActivity.this, "Event deleted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EventDetailsActivity.this,
+                            "Event deleted", Toast.LENGTH_SHORT).show();
                     finish();
                 });
             }
 
-            /**
-             * Callback for when the delete operation fails.
-             * @param error The error message
-             */
             @Override
             public void onFailure(String error) {
                 runOnUiThread(() ->
-                        Toast.makeText(EventDetailsActivity.this, "Delete failed: " + error, Toast.LENGTH_SHORT).show()
-                );
+                        Toast.makeText(EventDetailsActivity.this,
+                                "Delete failed: " + error, Toast.LENGTH_SHORT).show());
             }
         });
     }
 
-
-    // helper functions
-
     /**
-     * Open the image picker.
+     * Launch image picker for poster update.
      */
     private void openImagePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -472,26 +478,25 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Upload the selected image to Firebase Storage and update the event's posterUri in Firestore.
-     *
-     * @param fileUri The URI of the selected image
+     * Upload selected image to Storage and update event.posterUri, then refresh the pager.
      */
-    // From OpenAI, ChatGPT (GPT-5 Thinking), "Upload poster + Firestore update (posterUri) with background-safe callbacks and Glide reload", 2025-11-07
     private void uploadPosterAndSaveUrl(Uri fileUri) {
         if (eventId == null || eventId.isEmpty()) {
-            Snackbar.make(posterImageView, "Missing event id", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(eventPager, "Missing event id", Snackbar.LENGTH_LONG).show();
             return;
         }
 
-        // If there’s an existing upload, cancel it before starting a new one
+        // Cancel any previous upload
         if (currentUpload != null && currentUpload.isInProgress()) {
             currentUpload.cancel();
         }
 
         updatePhotoBtn.setEnabled(false);
 
-        String imageName = "posters/" + java.util.UUID.randomUUID() + ".png";
-        StorageReference ref = FirebaseStorage.getInstance().getReference().child(imageName);
+        String imageName = "posters/" + UUID.randomUUID() + ".png";
+        StorageReference ref = FirebaseStorage.getInstance()
+                .getReference()
+                .child(imageName);
 
         currentUpload = ref.putFile(fileUri);
 
@@ -499,55 +504,45 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .addOnSuccessListener(ts -> ref.getDownloadUrl().addOnSuccessListener(downloadUri -> {
                     String posterDownloadUrl = downloadUri.toString();
 
-                    // Always update Firestore, even if Activity is finishing/destroyed.
                     FirebaseFirestore.getInstance()
                             .collection("events")
                             .document(eventId)
                             .update("posterUri", posterDownloadUrl)
                             .addOnSuccessListener(unused -> {
-                                // Only touch views if we're still alive
-                                boolean alive = !isFinishing() && !(android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed());
-                                if (alive) {
-                                    Glide.with(this)
-                                            .load(posterDownloadUrl)
-                                            .centerCrop()
-                                            .into(posterImageView);
-                                    com.google.android.material.snackbar.Snackbar
-                                            .make(posterImageView, "Photo updated", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
-                                            .show();
+                                // Update local model
+                                if (currentEvent != null) {
+                                    currentEvent.setPosterUri(posterDownloadUrl);
                                 }
+
+                                // Update pagerImages[0] = posterDownloadUrl
+                                if (pagerImages.isEmpty()) {
+                                    pagerImages.add(posterDownloadUrl);
+                                } else {
+                                    pagerImages.set(0, posterDownloadUrl);
+                                }
+                                setupOrRefreshPager();
+
+                                Snackbar.make(eventPager, "Photo updated",
+                                        Snackbar.LENGTH_LONG).show();
                                 updatePhotoBtn.setEnabled(true);
                             })
                             .addOnFailureListener(e -> {
-                                boolean alive = !isFinishing() && !(android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed());
-                                if (alive) {
-                                    com.google.android.material.snackbar.Snackbar
-                                            .make(posterImageView, "Saved to storage, but failed to update event: " + e.getMessage(),
-                                                    com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
-                                            .show();
-                                }
+                                Snackbar.make(eventPager,
+                                                "Saved to storage, but failed to update event: " + e.getMessage(),
+                                                Snackbar.LENGTH_LONG)
+                                        .show();
                                 updatePhotoBtn.setEnabled(true);
                             });
                 }))
                 .addOnFailureListener(e -> {
-                    boolean alive = !isFinishing() && !(android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed());
+                    boolean alive = !isFinishing() && !(Build.VERSION.SDK_INT >= 17 && isDestroyed());
                     if (alive) {
-                        com.google.android.material.snackbar.Snackbar
-                                .make(posterImageView, "Upload failed: " + e.getMessage(),
-                                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                        Snackbar.make(eventPager,
+                                        "Upload failed: " + e.getMessage(),
+                                        Snackbar.LENGTH_LONG)
                                 .show();
                     }
                     updatePhotoBtn.setEnabled(true);
                 });
-
-    }
-
-    /**
-     * Hide all the buttons in the UI.
-     */
-    private void setDefaultVisibility() {
-        deleteButton.setVisibility(View.GONE);
-        joinButton.setVisibility(View.GONE);
-        updatePhotoBtn.setVisibility(View.GONE);
     }
 }
