@@ -81,14 +81,12 @@ public class EventsFragment extends Fragment {
         String roleName = getArguments() != null ? getArguments().getString("role") : User.Role.ENTRANT.name();
         User.Role role = User.Role.valueOf(roleName);
 
-//        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
-        // Inflate correct home layout
         View root;
         int eventItemLayoutResource;
         switch (role) {
             case ORGANIZER:
-                root = inflater.inflate(R.layout.fragment_events_organizer, container, false);
-                eventItemLayoutResource = R.layout.entrant_event_content;
+                root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
+                eventItemLayoutResource = R.layout.item_event;
                 break;
             default:
                 root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
@@ -96,16 +94,18 @@ public class EventsFragment extends Fragment {
                 break;
         }
         assert root != null;
-        eventList = root.findViewById(R.id.entrant_events);
-        eventAdapter = new EventArrayAdapter(requireActivity(),
-                displayedEvents.getEvents(),
-                eventItemLayoutResource,
-                EventArrayAdapter.ViewType.EVENTS,
-                null);
-        eventList.setAdapter(eventAdapter);
+        if (role == User.Role.ENTRANT) {
+            eventList = root.findViewById(R.id.entrant_events);
+            eventAdapter = new EventArrayAdapter(requireActivity(),
+                    displayedEvents.getEvents(),
+                    eventItemLayoutResource,
+                    EventArrayAdapter.ViewType.EVENTS,
+                    null);
+            eventList.setAdapter(eventAdapter);
 
-        setupTabs(root);
-        getUserAndLoadEvents();
+            setupTabs(root);
+            getUserAndLoadEvents();
+        }
         return root;
     }
 
