@@ -16,7 +16,7 @@ public class UserList implements Serializable {
     // Required empty constructor for Firestore
     public UserList() {
         this.users = new ArrayList<>();
-        this.capacity = null;
+        this.capacity = 0;
     }
 
     public UserList(Integer capacity) {

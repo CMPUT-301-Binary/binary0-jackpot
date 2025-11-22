@@ -3,6 +3,7 @@ package com.example.jackpot;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 
 
@@ -229,5 +230,18 @@ public class User implements Serializable {
      */
     public void setGeoPoint(GeoPoint geoPoint) {
         this.geoPoint = geoPoint;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
