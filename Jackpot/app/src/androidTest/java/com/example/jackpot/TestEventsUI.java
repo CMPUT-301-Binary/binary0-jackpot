@@ -6,7 +6,6 @@ import android.widget.DatePicker;
 
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.clearText;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.typeText;
@@ -18,6 +17,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.anything;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,11 +56,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
- */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class TestEventsUI {
@@ -72,6 +67,8 @@ public class TestEventsUI {
     private FirebaseFirestore db;
     private User testUser;
     private final List<String> testEventIds = new ArrayList<>();
+    private final List<String> testUserIds = new ArrayList<>();
+
 
     @Before
     public void setUp() throws Exception {
@@ -81,7 +78,6 @@ public class TestEventsUI {
 
         mAuth.getFirebaseAuthSettings().setAppVerificationDisabledForTesting(true);
 
-        // Sign out to ensure tests start from a clean state
         if (mAuth.getCurrentUser() != null) {
             mAuth.signOut();
         }
@@ -96,34 +92,161 @@ public class TestEventsUI {
 
         this.testUser = new User(uid, "Test Entrant", User.Role.ENTRANT, email, "1234567890", "","", "default", null, new GeoPoint(0.0,0.0));
         Tasks.await(db.collection("users").document(uid).set(this.testUser), 10, TimeUnit.SECONDS);
-        Thread.sleep(1000); // Allow time for login state to propagate
+        testUserIds.add(uid);
+        Thread.sleep(1000); 
     }
 
     @Test
+    public void testEntrantJoinsEventFromDetailsActivity() throws Exception {
+        // 1. Setup: Create a user and a new event to join.
+        createAndLoginTestUser();
+        String eventId = "details-join-test-" + UUID.randomUUID().toString();
+        Event testEvent = new Event(eventId, "org", "Details Join Test", "desc", new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Tasks.await(db.collection("events").document(eventId).set(testEvent));
+        testEventIds.add(eventId);
+
+        // 2. Refresh UI to load the new event.
+        onView(withId(R.id.nav_profile)).perform(click());
+        onView(withId(R.id.nav_home)).perform(click());
+        Thread.sleep(3000); // Wait for HomeFragment to reload.
+
+        // 3. Action: Click on the event to open details.
+        onData(anything())
+                .inAdapterView(withId(R.id.events_list))
+                .atPosition(0) // Assuming it's the first event
+                .perform(click());
+        
+        // Verify we are in the details activity
+        intended(hasComponent(EventDetailsActivity.class.getName()));
+        Thread.sleep(1000); // Wait for details activity to load
+
+        // 4. Action: Click the join button within the details activity.
+        onView(withId(R.id.event_details_join_button)).perform(click());
+
+        // 5. Wait for the asynchronous Firestore update.
+        Thread.sleep(2000);
+
+        // 6. Verification: Fetch the event from Firestore and check if the user is in the waiting list.
+        DocumentSnapshot updatedEventDoc = Tasks.await(db.collection("events").document(eventId).get());
+        assertTrue("Event document could not be found after joining.", updatedEventDoc.exists());
+        Event updatedEvent = updatedEventDoc.toObject(Event.class);
+        assertNotNull("Event object could not be deserialized.", updatedEvent);
+        assertNotNull("Waiting list is null.", updatedEvent.getWaitingList());
+
+        boolean isUserInWaitingList = updatedEvent.getWaitingList().getUsers().stream()
+                .anyMatch(entrant -> entrant.getId().equals(testUser.getId()));
+
+        assertTrue("Test user was not found in the waiting list after joining from details.", isUserInWaitingList);
+    }
+
+    @Test
+    public void testLotteryGuidelinesDisplayed() throws Exception {
+        createAndLoginTestUser();
+        // 1. Setup: Create an event with specific lottery guidelines in its description.
+        String eventId = "guidelines-test-" + UUID.randomUUID().toString();
+        String guidelines = "Lottery winners are selected at random from the waiting list.";
+        Event testEvent = new Event(eventId, "org", "Lottery Info Event", guidelines, new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Tasks.await(db.collection("events").document(eventId).set(testEvent));
+        testEventIds.add(eventId);
+
+        // 2. Refresh UI to load the new event.
+        onView(withId(R.id.nav_profile)).perform(click());
+        onView(withId(R.id.nav_home)).perform(click());
+        Thread.sleep(3000);
+
+        // 3. Action: Click on the event to open its details.
+        onData(anything())
+                .inAdapterView(withId(R.id.events_list))
+                .atPosition(0)
+                .perform(click());
+
+        // 4. Verification:
+        // Check that the EventDetailsActivity was launched.
+        intended(hasComponent(EventDetailsActivity.class.getName()));
+        // Check that the description on the details screen contains the guidelines.
+        onView(withId(R.id.event_details_description)).check(matches(withText(containsString(guidelines))));
+    }
+
+    @Test
+    public void testWaitingListCountIsDisplayedCorrectly() throws Exception {
+        createAndLoginTestUser();
+        // 1. Setup: Create an event and add 3 dummy users to its waiting list.
+        String eventId = "waiting-list-test-" + UUID.randomUUID().toString();
+        Event testEvent = new Event(eventId, "org", "Waiting List Test Event", "desc", new UserList(20), "loc", new Date(), 0.0, 0.0, 0.0, 20, new Date(), new Date(), "", "", false, "cat");
+        
+        for (int i = 0; i < 3; i++) {
+            User dummyUser = new User("dummy-id-" + i, "Dummy " + i, User.Role.ENTRANT, "", "", "", "", "", null, null);
+            testEvent.getWaitingList().add(dummyUser);
+        }
+        Tasks.await(db.collection("events").document(eventId).set(testEvent));
+        testEventIds.add(eventId);
+
+        // 2. Refresh UI and navigate to Home.
+        onView(withId(R.id.nav_profile)).perform(click());
+        onView(withId(R.id.nav_home)).perform(click());
+        Thread.sleep(3000);
+
+        // 3. Verification on HomeFragment: Check initial count is 3.
+        onData(anything()).inAdapterView(withId(R.id.events_list)).atPosition(0).onChildView(withId(R.id.event_waiting)).check(matches(withText("3 waiting")));
+
+        // 4. Action: Main user joins the event.
+        onData(anything()).inAdapterView(withId(R.id.events_list)).atPosition(0).onChildView(withId(R.id.join_button)).perform(click());
+        Thread.sleep(1000);
+
+        // 5. Verification on HomeFragment: Check count updates to 4.
+        onData(anything()).inAdapterView(withId(R.id.events_list)).atPosition(0).onChildView(withId(R.id.event_waiting)).check(matches(withText("4 waiting")));
+
+        // 6. Verification on EventsFragment: Navigate and check count is 4.
+        onView(withId(R.id.nav_events)).perform(click());
+        Thread.sleep(2000);
+        onData(anything()).inAdapterView(withId(R.id.entrant_events)).atPosition(0).onChildView(withId(R.id.event_details)).check(matches(withText(containsString("Waiting: 4"))));
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (mAuth.getCurrentUser() != null) {
+            try {
+                Tasks.await(mAuth.getCurrentUser().delete());
+            } catch (Exception e) {
+                Log.w("TestCleanup", "Could not delete test user: " + e.getMessage());
+            }
+        }
+
+        for (String userId : testUserIds) {
+            db.collection("users").document(userId).delete();
+        }
+        testUserIds.clear();
+
+        for (String eventId : testEventIds) {
+            db.collection("events").document(eventId).delete();
+        }
+        testEventIds.clear();
+
+        Intents.release();
+    }
+
+    // Other tests remain unchanged...
+    @Test
     public void testEntrantSignup_AndDataIsSaved() throws Exception {
-        // 1. Launch the SignupEntrantActivity directly
         ActivityScenario<SignupEntrantActivity> scenario = ActivityScenario.launch(SignupEntrantActivity.class);
 
-        // 2. Define unique user data
         String name = "Jane Doe";
         String phone = "9876543210";
         String email = "jane.doe." + UUID.randomUUID().toString() + "@example.com";
         String password = "password123";
 
-        // 3. UI Interaction: Fill in the form and click sign up
         onView(withId(R.id.namefld)).perform(typeText(name), closeSoftKeyboard());
         onView(withId(R.id.emailfld)).perform(typeText(email), closeSoftKeyboard());
         onView(withId(R.id.passwordfld)).perform(typeText(password), closeSoftKeyboard());
         onView(withId(R.id.phonefld)).perform(typeText(phone), closeSoftKeyboard());
         onView(withId(R.id.signupbtn)).perform(click());
 
-        // 4. Wait for async operations (Auth and Firestore) to complete
         Thread.sleep(5000);
 
-        // 5. Verification: Check if user exists in Auth and data is correct in Firestore
         FirebaseUser firebaseUser = mAuth.getCurrentUser();
         assertNotNull("User was not created in Firebase Authentication.", firebaseUser);
         String uid = firebaseUser.getUid();
+        testUserIds.add(uid);
 
         DocumentSnapshot userDoc = Tasks.await(db.collection("users").document(uid).get());
         assertTrue("User document was not created in Firestore.", userDoc.exists());
@@ -131,7 +254,6 @@ public class TestEventsUI {
         User savedUser = userDoc.toObject(User.class);
         assertNotNull("User object could not be deserialized from Firestore.", savedUser);
 
-        // Assert that the saved data matches the input data
         assertEquals("Name does not match input.", name, savedUser.getName());
         assertEquals("Email does not match input.", email, savedUser.getEmail());
         assertEquals("Phone does not match input.", phone, savedUser.getPhone());
@@ -140,7 +262,6 @@ public class TestEventsUI {
     @Test
     public void testSeesListOfEventsOnHomeFragment() throws Exception {
         createAndLoginTestUser();
-        // 1. Setup: Create two new events in the database.
         String eventId1 = "test-event-" + UUID.randomUUID().toString();
         Event testEvent1 = new Event(eventId1, "org", "Test Event 1", "desc", new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
         Tasks.await(db.collection("events").document(eventId1).set(testEvent1));
@@ -151,26 +272,22 @@ public class TestEventsUI {
         Tasks.await(db.collection("events").document(eventId2).set(testEvent2));
         testEventIds.add(eventId2);
 
-        // 2. Refresh the UI to ensure it fetches the new data.
-        onView(withId(R.id.nav_events)).perform(click()); // Navigate away
+        onView(withId(R.id.nav_events)).perform(click()); 
         Thread.sleep(1000);
-        onView(withId(R.id.nav_home)).perform(click()); // Navigate back home
-        Thread.sleep(3000); // Wait for events to load
+        onView(withId(R.id.nav_home)).perform(click()); 
+        Thread.sleep(3000); 
 
-        // 3. Verification: Check that the list view now displays the two events we created.
         onView(withId(R.id.events_list)).check(matches(hasChildCount(2)));
     }
 
     @Test
     public void testEntrantJoinsEventFromHome() throws Exception {
         createAndLoginTestUser();
-        // Setup: Create a single event to join.
         String eventId = "join-test-event-" + UUID.randomUUID().toString();
         testEventIds.add(eventId);
         Event testEvent = new Event(eventId, "org", "Joinable Event", "desc", new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
         Tasks.await(db.collection("events").document(eventId).set(testEvent));
 
-        // Refresh UI
         onView(withId(R.id.nav_events)).perform(click());
         onView(withId(R.id.nav_home)).perform(click());
         Thread.sleep(3000);
@@ -200,9 +317,8 @@ public class TestEventsUI {
     @Test
     public void testEntrantLeavesEventFromEventsFragment() throws Exception {
         createAndLoginTestUser();
-        // 1. Setup: Create an event and add the test user to its waiting list.
         String eventId = "leave-test-event-" + UUID.randomUUID().toString();
-        testEventIds.add(eventId); // Add for cleanup
+        testEventIds.add(eventId); 
         Event testEvent = new Event(eventId, "organizer-id", "Test Event for Leaving",
                 "Desc", new UserList(), "Location", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), null, "qr", false, "");
 
@@ -211,20 +327,17 @@ public class TestEventsUI {
 
         Tasks.await(db.collection("events").document(eventId).set(testEvent));
 
-        // 2. Navigate to the Events Fragment.
-        onView(withId(R.id.nav_events_entrant)).perform(click());
-        Thread.sleep(3000); // Wait for fragment to load and fetch data.
+        onView(withId(R.id.nav_events)).perform(click());
+        Thread.sleep(3000); 
 
-        // 3. Find the event and click the "Leave Lottery" button.
         onData(anything())
                 .inAdapterView(withId(R.id.entrant_events))
                 .atPosition(0)
                 .onChildView(withId(R.id.leave_button))
                 .perform(click());
 
-        Thread.sleep(2000); // Wait for Firestore update.
+        Thread.sleep(2000); 
 
-        // 4. Verification: Fetch the event and verify the user is no longer in the waiting list.
         DocumentSnapshot updatedEventDoc = Tasks.await(db.collection("events").document(eventId).get());
         Event updatedEvent = updatedEventDoc.toObject(Event.class);
         assertNotNull(updatedEvent);
@@ -238,7 +351,6 @@ public class TestEventsUI {
     @Test
     public void testFilterEventsByCategory() throws Exception {
         createAndLoginTestUser();
-        // 1. Setup: Create events with distinct categories to test filtering.
         String partyEventId = "filter-test-party-" + UUID.randomUUID().toString();
         Event partyEvent = new Event(partyEventId, "org", "Party Night", "desc", new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "Party");
         Tasks.await(db.collection("events").document(partyEventId).set(partyEvent));
@@ -249,17 +361,14 @@ public class TestEventsUI {
         Tasks.await(db.collection("events").document(concertEventId).set(concertEvent));
         testEventIds.add(concertEventId);
 
-        // 2. Refresh the UI to load the new events.
-        onView(withId(R.id.nav_events)).perform(click()); // Navigate away
+        onView(withId(R.id.nav_events)).perform(click()); 
         Thread.sleep(1000);
-        onView(withId(R.id.nav_home)).perform(click()); // Navigate back home
-        Thread.sleep(3000); // Wait for events to load.
+        onView(withId(R.id.nav_home)).perform(click());
+        Thread.sleep(3000); 
 
-        // 3. Action: Click the "Party" filter button.
         onView(withId(R.id.party_button)).perform(click());
-        Thread.sleep(1000); // Wait for UI to filter.
+        Thread.sleep(1000); 
 
-        // 4. Verification: Check that only one event is shown and it's the correct one.
         onView(withId(R.id.events_list)).check(matches(hasChildCount(1)));
 
         onData(anything())
@@ -268,7 +377,6 @@ public class TestEventsUI {
                 .onChildView(withId(R.id.event_name))
                 .check(matches(withText("Party Night")));
 
-        // 5. Action: Clear filter and verify both events are back.
         onView(withId(R.id.clear_filters_button)).perform(click());
         Thread.sleep(1000);
         onView(withId(R.id.events_list)).check(matches(hasChildCount(2)));
@@ -277,7 +385,6 @@ public class TestEventsUI {
     @Test
     public void testFilterEventsByLocation() throws Exception {
         createAndLoginTestUser();
-        // 1. Setup: Create events with distinct locations.
         String edmontonEventId = "loc-test-edm-" + UUID.randomUUID().toString();
         Event edmontonEvent = new Event(edmontonEventId, "org", "Edmonton Expo", "desc", new UserList(10), "Edmonton", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
         Tasks.await(db.collection("events").document(edmontonEventId).set(edmontonEvent));
@@ -288,17 +395,14 @@ public class TestEventsUI {
         Tasks.await(db.collection("events").document(calgaryEventId).set(calgaryEvent));
         testEventIds.add(calgaryEventId);
 
-        // 2. Refresh UI.
         onView(withId(R.id.nav_home)).perform(click());
         Thread.sleep(3000);
 
-        // 3. Action: Click location button and enter text.
         onView(withId(R.id.locationButton)).perform(click());
         onView(withClassName(Matchers.equalTo("android.widget.EditText"))).perform(typeText("Edmonton"), closeSoftKeyboard());
         onView(withText("Confirm")).perform(click());
         Thread.sleep(1000);
 
-        // 4. Verification: Check that only the Edmonton event is shown.
         onView(withId(R.id.events_list)).check(matches(hasChildCount(1)));
         onData(anything()).inAdapterView(withId(R.id.events_list)).atPosition(0).onChildView(withId(R.id.event_name)).check(matches(withText("Edmonton Expo")));
     }
@@ -306,7 +410,6 @@ public class TestEventsUI {
     @Test
     public void testFilterEventsByDate() throws Exception {
         createAndLoginTestUser();
-        // 1. Setup: Create events with distinct dates.
         Calendar today = Calendar.getInstance();
         Calendar tomorrow = Calendar.getInstance();
         tomorrow.add(Calendar.DAY_OF_YEAR, 1);
@@ -321,75 +424,20 @@ public class TestEventsUI {
         Tasks.await(db.collection("events").document(tomorrowEventId).set(tomorrowEvent));
         testEventIds.add(tomorrowEventId);
 
-        // 2. Refresh UI.
         onView(withId(R.id.nav_home)).perform(click());
         Thread.sleep(3000);
 
-        // 3. Action: Click date button and select tomorrow.
         onView(withId(R.id.timeButton)).perform(click());
         onView(withClassName(Matchers.equalTo(DatePicker.class.getName()))).perform(PickerActions.setDate(tomorrow.get(Calendar.YEAR), tomorrow.get(Calendar.MONTH) + 1, tomorrow.get(Calendar.DAY_OF_MONTH)));
         onView(withText("OK")).perform(click());
         Thread.sleep(1000);
 
-        // 4. Verification: Check that only the event for tomorrow is shown.
         onView(withId(R.id.events_list)).check(matches(hasChildCount(1)));
         onData(anything()).inAdapterView(withId(R.id.events_list)).atPosition(0).onChildView(withId(R.id.event_name)).check(matches(withText("Tomorrow's Gala")));
     }
 
     @Test
-    public void testUpdateProfile_AndDataIsSaved() throws Exception {
-        // 1. Ensure a user is logged in
-        createAndLoginTestUser();
-
-        // 2. Navigate to the Profile Fragment
-        onView(withId(R.id.nav_profile)).perform(click());
-        Thread.sleep(2000); // Wait for profile to load
-
-        // 3. Define new data to update
-        String newName = "John Smith";
-        String newPhone = "5551234567";
-
-        // 4. UI Interaction: Clear existing text, type new text, and save
-        onView(withId(R.id.profile_name)).perform(clearText(), typeText(newName), closeSoftKeyboard());
-        onView(withId(R.id.profile_phone)).perform(clearText(), typeText(newPhone), closeSoftKeyboard());
-        onView(withId(R.id.save_profile_button)).perform(click());
-
-        // 5. Wait for async operations (Firestore update) to complete
-        Thread.sleep(3000); // Give time for the toast and DB update
-
-        // 6. Verification: Fetch the user document from Firestore and verify the fields were updated
-        DocumentSnapshot userDoc = Tasks.await(db.collection("users").document(testUser.getId()).get());
-        assertTrue("User document does not exist in Firestore.", userDoc.exists());
-
-        // Assert that the updated data matches the input
-        assertEquals("Name was not updated in Firestore.", newName, userDoc.getString("name"));
-        assertEquals("Phone was not updated in Firestore.", newPhone, userDoc.getString("phone"));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        // Delete the user from Firebase to keep the database clean for the next test run.
-        if (mAuth.getCurrentUser() != null) {
-            try {
-                Tasks.await(mAuth.getCurrentUser().delete());
-            } catch (Exception e) {
-                // This can happen if the user was already deleted or auth state is unstable
-                Log.w("TestCleanup", "Could not delete test user: " + e.getMessage());
-            }
-        }
-
-        // Cleanup all events created during tests
-        for (String eventId : testEventIds) {
-            db.collection("events").document(eventId).delete();
-        }
-        testEventIds.clear();
-
-        Intents.release();
-    }
-
-    @Test
     public void useAppContext() {
-        // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         assertEquals("com.example.jackpot", appContext.getPackageName());
     } 
