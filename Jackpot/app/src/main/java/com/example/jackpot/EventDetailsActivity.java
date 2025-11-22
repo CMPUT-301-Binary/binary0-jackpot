@@ -262,6 +262,25 @@ public class EventDetailsActivity extends AppCompatActivity {
         loadFullEventFromDatabase();
     }
 
+
+    private boolean isUserInWaitingList(Event event) {
+        if (currentUser == null || event.getWaitingList() == null) {
+            return false;
+        }
+
+        ArrayList<User> users = event.getWaitingList().getUsers();
+        if (users == null) {
+            return false;
+        }
+
+        for (User user : users) {
+            if (user != null && user.getId() != null && user.getId().equals(currentUser.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Fetch full event from Firestore (including waitingList, posterUri, qrCodeId).
      */
@@ -279,6 +298,17 @@ public class EventDetailsActivity extends AppCompatActivity {
                         waitingCount = event.getWaitingList().size();
                         eventWaiting.setText(String.format(Locale.getDefault(),
                                 "%d people waiting", waitingCount));
+                    }
+
+                    // Check if user is already in waiting list and update button
+                    if (currentUser != null && currentUser.getRole() == User.Role.ENTRANT) {
+                        if (isUserInWaitingList(event)) {
+                            joinButton.setEnabled(false);
+                            joinButton.setText("Joined");
+                        } else {
+                            joinButton.setEnabled(true);
+                            joinButton.setText("Join Waiting List");
+                        }
                     }
 
                     // Load poster + QR code into ViewPager2

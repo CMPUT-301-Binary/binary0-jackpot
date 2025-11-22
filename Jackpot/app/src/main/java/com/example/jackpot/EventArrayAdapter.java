@@ -223,6 +223,18 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 joinButton.setVisibility(View.GONE);
             } else {
                 joinButton.setVisibility(View.VISIBLE);
+
+                // Check if user is already in waiting list
+                boolean isJoined = isUserInWaitingList(event, currentUser != null ? currentUser.getId() : null);
+
+                if (isJoined) {
+                    joinButton.setEnabled(false);
+                    joinButton.setText("Joined");
+                } else {
+                    joinButton.setEnabled(true);
+                    joinButton.setText("Join");
+                }
+
                 // Stop click propagation so button click doesn't trigger view click
                 joinButton.setOnClickListener(v -> {
                     handleJoinButtonClick(event);
