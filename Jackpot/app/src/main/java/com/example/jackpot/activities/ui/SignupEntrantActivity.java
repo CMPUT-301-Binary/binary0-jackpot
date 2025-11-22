@@ -1,18 +1,24 @@
 package com.example.jackpot.activities.ui;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.MainActivity;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
@@ -30,6 +36,10 @@ public class SignupEntrantActivity extends AppCompatActivity {
 
     private EditText nameField, emailField, passwordField, phoneField;
     private Toast currentToast;
+
+    private static final int LOCATION_REQUEST = 300;
+    private String newUserId;
+
 
     /**
      * Called when the activity is first created.
@@ -94,6 +104,10 @@ public class SignupEntrantActivity extends AppCompatActivity {
                         fDatabase.getDb().collection("users").document(uid).set(user)
                                 .addOnSuccessListener(aVoid -> {
                                     showToast("Account created!");
+
+                                    // Ask for location permission ONCE during signup
+                                    askForLocationPermission(uid);
+
                                     startActivity(new Intent(this, MainActivity.class));
                                     finish();
                                 })
@@ -123,5 +137,69 @@ public class SignupEntrantActivity extends AppCompatActivity {
         }
         currentToast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
         currentToast.show();
+    }
+
+    private void askForLocationPermission(String uid) {
+        newUserId = uid;
+
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_REQUEST
+            );
+
+        } else {
+            saveInitialLocation();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LOCATION_REQUEST) {
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                saveInitialLocation();
+
+            } else {
+                // No change → stays at (0,0)
+                goToMain();
+            }
+        }
+    }
+
+    private void saveInitialLocation() {
+        FusedLocationProviderClient client =
+                LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED) {
+            goToMain();
+            return;
+        }
+
+        client.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null) {
+                GeoPoint gp = new GeoPoint(location.getLatitude(), location.getLongitude());
+                db.collection("users").document(newUserId)
+                        .update("geoPoint", gp)
+                        .addOnSuccessListener(v -> Log.d("Signup", "Initial location saved"));
+            }
+            goToMain();
+        });
+    }
+
+    private void goToMain() {
+        startActivity(new Intent(SignupEntrantActivity.this, MainActivity.class));
+        finish();
     }
 }
