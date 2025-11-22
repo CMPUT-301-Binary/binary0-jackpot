@@ -28,16 +28,18 @@
         layout="@layout/content_main"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <!-- Floating Action Button -->
+    <!-- Floating Action Button - positioned above bottom nav -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
-        android:layout_height="100dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="72dp"
-        android:layout_margin="@dimen/fab_margin"
         android:contentDescription="@string/fab_content_description"
         app:backgroundTint="#8FC8EB"
-        app:srcCompat="@android:drawable/ic_input_add" />
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:fabSize="normal"
+        app:elevation="6dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
