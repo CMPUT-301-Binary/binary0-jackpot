@@ -107,9 +107,6 @@ public class SignupEntrantActivity extends AppCompatActivity {
 
                                     // Ask for location permission ONCE during signup
                                     askForLocationPermission(uid);
-
-                                    startActivity(new Intent(this, MainActivity.class));
-                                    finish();
                                 })
                                 .addOnFailureListener(e -> {
                                     signupBtn.setEnabled(true);
