@@ -14,6 +14,7 @@ import com.example.jackpot.R;
 import com.example.jackpot.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 
 /**
  * SignUp activity for the organizer. The organizer will be prompted to enter details, which will be stored in the database.
@@ -69,7 +70,7 @@ public class SignupOrganizerActivity extends AppCompatActivity {
                     .addOnSuccessListener(authResult -> {
                         String uid = mAuth.getCurrentUser().getUid();
 
-                        User user = new User(uid, name, User.Role.ORGANIZER, email, phone, "default","", "default", null);
+                        User user = new User(uid, name, User.Role.ORGANIZER, email, phone, "default","", "default", null, new GeoPoint(0.0,0.0));
 
                         fDatabase.getDb().collection("users").document(uid).set(user)
                                 .addOnSuccessListener(aVoid -> {

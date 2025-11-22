@@ -1,6 +1,10 @@
 package com.example.jackpot;
 
+import com.google.firebase.firestore.GeoPoint;
+
 import java.io.Serializable;
+
+
 
 /**
  * Represents a user of the Jackpot application.
@@ -18,6 +22,8 @@ public class User implements Serializable {
     protected String password;
     protected String notificationPreferences;
     protected Device device;
+    protected GeoPoint geoPoint;
+
 
     /**
      * A public, no-argument constructor.
@@ -40,9 +46,10 @@ public class User implements Serializable {
      * @param password The user's password.
      * @param notificationPreferences User's preferences for notifications.
      * @param device The device associated with the user for notifications.
+     * @param geoPoint The location of the user on the map.
      */
 
-    public User(String id, String name, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device) {
+    public User(String id, String name, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device, GeoPoint geoPoint) {
         this.id = id;
         this.name = name;
         this.role = role;
@@ -52,6 +59,7 @@ public class User implements Serializable {
         this.password = password;
         this.notificationPreferences = notificationPreferences;
         this.device = device;
+        this.geoPoint = geoPoint;
     }
     /**
      * Gets the unique identifier of the user.
@@ -206,5 +214,20 @@ public class User implements Serializable {
         ENTRANT,
         ORGANIZER,
         ADMIN
+    }
+
+    /**
+     * get location of user.
+     */
+    public GeoPoint getGeoPoint() {
+        return geoPoint;
+    }
+
+    /**
+     * set location of user.
+     * @param geoPoint The new {@link GeoPoint} object for the user.
+     */
+    public void setGeoPoint(GeoPoint geoPoint) {
+        this.geoPoint = geoPoint;
     }
 }

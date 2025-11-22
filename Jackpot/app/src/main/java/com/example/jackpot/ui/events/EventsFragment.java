@@ -222,7 +222,8 @@ public class EventsFragment extends Fragment {
                             currentUser.getProfileImageUrl(),
                             currentUser.getPassword(),
                             currentUser.getNotificationPreferences(),
-                            currentUser.getDevice()
+                            currentUser.getDevice(),
+                            currentUser.getGeoPoint()
                     );
                     for (Event event : events) {
                         if (event.getWaitingList() != null && event.hasEntrant(check)) {

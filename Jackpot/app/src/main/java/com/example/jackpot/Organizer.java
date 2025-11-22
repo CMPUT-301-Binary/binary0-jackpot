@@ -1,5 +1,7 @@
 package com.example.jackpot;
 
+import com.google.firebase.firestore.GeoPoint;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,8 +43,8 @@ public class Organizer extends User {
      * @param notificationPreferences The notification preferences for the organizer.
      * @param device The device associated with the organizer.
      */
-    public Organizer(String name, String id, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device) {
-        super(id, name, Role.ORGANIZER, email, phone, profileImageUrl, password, notificationPreferences, device);
+    public Organizer(String name, String id, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device, GeoPoint geoPoint) {
+        super(id, name, Role.ORGANIZER, email, phone, profileImageUrl, password, notificationPreferences, device, geoPoint);
         this.managedEventIds = new ArrayList<>();
     }
 
