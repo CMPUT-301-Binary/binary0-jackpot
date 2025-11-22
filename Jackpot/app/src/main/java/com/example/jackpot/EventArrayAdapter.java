@@ -47,12 +47,6 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         this.currentUser = currentUser;
     }
 
-    //    public EventArrayAdapter(Context context, ArrayList<Event> events, int layoutResource, User user) {
-//        super(context, 0, events);
-//        this.layoutResource = layoutResource;
-//        this.currentUser = user;
-//    }
-
     /**
      * Set the current user.
      * @param user The user to set.
@@ -155,7 +149,6 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
         //Load the image from the database and show it. Use glide
         String imageUri = event.getPosterUri();
-        //String imageUri = "https://firebasestorage.googleapis.com/v0/b/jackpot-d3153.firebasestorage.app/o/posters%2F00aec71a-f834-4b8c-8c9b-15391d89583b.png?alt=media&token=ffeded25-46b1-4a17-ae17-5b3e414b1b8f";
         //Log imageUri for debugging
         Log.d("EventArrayAdapter", "Image URI: " + details);
         if (imageUri != null && !imageUri.isEmpty()) {
@@ -224,15 +217,21 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
         Button joinButton = view.findViewById(R.id.join_button);
         if (joinButton != null) {
-            // Stop click propagation so button click doesn't trigger view click
-            joinButton.setOnClickListener(v -> {
-                handleJoinButtonClick(event);
-            });
+            // Hide join button for organizers and admins
+            if (currentUser != null &&
+                    (currentUser.getRole() == User.Role.ORGANIZER || currentUser.getRole() == User.Role.ADMIN)) {
+                joinButton.setVisibility(View.GONE);
+            } else {
+                joinButton.setVisibility(View.VISIBLE);
+                // Stop click propagation so button click doesn't trigger view click
+                joinButton.setOnClickListener(v -> {
+                    handleJoinButtonClick(event);
+                });
+            }
         }
 
         //Load the image from the database and show it. Use glide
         String imageUri = event.getPosterUri();
-        //String imageUri = "https://firebasestorage.googleapis.com/v0/b/jackpot-d3153.firebasestorage.app/o/posters%2F00aec71a-f834-4b8c-8c9b-15391d89583b.png?alt=media&token=ffeded25-46b1-4a17-ae17-5b3e414b1b8f";
         //Log imageUri for debugging
         if (imageUri != null && !imageUri.isEmpty()) {
             Glide.with(getContext())
