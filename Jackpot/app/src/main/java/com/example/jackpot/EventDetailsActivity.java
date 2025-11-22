@@ -81,6 +81,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         setDefaultVisibility(); // hide role-based buttons until we know the role
         loadEventData();        // sets eventId + basic info from intent
         setupButtons();
+        // Load current user AFTER eventId is set
         loadCurrentUser();      // shows the proper button based on role
 
         // Register image picker
@@ -171,10 +172,13 @@ public class EventDetailsActivity extends AppCompatActivity {
                     switch (currentUser.getRole()) {
                         case ADMIN:
                             deleteButton.setVisibility(View.VISIBLE);
+                            // Join button remains hidden for admins
                             break;
 
                         case ORGANIZER:
-                            updatePhotoBtn.setVisibility(View.VISIBLE);
+                            // Only show update photo button if organizer owns this event
+                            checkEventOwnershipAndShowButton();
+                            // Join button remains hidden for organizers
                             break;
 
                         case ENTRANT:
@@ -183,6 +187,46 @@ public class EventDetailsActivity extends AppCompatActivity {
                     }
                 })
                 .addOnFailureListener(e -> Log.e(TAG, "Failed to load user", e));
+    }
+
+    /**
+     * Check if the current organizer owns this event and show update photo button accordingly.
+     */
+    private void checkEventOwnershipAndShowButton() {
+        if (eventId == null || currentUser == null) {
+            Log.w(TAG, "Cannot check ownership - eventId: " + eventId + ", currentUser: " + currentUser);
+            return;
+        }
+
+        Log.d(TAG, "Checking event ownership for eventId: " + eventId + ", userId: " + currentUser.getId());
+
+        FDatabase.getInstance().getDb().collection("events")
+                .document(eventId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (!documentSnapshot.exists()) {
+                        Log.w(TAG, "Event document does not exist");
+                        return;
+                    }
+
+                    // Try to get the creator/organizer ID from the document
+                    // The field is called "createdBy" in Firestore
+                    String eventCreatorId = documentSnapshot.getString("createdBy");
+
+                    Log.d(TAG, "Event createdBy: " + eventCreatorId + ", Current userId: " + currentUser.getId());
+
+                    if (eventCreatorId != null && eventCreatorId.equals(currentUser.getId())) {
+                        Log.d(TAG, "User IS the organizer - showing update photo button");
+                        updatePhotoBtn.setVisibility(View.VISIBLE);
+                    } else {
+                        Log.d(TAG, "User is NOT the organizer - hiding update photo button");
+                        updatePhotoBtn.setVisibility(View.GONE);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to check event ownership", e);
+                    updatePhotoBtn.setVisibility(View.GONE);
+                });
     }
 
     /**
