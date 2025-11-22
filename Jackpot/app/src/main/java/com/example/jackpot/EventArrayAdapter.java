@@ -265,7 +265,8 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                     currentUser.getProfileImageUrl(),
                     currentUser.getPassword(),
                     currentUser.getNotificationPreferences(),
-                    currentUser.getDevice()
+                    currentUser.getDevice(),
+                    currentUser.getGeoPoint()
             );
             try {
                 entrant.joinWaitingList(event);

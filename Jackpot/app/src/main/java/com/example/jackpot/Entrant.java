@@ -1,5 +1,7 @@
 package com.example.jackpot;
 
+import com.google.firebase.firestore.GeoPoint;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -8,8 +10,8 @@ public class Entrant extends User {
     //private boolean notificationsOptOut;
     private List<String> historyEventIds; //Should be in database
 
-    public Entrant(String id, String name, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device) {
-        super(id, name, role, email, phone, profileImageUrl, password, notificationPreferences, device);
+    public Entrant(String id, String name, Role role, String email, String phone, String profileImageUrl, String password, String notificationPreferences, Device device, GeoPoint geoPoint) {
+        super(id, name, role, email, phone, profileImageUrl, password, notificationPreferences, device, geoPoint);
         //this.notificationsOptOut = false;
         this.historyEventIds = new ArrayList<>();
     }

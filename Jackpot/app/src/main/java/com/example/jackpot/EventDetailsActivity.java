@@ -427,7 +427,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                 currentUser.getProfileImageUrl(),
                 currentUser.getPassword(),
                 currentUser.getNotificationPreferences(),
-                currentUser.getDevice()
+                currentUser.getDevice(),
+                currentUser.getGeoPoint()
         );
 
         if (event.hasEntrant(entrant)) {

@@ -27,6 +27,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import org.junit.After;
@@ -75,7 +76,7 @@ public class TestEventsUI {
         AuthResult authResult = Tasks.await(mAuth.createUserWithEmailAndPassword(email, password), 10, TimeUnit.SECONDS);
         String uid = authResult.getUser().getUid();
 
-        this.testUser = new User(uid, "Test Entrant", User.Role.ENTRANT, email, "1234567890", "", "default", null);
+        this.testUser = new User(uid, "Test Entrant", User.Role.ENTRANT, email, "1234567890", "","", "default", null, new GeoPoint(0.0,0.0));
         Tasks.await(db.collection("users").document(uid).set(this.testUser), 10, TimeUnit.SECONDS);
     }
 
@@ -115,7 +116,7 @@ public class TestEventsUI {
         Event testEvent = new Event(eventId, "organizer-id", "Test Event for Leaving",
                 "Desc", new UserList(), "Location", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), null, "qr", false, "");
 
-        Entrant entrantUser = new Entrant(testUser.getName(), testUser.getId(), testUser.getRole(), testUser.getEmail(), testUser.getPhone(), testUser.getPassword(), testUser.getNotificationPreferences(), testUser.getDevice());
+        Entrant entrantUser = new Entrant(testUser.getName(), testUser.getId(), testUser.getRole(), testUser.getEmail(), testUser.getPhone(), testUser.getProfileImageUrl(),testUser.getPassword(), testUser.getNotificationPreferences(), testUser.getDevice(), testUser.getGeoPoint());
         testEvent.addEntrantWaitingList(entrantUser);
 
         Tasks.await(db.collection("events").document(eventId).set(testEvent));

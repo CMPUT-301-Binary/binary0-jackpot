@@ -15,6 +15,7 @@ import com.example.jackpot.R;
 import com.example.jackpot.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 
 /**
  * SignUp activity for the entrant. The entrant will be prompted to enter details, which will be stored in the database.
@@ -88,7 +89,7 @@ public class SignupEntrantActivity extends AppCompatActivity {
                     .addOnSuccessListener(authResult -> {
                         String uid = mAuth.getCurrentUser().getUid();
 
-                        User user = new User(uid, name, User.Role.ENTRANT, email, phone, profileImageUrl, "", "default", null);
+                        User user = new User(uid, name, User.Role.ENTRANT, email, phone, profileImageUrl, "", "default", null, new GeoPoint(0.0,0.0));
 
                         fDatabase.getDb().collection("users").document(uid).set(user)
                                 .addOnSuccessListener(aVoid -> {
