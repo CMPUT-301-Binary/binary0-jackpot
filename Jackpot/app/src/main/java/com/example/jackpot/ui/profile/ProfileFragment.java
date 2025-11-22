@@ -83,6 +83,8 @@ public class ProfileFragment extends Fragment {
         profileImage = root.findViewById(R.id.profile_image);
         nameField = root.findViewById(R.id.profile_name);
         emailField = root.findViewById(R.id.profile_email);
+        emailField.setEnabled(false);  // Add this line
+        emailField.setFocusable(false);  // Add this line
         phoneField = root.findViewById(R.id.profile_phone);
         bioField = root.findViewById(R.id.profile_bio);
         logoutButton = root.findViewById(R.id.logout_button);
@@ -183,20 +185,66 @@ public class ProfileFragment extends Fragment {
                                 Toast.makeText(requireContext(), "Upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
-
     /**
-     * Save the user profile information to Firestore.
+     * Save the user profile information to Firestore with validation.
      */
     private void saveUserProfile() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) return;
 
+        // Get field values
+        String name = nameField.getText().toString().trim();
+        String email = emailField.getText().toString().trim();
+        String phone = phoneField.getText().toString().trim();
+        String bio = bioField.getText().toString().trim();
+
+        // Validate fields
+        boolean isValid = true;
+
+        if (name.isEmpty()) {
+            nameField.setError("Name cannot be empty");
+            isValid = false;
+        }
+
+        // Email validation removed - email field is read-only
+
+        if (phone.isEmpty()) {
+            phoneField.setError("Phone cannot be empty");
+            isValid = false;
+        } else if (!phone.matches("\\d+")) {
+            phoneField.setError("Phone must contain only numbers");
+            isValid = false;
+        }
+
+        if (bio.isEmpty()) {
+            bioField.setError("Bio/Notification preferences cannot be empty");
+            isValid = false;
+        }
+
+        // If validation fails, show a toast and return
+        if (!isValid) {
+            Toast.makeText(requireContext(), "Please fill in all fields correctly", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String uid = currentUser.getUid();
+
+        // Get current email from Firebase Auth (email cannot be changed)
+        String authEmail = currentUser.getEmail();
+
+        // Update Firestore profile directly (without email change)
+        updateFirestoreProfile(uid, name, authEmail, phone, bio);
+    }
+
+    /**
+     * Helper method to update Firestore profile data.
+     */
+    private void updateFirestoreProfile(String uid, String name, String email, String phone, String bio) {
         Map<String, Object> updates = new HashMap<>();
-        updates.put("name", nameField.getText().toString());
-        updates.put("email", emailField.getText().toString());
-        updates.put("phone", phoneField.getText().toString());
-        updates.put("notificationPreferences", bioField.getText().toString());
+        updates.put("name", name);
+        updates.put("email", email);
+        updates.put("phone", phone);
+        updates.put("notificationPreferences", bio);
 
         db.collection("users").document(uid)
                 .update(updates)
@@ -205,7 +253,6 @@ public class ProfileFragment extends Fragment {
                 .addOnFailureListener(e ->
                         Toast.makeText(requireContext(), "Failed to update profile: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
-
 
     /**
      * Logout the current user and redirect to the login screen.
