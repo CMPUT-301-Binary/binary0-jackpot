@@ -95,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
                         if (user != null && user.getRole() != null) {
                             currentRole = user.getRole();
                             Log.d("Firestore", "Logged in as: " + currentRole);
-//                            currentRole = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 
                             // Inflate menus based on role
                             setupMenusAndFab(currentRole, bottomNav, drawerNav);
