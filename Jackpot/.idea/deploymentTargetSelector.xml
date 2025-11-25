@@ -13,7 +13,10 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="TestEventsUI">
+      <SelectionState runConfigName="testEntrantLeavesEventFromEventsFragment()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="TestEventsUIEntrant">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

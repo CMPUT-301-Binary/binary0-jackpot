@@ -1,6 +1,8 @@
 package com.example.jackpot;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 import android.widget.DatePicker;
 
@@ -40,7 +42,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -58,7 +59,7 @@ import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class TestEventsUI {
+public class TestEventsUIEntrant {
     @Rule
     public ActivityScenarioRule<MainActivity> scenario = new
             ActivityScenarioRule<>(MainActivity.class);
@@ -94,6 +95,28 @@ public class TestEventsUI {
         Tasks.await(db.collection("users").document(uid).set(this.testUser), 10, TimeUnit.SECONDS);
         testUserIds.add(uid);
         Thread.sleep(1000); 
+    }
+
+    @Test
+    public void testViewEventDetails_ViaQRCodeDeepLink() throws Exception {
+        // 1. Setup: Create a user and a target event.
+        createAndLoginTestUser();
+        String eventId = "deep-link-event-" + UUID.randomUUID().toString();
+        String eventName = "Deep Link Gala";
+        Event testEvent = new Event(eventId, "org", eventName, "desc", new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Tasks.await(db.collection("events").document(eventId).set(testEvent));
+        testEventIds.add(eventId);
+
+        // 2. Action: Simulate a deep link scan by creating and launching an intent.
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("jackpot://event/" + eventId));
+        intent.setPackage(InstrumentationRegistry.getInstrumentation().getTargetContext().getPackageName());
+        ActivityScenario.launch(intent);
+
+        // 3. Wait for the activity to process the deep link and load data.
+        Thread.sleep(4000);
+
+        // 4. Verification: Check that the EventDetailsActivity is showing the correct event name.
+        onView(withId(R.id.event_details_name)).check(matches(withText(eventName)));
     }
 
     @Test
