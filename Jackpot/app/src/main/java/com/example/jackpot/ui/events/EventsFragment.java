@@ -26,6 +26,12 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 
+/**
+ * A fragment that displays events relevant to the current user.
+ * This screen is tailored to the user's role and allows them to view events they are
+ * associated with, such as events they have joined the waiting list for ('Wishlist').
+ * It features a tab-based navigation to switch between different event categories.
+ */
 public class EventsFragment extends Fragment {
     private ListView eventList;
     private EventArrayAdapter eventAdapter;

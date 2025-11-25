@@ -31,6 +31,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.stream.Collectors;
 
+/**
+ * A fragment for the home page.
+ * This fragment is used to display a list of events.
+ * You can filter the events by category, date, or location.
+ * You can also click on an event to view its details and join it.
+ */
 public class HomeFragment extends Fragment {
 
     private ListView eventList;
@@ -113,6 +119,9 @@ public class HomeFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Fetches all events from the database and updates the UI.
+     */
     private void loadEvents() {
         fDatabase.getAllEvents(new FDatabase.DataCallback<Event>() {
             @Override
@@ -130,6 +139,10 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    /**
+     * Fetches the current user from Firebase and then loads all events.
+     * The user object is passed to the adapter to enable role-specific UI elements.
+     */
     private void fetchUserAndLoadEvents() {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
@@ -155,6 +168,10 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    /**
+     * Sets up click listeners for all the filter buttons on the home screen.
+     * @param root The root view of the fragment.
+     */
     private void setupFilterButtons(View root) {
         ImageButton partyButton = root.findViewById(R.id.party_button);
         ImageButton concertButton = root.findViewById(R.id.concert_button);
@@ -189,6 +206,9 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    /**
+     * Sets up the search view query listener to filter events as the user types.
+     */
     private void setupSearchView() {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -205,6 +225,11 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    /**
+     * Filters the event list based on a search query.
+     * The query is matched against the event name, description, location, and category.
+     * @param query The text to search for.
+     */
     private void filterEventsBySearch(String query) {
         if (dataList == null || dataList.getEvents() == null) return;
 
@@ -220,6 +245,10 @@ public class HomeFragment extends Fragment {
         updateEventList(filteredList);
     }
 
+    /**
+     * Filters the event list by a specific category.
+     * @param category The category to filter by.
+     */
     private void filterByCategory(String category) {
         if (dataList == null || dataList.getEvents() == null) return;
 
@@ -231,6 +260,9 @@ public class HomeFragment extends Fragment {
         Toast.makeText(getContext(), "Showing " + category + " events", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Displays the standard Android date picker dialog.
+     */
     private void showDatePickerDialog() {
         final Calendar c = Calendar.getInstance();
         int year = c.get(Calendar.YEAR);
@@ -242,6 +274,12 @@ public class HomeFragment extends Fragment {
         }, year, month, day).show();
     }
 
+    /**
+     * Filters the event list to show only events on the selected date.
+     * @param year The year to filter by.
+     * @param month The month to filter by.
+     * @param day The day to filter by.
+     */
     private void filterByDate(int year, int month, int day) {
         if (dataList == null || dataList.getEvents() == null) return;
 
@@ -267,6 +305,9 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    /**
+     * Shows a dialog prompting the user to enter a location to filter by.
+     */
     private void showLocationFilterDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Filter by location");
@@ -294,52 +335,31 @@ public class HomeFragment extends Fragment {
         builder.show();
     }
 
-    private void filterByHistory() {
-        if (currentUser == null) return;
-
-        ArrayList<Event> filteredList = dataList.getEvents().stream()
-                .filter(event -> event.getWaitingList() != null && event.getWaitingList().contains(currentUser))
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        updateEventList(filteredList);
-        Toast.makeText(getContext(), "Showing events you're in", Toast.LENGTH_SHORT).show();
-    }
-
-    private void updateEventList(ArrayList<Event> newList) {
+    /**
+     * Updates the event list adapter with a new list of events.
+     * @param events The new list of events to display.
+     */
+    private void updateEventList(ArrayList<Event> events) {
         if (eventAdapter != null) {
             eventAdapter.clear();
-            eventAdapter.addAll(newList);
+            eventAdapter.addAll(events);
             eventAdapter.notifyDataSetChanged();
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadEvents();
-    }
-
-    // From OpenAI, ChatGPT (GPT-5 Thinking), "Subscribe to Firestore events collection and refresh list on any change", 2025-11-07
-    @Override
-    public void onStart() {
-        super.onStart();
-        eventsReg = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                .collection("events")
-                .addSnapshotListener((snap, e) -> {
-                    if (e != null || snap == null || !isAdded()) return;
-                    java.util.ArrayList<Event> list = new java.util.ArrayList<>();
-                    for (com.google.firebase.firestore.DocumentSnapshot d : snap.getDocuments()) {
-                        Event ev = d.toObject(Event.class);
-                        if (ev != null) list.add(ev);
-                    }
-                    updateEventList(list);
-                });
-    }
-
-    // From OpenAI, ChatGPT (GPT-5 Thinking), "Unsubscribe Firestore listener to avoid leaks when fragment stops", 2025-11-07
-    @Override
-    public void onStop() {
-        if (eventsReg != null) { eventsReg.remove(); eventsReg = null; }
-        super.onStop();
+    /**
+     * Filters the event list to show only events the current user has joined.
+     */
+    private void filterByHistory(){
+        if(dataList == null || dataList.getEvents() == null || currentUser == null){
+            return;
+        }
+        ArrayList<Event> filteredList = new ArrayList<>();
+        for (Event event : dataList.getEvents()) {
+            if (event.getWaitingList() != null && event.getWaitingList().contains(currentUser)) {
+                filteredList.add(event);
+            }
+        }
+        updateEventList(filteredList);
     }
 }

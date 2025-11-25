@@ -37,6 +37,10 @@ import org.junit.runner.RunWith;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Instrumented tests for user profile management functionalities.
+ * This class covers user stories related to updating and deleting a user's own profile.
+ */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class TestProfileUI {
@@ -48,6 +52,10 @@ public class TestProfileUI {
     private FirebaseFirestore db;
     private User testUser;
 
+    /**
+     * Sets up the test environment before each test.
+     * @throws Exception if setup fails.
+     */
     @Before
     public void setUp() throws Exception {
         Intents.init();
@@ -61,6 +69,10 @@ public class TestProfileUI {
         }
     }
 
+    /**
+     * Helper method to create and log in a new user with the ENTRANT role.
+     * @throws Exception if user creation or Firestore write fails.
+     */
     private void createAndLoginTestUser() throws Exception {
         String email = "testuser-" + UUID.randomUUID().toString() + "@example.com";
         String password = "password123";
@@ -73,6 +85,10 @@ public class TestProfileUI {
         Thread.sleep(1000); 
     }
 
+    /**
+     * Tests the user story: "As an entrant, I want to update information such as name, email and contact information on my profile."
+     * @throws Exception if test setup or execution fails.
+     */
     @Test
     public void testUpdateProfile_AndDataIsSaved() throws Exception {
         createAndLoginTestUser();
@@ -96,6 +112,10 @@ public class TestProfileUI {
         assertEquals("Phone was not updated in Firestore.", newPhone, userDoc.getString("phone"));
     }
 
+    /**
+     * Tests the user story: "As an entrant, I want to delete my profile if I no longer wish to use the app."
+     * @throws Exception if test setup or execution fails.
+     */
     @Test
     public void testDeleteProfile_AndDataIsRemoved() throws Exception {
         // 1. Create and log in a user.
@@ -124,7 +144,10 @@ public class TestProfileUI {
         assertFalse("User document should have been deleted from Firestore, but it still exists.", userDoc.exists());
     }
 
-
+    /**
+     * Cleans up the test environment by deleting the created test user.
+     * @throws Exception if cleanup fails.
+     */
     @After
     public void tearDown() throws Exception {
         if (mAuth.getCurrentUser() != null) {

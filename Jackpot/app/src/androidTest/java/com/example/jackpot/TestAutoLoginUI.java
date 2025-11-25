@@ -29,6 +29,10 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 
+/**
+ * Instrumented tests for the automatic login (persistent session) functionality.
+ * This class covers the user story: "As an entrant, I want to be identified by my device, so that I don't have to use a username and password."
+ */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class TestAutoLoginUI {
@@ -39,6 +43,10 @@ public class TestAutoLoginUI {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
+    /**
+     * Sets up the test environment before each test.
+     * @throws Exception if setup fails.
+     */
     @Before
     public void setUp() throws Exception {
         Intents.init();
@@ -53,6 +61,11 @@ public class TestAutoLoginUI {
         }
     }
 
+    /**
+     * Helper method to create and sign in a test user.
+     * @return The created User object.
+     * @throws Exception if user creation fails.
+     */
     private User createAndLoginTestUser() throws Exception {
         String email = "autologin-user-" + UUID.randomUUID().toString() + "@example.com";
         String password = "password123";
@@ -69,6 +82,12 @@ public class TestAutoLoginUI {
         return testUser;
     }
 
+    /**
+     * Tests that a user is automatically logged in when restarting the app.
+     * Simulates a first-time login, then closes and relaunches the activity, verifying
+     * that the main app screen is displayed, skipping the login screen.
+     * @throws Exception if test execution fails.
+     */
     @Test
     public void testAutoLogin_OnAppRestart() throws Exception {
         // 1. First run: Create a user, which also signs them in.
@@ -87,6 +106,10 @@ public class TestAutoLoginUI {
         onView(withId(R.id.drawer_layout)).check(matches(isDisplayed()));
     }
 
+    /**
+     * Cleans up the test environment by deleting the created test user.
+     * @throws Exception if cleanup fails.
+     */
     @After
     public void tearDown() throws Exception {
         // Cleanup: Delete the user created during the test.

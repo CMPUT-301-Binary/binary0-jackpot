@@ -1,6 +1,8 @@
 package com.example.jackpot;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 import android.widget.DatePicker;
 
@@ -40,7 +42,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -56,9 +57,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Instrumented tests for UI flows related to the Entrant user role.
+ * This class covers user stories such as signing up, browsing events, joining waiting lists,
+ * and viewing event details via deep links.
+ */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class TestEventsUI {
+public class TestEventsUIEntrant {
     @Rule
     public ActivityScenarioRule<MainActivity> scenario = new
             ActivityScenarioRule<>(MainActivity.class);
@@ -70,6 +76,11 @@ public class TestEventsUI {
     private final List<String> testUserIds = new ArrayList<>();
 
 
+    /**
+     * Sets up the test environment. Initializes Firebase, disables app verification for testing,
+     * and ensures no user is signed in before each test runs.
+     * @throws Exception if setup fails.
+     */
     @Before
     public void setUp() throws Exception {
         Intents.init();
@@ -83,6 +94,10 @@ public class TestEventsUI {
         }
     }
 
+    /**
+     * Helper method to create and log in a new user with the ENTRANT role.
+     * @throws Exception if user creation or Firestore write fails.
+     */
     private void createAndLoginTestUser() throws Exception {
         String email = "testuser-" + UUID.randomUUID().toString() + "@example.com";
         String password = "password123";
@@ -96,6 +111,37 @@ public class TestEventsUI {
         Thread.sleep(1000); 
     }
 
+    /**
+     * Tests the user story: "As an entrant, I want to view event details within the app by scanning the promotional QR code."
+     * This is simulated by launching the app with a deep link intent.
+     * @throws Exception if test setup fails.
+     */
+    @Test
+    public void testViewEventDetails_ViaQRCodeDeepLink() throws Exception {
+        // 1. Setup: Create a user and a target event.
+        createAndLoginTestUser();
+        String eventId = "deep-link-event-" + UUID.randomUUID().toString();
+        String eventName = "Deep Link Gala";
+        Event testEvent = new Event(eventId, "org", eventName, "desc", new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Tasks.await(db.collection("events").document(eventId).set(testEvent));
+        testEventIds.add(eventId);
+
+        // 2. Action: Simulate a deep link scan by creating and launching an intent.
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("jackpot://event/" + eventId));
+        intent.setPackage(InstrumentationRegistry.getInstrumentation().getTargetContext().getPackageName());
+        ActivityScenario.launch(intent);
+
+        // 3. Wait for the activity to process the deep link and load data.
+        Thread.sleep(4000);
+
+        // 4. Verification: Check that the EventDetailsActivity is showing the correct event name.
+        onView(withId(R.id.event_details_name)).check(matches(withText(eventName)));
+    }
+
+    /**
+     * Tests the user story: "As an entrant, I want to be able to sign up for an event from the event details."
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testEntrantJoinsEventFromDetailsActivity() throws Exception {
         // 1. Setup: Create a user and a new event to join.
@@ -139,6 +185,10 @@ public class TestEventsUI {
         assertTrue("Test user was not found in the waiting list after joining from details.", isUserInWaitingList);
     }
 
+    /**
+     * Tests the user story: "As an entrant, I want to be informed about the criteria or guidelines for the lottery selection process."
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testLotteryGuidelinesDisplayed() throws Exception {
         createAndLoginTestUser();
@@ -167,6 +217,11 @@ public class TestEventsUI {
         onView(withId(R.id.event_details_description)).check(matches(withText(containsString(guidelines))));
     }
 
+    /**
+     * Tests the user story: "As an entrant, I want to know how many total entrants are on the waiting list for an event."
+     * Verifies the count on both the home list and the events screen, and that it updates live.
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testWaitingListCountIsDisplayedCorrectly() throws Exception {
         createAndLoginTestUser();
@@ -202,6 +257,10 @@ public class TestEventsUI {
         onData(anything()).inAdapterView(withId(R.id.entrant_events)).atPosition(0).onChildView(withId(R.id.event_details)).check(matches(withText(containsString("Waiting: 4"))));
     }
 
+    /**
+     * Cleans up the test environment by deleting any created users and events from Firebase.
+     * @throws Exception if cleanup fails.
+     */
     @After
     public void tearDown() throws Exception {
         if (mAuth.getCurrentUser() != null) {
@@ -225,7 +284,11 @@ public class TestEventsUI {
         Intents.release();
     }
 
-    // Other tests remain unchanged...
+
+    /**
+     * Tests the user story: "As an entrant, I want to provide my personal information such as name, email and optional phone number in the app."
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testEntrantSignup_AndDataIsSaved() throws Exception {
         ActivityScenario<SignupEntrantActivity> scenario = ActivityScenario.launch(SignupEntrantActivity.class);
@@ -259,6 +322,10 @@ public class TestEventsUI {
         assertEquals("Phone does not match input.", phone, savedUser.getPhone());
     }
 
+    /**
+     * Tests the user story: "As an entrant, I want to be able to see a list of events that I can join the waiting list for."
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testSeesListOfEventsOnHomeFragment() throws Exception {
         createAndLoginTestUser();
@@ -280,6 +347,10 @@ public class TestEventsUI {
         onView(withId(R.id.events_list)).check(matches(hasChildCount(2)));
     }
 
+    /**
+     * Tests joining an event from the home screen list.
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testEntrantJoinsEventFromHome() throws Exception {
         createAndLoginTestUser();
@@ -314,6 +385,10 @@ public class TestEventsUI {
         intended(not(hasComponent(EventDetailsActivity.class.getName())));
     }
 
+    /**
+     * Tests leaving an event from the "My Events" screen.
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testEntrantLeavesEventFromEventsFragment() throws Exception {
         createAndLoginTestUser();
@@ -348,6 +423,10 @@ public class TestEventsUI {
         assertFalse("Test user should NOT be in the waiting list after leaving.", isUserInWaitingList);
     }
 
+    /**
+     * Tests filtering events by the "Party" category on the home screen.
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testFilterEventsByCategory() throws Exception {
         createAndLoginTestUser();
@@ -382,6 +461,10 @@ public class TestEventsUI {
         onView(withId(R.id.events_list)).check(matches(hasChildCount(2)));
     }
 
+    /**
+     * Tests filtering events by location on the home screen.
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testFilterEventsByLocation() throws Exception {
         createAndLoginTestUser();
@@ -407,6 +490,10 @@ public class TestEventsUI {
         onData(anything()).inAdapterView(withId(R.id.events_list)).atPosition(0).onChildView(withId(R.id.event_name)).check(matches(withText("Edmonton Expo")));
     }
 
+    /**
+     * Tests filtering events by date on the home screen.
+     * @throws Exception if test setup fails.
+     */
     @Test
     public void testFilterEventsByDate() throws Exception {
         createAndLoginTestUser();
@@ -436,8 +523,12 @@ public class TestEventsUI {
         onData(anything()).inAdapterView(withId(R.id.events_list)).atPosition(0).onChildView(withId(R.id.event_name)).check(matches(withText("Tomorrow's Gala")));
     }
 
+    /**
+     * A simple test to verify the application context.
+     */
     @Test
     public void useAppContext() {
+        // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         assertEquals("com.example.jackpot", appContext.getPackageName());
     } 
