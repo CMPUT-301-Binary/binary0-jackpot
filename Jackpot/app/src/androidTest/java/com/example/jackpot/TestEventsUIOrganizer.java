@@ -56,6 +56,11 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+/**
+ * Instrumented tests for UI flows related to the Organizer user role.
+ * This class covers user stories such as creating events with various options like
+ * QR codes, registration periods, and waiting list limits.
+ */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class TestEventsUIOrganizer {
@@ -67,6 +72,10 @@ public class TestEventsUIOrganizer {
     private FirebaseFirestore db;
     private final List<String> testEventIds = new ArrayList<>();
 
+    /**
+     * Sets up the test environment before each test.
+     * @throws Exception if setup fails.
+     */
     @Before
     public void setUp() throws Exception {
         Intents.init();
@@ -80,6 +89,11 @@ public class TestEventsUIOrganizer {
         }
     }
 
+    /**
+     * Helper method to create and log in a new user with the ORGANIZER role.
+     * @return The created User object.
+     * @throws Exception if user creation or login fails.
+     */
     private User createAndLoginOrganizer() throws Exception {
         String email = "organizer-" + UUID.randomUUID().toString() + "@example.com";
         String password = "password123";
@@ -94,6 +108,11 @@ public class TestEventsUIOrganizer {
         return testUser;
     }
 
+    /**
+     * Tests the user story: "As an organizer, I want to upload an event poster to the event details page to provide visual information to entrants."
+     * This test specifically covers UPDATING an existing poster.
+     * @throws Exception if test execution fails.
+     */
     @Test
     public void testUpdateEventPoster() throws Exception {
         User organizer = createAndLoginOrganizer();
@@ -130,7 +149,11 @@ public class TestEventsUIOrganizer {
         assertNotEquals("Poster URI should have changed, but it matches the initial URI.", initialPosterUri, updatedEvent.getPosterUri());
     }
     
-    // --- EXISTING TESTS ---
+    /**
+     * Tests the user story: "As an organizer, I want to upload an event poster..."
+     * This test specifically covers creating a NEW event with a poster.
+     * @throws Exception if test execution fails.
+     */
     @Test
     public void testCreateEvent_WithPosterUpload() throws Exception {
         createAndLoginOrganizer();
@@ -174,6 +197,11 @@ public class TestEventsUIOrganizer {
         assertFalse("Poster URI should not be empty.", createdEvent.getPosterUri().isEmpty());
     }
 
+    /**
+     * Tests the user story: "As an organizer I want to OPTIONALLY limit the number of entrants who can join my waiting list."
+     * This test covers the case where a limit is provided.
+     * @throws Exception if test execution fails.
+     */
     @Test
     public void testCreateEvent_WithWaitingListLimit() throws Exception {
         createAndLoginOrganizer();
@@ -213,6 +241,11 @@ public class TestEventsUIOrganizer {
         assertEquals("Waiting list capacity does not match the set limit.", 5, (int) createdEvent.getWaitingList().getCapacity());
     }
 
+    /**
+     * Tests the user story: "As an organizer I want to OPTIONALLY limit the number of entrants..."
+     * This test covers the case where the limit is left blank (is optional).
+     * @throws Exception if test execution fails.
+     */
     @Test
     public void testCreateEvent_WithoutWaitingListLimit() throws Exception {
         createAndLoginOrganizer();
@@ -250,6 +283,11 @@ public class TestEventsUIOrganizer {
         assertNull("Waiting list capacity should be null when not set.", createdEvent.getWaitingList().getCapacity());
     }
 
+    /**
+     * Tests the user story: "As an organizer, I want to set a registration period."
+     * Verifies that the start and end dates/times are correctly saved to Firestore.
+     * @throws Exception if test execution fails.
+     */
     @Test
     public void testCreateEvent_WithRegistrationPeriod() throws Exception {
         createAndLoginOrganizer();
@@ -337,6 +375,10 @@ public class TestEventsUIOrganizer {
         assertEquals(17, closeResultCal.get(Calendar.HOUR_OF_DAY));
     }
 
+    /**
+     * Tests the user story: "As an organizer I want to create a new event and generate a unique promotional QR code..."
+     * @throws Exception if test execution fails.
+     */
     @Test
     public void testCreateEvent_WithPromotionalQRCode() throws Exception {
         createAndLoginOrganizer();
@@ -401,6 +443,10 @@ public class TestEventsUIOrganizer {
         assertFalse("Poster URI should not be empty.", createdEvent.getPosterUri().isEmpty());
     }
 
+    /**
+     * Cleans up the test environment by deleting any created users and events from Firebase.
+     * @throws Exception if cleanup fails.
+     */
     @After
     public void tearDown() throws Exception {
         FirebaseUser currentUser = mAuth.getCurrentUser();

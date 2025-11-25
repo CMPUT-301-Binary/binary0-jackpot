@@ -46,6 +46,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * Instrumented tests for administrator functionalities.
+ * This class tests core admin user stories, including browsing and deleting profiles,
+ * events, and images.
+ */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class TestAdminUI {
@@ -58,6 +63,11 @@ public class TestAdminUI {
     private final List<String> testEventIds = new ArrayList<>();
     private final List<String> testUserIds = new ArrayList<>();
 
+    /**
+     * Sets up the test environment before each test.
+     * Initializes Firebase instances and signs out any existing user to ensure a clean slate.
+     * @throws Exception if setup fails.
+     */
     @Before
     public void setUp() throws Exception {
         Intents.init();
@@ -71,6 +81,11 @@ public class TestAdminUI {
         }
     }
 
+    /**
+     * Helper method to create a new, unique administrator user in Firebase Auth and Firestore,
+     * then signs them in for the test.
+     * @throws Exception if user creation or login fails.
+     */
     private void createAndLoginAdmin() throws Exception {
         String email = "admin-" + UUID.randomUUID().toString() + "@example.com";
         String password = "password123";
@@ -85,6 +100,11 @@ public class TestAdminUI {
         Thread.sleep(2000);
     }
 
+    /**
+     * Tests if an administrator can successfully navigate to the profile browsing screen
+     * and see a list of non-admin users.
+     * @throws Exception if test setup or execution fails.
+     */
     @Test
     public void testAdminCanBrowseProfiles() throws Exception {
         // 1. Log in as an Administrator
@@ -119,6 +139,12 @@ public class TestAdminUI {
                 .check(matches(hasDescendant(withText("Browser Organizer"))));
     }
 
+    /**
+     * Tests if an administrator can delete multiple organizer profiles sequentially.
+     * Verifies that the UI updates correctly after each deletion and confirms that the
+     * corresponding user documents are removed from Firestore while non-targeted users remain.
+     * @throws Exception if test setup or execution fails.
+     */
     @Test
     public void testAdminCanRemoveProfiles() throws Exception {
         // 1. Log in as an admin
@@ -175,6 +201,12 @@ public class TestAdminUI {
         assertTrue("Entrant who was not deleted should still exist in Firestore.", keepDoc.exists());
     }
 
+    /**
+     * Tests if an administrator can browse and delete images. It seeds the database with
+     * a user profile image and an event poster, navigates to the image browsing screen,
+     * deletes one image, and verifies that both the UI and the database state are updated correctly.
+     * @throws Exception if test setup or execution fails.
+     */
     @Test
     public void testAdminCanBrowseAndRemoveImages() throws Exception {
         createAndLoginAdmin();
@@ -224,6 +256,11 @@ public class TestAdminUI {
         assertEquals("User profileImageUrl should be unchanged.", profileUrl, userDoc.getString("profileImageUrl"));
     }
 
+    /**
+     * Tests if an administrator can browse events on the home screen.
+     * It seeds the database with two events and verifies they are displayed in the list.
+     * @throws Exception if test setup or execution fails.
+     */
     @Test
     public void testAdminCanBrowseEvents() throws Exception {
         createAndLoginAdmin();
@@ -250,6 +287,12 @@ public class TestAdminUI {
         onView(withId(R.id.events_list)).check(matches(hasChildCount(2)));
     }
 
+    /**
+     * Tests if an administrator can delete an event from the event details screen.
+     * It creates two events, navigates to the details of one, deletes it, and then
+     * verifies that the UI list updates and the event document is removed from Firestore.
+     * @throws Exception if test setup or execution fails.
+     */
     @Test
     public void testAdminCanDeleteEvent() throws Exception {
         createAndLoginAdmin();
@@ -284,6 +327,11 @@ public class TestAdminUI {
         assertFalse("Event document should have been deleted from Firestore, but it still exists.", deletedDoc.exists());
     }
 
+    /**
+     * Cleans up the test environment after each test by deleting all created
+     * test users and events from Firebase Auth and Firestore.
+     * @throws Exception if cleanup fails.
+     */
     @After
     public void tearDown() throws Exception {
         for (String eventId : testEventIds) {
