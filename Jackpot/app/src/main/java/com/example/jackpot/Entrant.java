@@ -4,7 +4,6 @@ import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class Entrant extends User {
     //private boolean notificationsOptOut;
@@ -25,7 +24,7 @@ public class Entrant extends User {
         if (event==null) {
             throw new NullPointerException("Event is null");
         }
-        if (event.hasEntrant(this)) {
+        if (event.entrantInWaitingList(this)) {
             throw new IllegalArgumentException("Event already has entrant");
         }
         event.addEntrantWaitingList(this);
@@ -41,7 +40,7 @@ public class Entrant extends User {
         if (event==null) {
             throw new NullPointerException("Event is null");
         }
-        if (event.hasEntrant(this)) {
+        if (event.entrantInWaitingList(this)) {
             event.removeEntrantWaitingList(this);
         } else {
             throw new IllegalArgumentException("Event does not have entrant");

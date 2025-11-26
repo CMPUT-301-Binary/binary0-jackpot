@@ -21,6 +21,7 @@ import com.example.jackpot.EventList;
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.example.jackpot.UserList;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -218,7 +219,7 @@ public class EventsFragment extends Fragment {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
-                    ArrayList<Event> wishlistEvents = new ArrayList<>();
+                    ArrayList<Event> listToDisplay = new ArrayList<>();
                     Entrant check = new Entrant(
                             currentUser.getId(),
                             currentUser.getName(),
@@ -232,11 +233,24 @@ public class EventsFragment extends Fragment {
                             currentUser.getGeoPoint()
                     );
                     for (Event event : events) {
-                        if (event.getWaitingList() != null && event.hasEntrant(check)) {
-                            wishlistEvents.add(event);
+                        UserList listToSearch = null;
+                        // switch cases for list to check
+                        switch (currentTab) {
+                            case JOINED:
+                                listToSearch = event.getJoinedList();
+                                break;
+                            case WISHLIST:
+                                listToSearch = event.getWaitingList();
+                                break;
+                            case INVITATIONS:
+                                listToSearch = event.getInvitedList();
+                                break;
+                        }
+                        if (listToSearch != null && event.entrantInList(check, listToSearch)) {
+                            listToDisplay.add(event);
                         }
                     }
-                    updateEventList(wishlistEvents);
+                    updateEventList(listToDisplay);
                 }
             }
 
@@ -248,19 +262,7 @@ public class EventsFragment extends Fragment {
                 }
             }
         };
-        switch (currentTab) {
-            case JOINED:
-                Toast.makeText(getContext(), "TODO: Joined Events", Toast.LENGTH_SHORT).show();
-                break;
-            case WISHLIST:
-//                fDatabase.queryEventsWithArrayContains("waitingList", currentUser, callback);
-                fDatabase.getAllEvents(callback);
-
-                break;
-            case INVITATIONS:
-                Toast.makeText(getContext(), "TODO: Invitations Events", Toast.LENGTH_SHORT).show();
-                break;
-        }
+        fDatabase.getAllEvents(callback);
     }
 
     /**

@@ -25,14 +25,14 @@ public class EventTest {
 
         // Create a new event instance with the pre-populated waiting list
         event = new Event("event_id", "organizer_id", "Test Event", "Description", 
-                        waitingList, "Location", new Date(), 0.0, 0.0, 0.0, 20, 
+                        waitingList, new UserList(), new UserList(), "Location", new Date(), 0.0, 0.0, 0.0, 20,
                         new Date(), new Date(), "", "", false, "Category");
     }
 
     @Test
     public void testDrawEvent_SuccessfulDraw() {
         // Action: Draw 2 entrants from the waiting list of 5
-        ArrayList<Entrant> winners = event.drawEvent(2);
+        ArrayList<User> winners = event.drawEvent(2);
 
         // Verification
         // 1. Check that exactly 2 winners were returned
@@ -42,7 +42,7 @@ public class EventTest {
         assertEquals("Waiting list should be smaller after the draw.", 3, event.getWaitingList().size());
 
         // 3. Verify that the winners are no longer in the waiting list
-        for (Entrant winner : winners) {
+        for (User winner : winners) {
             assertFalse("Drawn winner should not be in the waiting list anymore.", event.getWaitingList().contains(winner));
         }
     }
@@ -59,7 +59,7 @@ public class EventTest {
     @Test
     public void testDrawEvent_DrawAllEntrants() {
         // Action: Draw all 5 entrants
-        ArrayList<Entrant> winners = event.drawEvent(5);
+        ArrayList<User> winners = event.drawEvent(5);
 
         // Verification
         // 1. Check that 5 winners were returned
@@ -72,7 +72,7 @@ public class EventTest {
     @Test
     public void testDrawEvent_DrawZeroEntrants() {
         // Action: Draw 0 entrants
-        ArrayList<Entrant> winners = event.drawEvent(0);
+        ArrayList<User> winners = event.drawEvent(0);
 
         // Verification
         // 1. Check that the returned list is empty
