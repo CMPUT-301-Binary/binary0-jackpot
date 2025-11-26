@@ -80,12 +80,12 @@ public class EventsFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         String roleName = getArguments() != null ? getArguments().getString("role") : User.Role.ENTRANT.name();
         User.Role role = User.Role.valueOf(roleName);
-
+        Log.d("ROLE_CHECK", "Received role = " + roleName);
         View root;
         int eventItemLayoutResource;
         switch (role) {
             case ORGANIZER:
-                root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
+                root = inflater.inflate(R.layout.fragment_events_organizer, container, false);
                 eventItemLayoutResource = R.layout.item_event;
                 break;
             default:
