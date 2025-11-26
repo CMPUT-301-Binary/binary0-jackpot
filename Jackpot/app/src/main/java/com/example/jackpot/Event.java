@@ -607,7 +607,13 @@ public class Event implements Serializable {
      * @return True if the entrant is in the joined list, false otherwise.
      */
     public boolean entrantInList(Entrant entrant, UserList list) {
-        return list.contains(entrant);
+        //Loop through the list and see if an identical entrant is in there
+        for (int i = 0; i < list.size(); i++) {
+            if (Objects.equals(list.get(i).getId(), entrant.getId())) {
+                return true;
+            }
+        }
+        return false;
     }
     /**
      * Cancels an enrollment.
