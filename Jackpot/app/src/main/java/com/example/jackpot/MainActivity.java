@@ -327,4 +327,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    public User.Role getCurrentUserRole(){
+        return currentRole;
+    }
 }
