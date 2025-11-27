@@ -24,6 +24,8 @@ public class Event implements Serializable {
     private String name;
     private String description;
     private UserList waitingList;
+    private UserList joinedList;
+    private UserList invitedList;
     private String location;
     private Date date;
     private Double lat;
@@ -51,6 +53,8 @@ public class Event implements Serializable {
      * @param name The name of the event
      * @param description The description of the event
      * @param waitingList The waiting list of the event
+     * @param joinedList The joined list of the event
+     * @param invitedList The invited list of the event
      * @param location The location of the event
      * @param date The date of the event
      * @param lat The latitude of the event
@@ -65,7 +69,7 @@ public class Event implements Serializable {
      * @param category The category of the event
      */
     public Event(String eventId, String organizerId, String name, String description,
-                 UserList waitingList, String location, Date date, Double lat,
+                 UserList waitingList, UserList joinedList, UserList invitedList, String location, Date date, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
                  Date regCloseAt, String posterUri, String qrCodeId, boolean geoRequired, String category){
         this.eventId = eventId;
@@ -73,6 +77,8 @@ public class Event implements Serializable {
         this.name = name;
         this.description = description;
         this.waitingList = waitingList;
+        this.joinedList = joinedList;
+        this.invitedList = invitedList;
         this.location = location;
         this.date = date;
         this.lat = lat;
@@ -175,6 +181,40 @@ public class Event implements Serializable {
      */
     public void setWaitingList(UserList waitingList) {
         this.waitingList = waitingList;
+    }
+
+    /**
+     * Gets the joined list of the event.
+     *
+     * @return The joined list of the event.
+     */
+    public UserList getJoinedList() {
+        return joinedList;
+    }
+
+    /**
+     * Sets the joined list of the event.
+     *
+     * @param joinedList The joined list to set.
+     */
+    public void setJoinedList(UserList joinedList) {
+        this.joinedList = joinedList;
+    }
+
+    /**
+     * Gets the invited list of the event.
+     * @return The invited list of the event.
+     */
+    public UserList getInvitedList() {
+        return invitedList;
+    }
+
+    /**
+     * Sets the invited list of the event.
+     * @param invitedList
+     */
+    public void setInvitedList(UserList invitedList) {
+        this.invitedList = invitedList;
     }
 
     /**
@@ -560,12 +600,22 @@ public class Event implements Serializable {
             waitingList.remove(entrant);
         }
     }
-//    public void recordInvitation(Notification invitation) {
-//
-//    }
-//    public void recordEnrolment(Notification enrollment) {
-//
-//    }
+
+    /**
+     * Checks if an entrant is in the list.
+     * @param id The entrant to check.
+     * @param list The list to check.
+     * @return True if the entrant is in the joined list, false otherwise.
+     */
+    public boolean entrantInList(String id, UserList list) {
+        //Loop through the list and see if an identical entrant is in there
+        for (User e : list.getUsers()) {
+            if (Objects.equals(e.getId(), id)) {
+                return true;
+            }
+        }
+        return false;
+    }
     /**
      * Cancels an enrollment.
      * @param enrollment The enrollment to cancel.

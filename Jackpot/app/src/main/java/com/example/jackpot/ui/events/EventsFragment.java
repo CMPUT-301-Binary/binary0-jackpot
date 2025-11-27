@@ -21,6 +21,7 @@ import com.example.jackpot.EventList;
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.example.jackpot.UserList;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -70,6 +71,16 @@ public class EventsFragment extends Fragment {
     /**
      * Called to have the fragment instantiate its user interface view.
      * This will check the user's role to ensure the correct layout is inflated.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return
      */
     @Nullable
     @Override
@@ -313,11 +324,13 @@ public class EventsFragment extends Fragment {
         Button wishlistButton = root.findViewById(R.id.wishlist_events_button);
         Button invitsButton = root.findViewById(R.id.invits_events_button);
 
+        // Define colours for the buttons
         int activeColor = ContextCompat.getColor(requireContext(), R.color.black);
         int inactiveColor = ContextCompat.getColor(requireContext(), R.color.white);
         int activeTextColor = ContextCompat.getColor(requireContext(), R.color.white);
         int inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.black);
 
+        // set initial state
         wishlistButton.setBackgroundColor(activeColor);
         wishlistButton.setTextColor(activeTextColor);
         joinedButton.setBackgroundColor(inactiveColor);
@@ -327,8 +340,10 @@ public class EventsFragment extends Fragment {
 
         joinedButton.setOnClickListener(v -> {
             currentTab = EventTab.JOINED;
+            // Set active state for Joined button
             joinedButton.setBackgroundColor(activeColor);
             joinedButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
             wishlistButton.setBackgroundColor(inactiveColor);
             wishlistButton.setTextColor(inactiveTextColor);
             invitsButton.setBackgroundColor(inactiveColor);
@@ -338,8 +353,10 @@ public class EventsFragment extends Fragment {
 
         wishlistButton.setOnClickListener(v -> {
             currentTab = EventTab.WISHLIST;
+            // Set active state for Wishlist button
             wishlistButton.setBackgroundColor(activeColor);
             wishlistButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
             joinedButton.setBackgroundColor(inactiveColor);
             joinedButton.setTextColor(inactiveTextColor);
             invitsButton.setBackgroundColor(inactiveColor);
@@ -349,8 +366,10 @@ public class EventsFragment extends Fragment {
 
         invitsButton.setOnClickListener(v -> {
             currentTab = EventTab.INVITATIONS;
+            // Set active state for Invitations button
             invitsButton.setBackgroundColor(activeColor);
             invitsButton.setTextColor(activeTextColor);
+            // Set inactive state for other buttons
             wishlistButton.setBackgroundColor(inactiveColor);
             wishlistButton.setTextColor(inactiveTextColor);
             joinedButton.setBackgroundColor(inactiveColor);
@@ -371,6 +390,7 @@ public class EventsFragment extends Fragment {
                     if (isAdded() && !data.isEmpty()) {
                         currentUser = data.get(0);
                         eventAdapter.setCurrentUser(currentUser);
+                        // Once user is fetched, load events for the default tab
                         loadEventsForTab();
                     } else {
                         Log.d("EventsFragment", "User not found in database.");
@@ -400,7 +420,7 @@ public class EventsFragment extends Fragment {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
-                    ArrayList<Event> wishlistEvents = new ArrayList<>();
+                    ArrayList<Event> listToDisplay = new ArrayList<>();
                     Entrant check = new Entrant(
                             currentUser.getId(),
                             currentUser.getName(),
@@ -414,11 +434,24 @@ public class EventsFragment extends Fragment {
                             currentUser.getGeoPoint()
                     );
                     for (Event event : events) {
-                        if (event.getWaitingList() != null && event.hasEntrant(check.getId())) {
-                            wishlistEvents.add(event);
+                        UserList listToSearch = null;
+                        // switch cases for list to check
+                        switch (currentTab) {
+                            case JOINED:
+                                listToSearch = event.getJoinedList();
+                                break;
+                            case WISHLIST:
+                                listToSearch = event.getWaitingList();
+                                break;
+                            case INVITATIONS:
+                                listToSearch = event.getInvitedList();
+                                break;
+                        }
+                        if (listToSearch != null && event.entrantInList(check.getId(), listToSearch)) {
+                            listToDisplay.add(event);
                         }
                     }
-                    updateEventList(wishlistEvents);
+                    updateEventList(listToDisplay);
                 }
             }
 
@@ -430,22 +463,12 @@ public class EventsFragment extends Fragment {
                 }
             }
         };
-
-        switch (currentTab) {
-            case JOINED:
-                Toast.makeText(getContext(), "TODO: Joined Events", Toast.LENGTH_SHORT).show();
-                break;
-            case WISHLIST:
-                fDatabase.getAllEvents(callback);
-                break;
-            case INVITATIONS:
-                Toast.makeText(getContext(), "TODO: Invitations Events", Toast.LENGTH_SHORT).show();
-                break;
-        }
+        fDatabase.getAllEvents(callback);
     }
 
     /**
      * Updates the event list with the given events.
+     * @param events The events to update the list with.
      */
     private void updateEventList(ArrayList<Event> events) {
         ArrayList<Event> adapterList = displayedEvents.getEvents();

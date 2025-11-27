@@ -352,6 +352,10 @@ public class EventCreationFragment extends Fragment {
 
         UserList waitingList = new UserList(waitLimitVal[0]);
         eventDoc.put("waitingList", waitingList);
+        UserList joinedList = new UserList(capacityVal);
+        eventDoc.put("joinedList", joinedList);
+        UserList invitedList = new UserList(0);
+        eventDoc.put("invitedList", invitedList);
         // endregion
 
         submitButton.setEnabled(false);
