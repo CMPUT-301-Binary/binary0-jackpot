@@ -571,12 +571,12 @@ public class Event implements Serializable {
      * @param reason The reason for the cancellation.
      * @throws IllegalArgumentException If the enrollment is null.
      */
-    public Notification cancelEnrollment(Notification enrollment, String reason) {
-        if (enrollment == null) {
-            throw new IllegalArgumentException("enrollment is null");
-        }
-        return new Notification(enrollment.getRecipientID(), enrollment.getEventID(), "Cancellation", reason);
-    }
+//    public Notification cancelEnrollment(Notification enrollment, String reason) {
+//        if (enrollment == null) {
+//            throw new IllegalArgumentException("enrollment is null");
+//        }
+//        return new Notification(enrollment.getRecipientID(), enrollment.getEventID(), "Cancellation", reason);
+//    }
 
     /**
      * Draws a random sample of entrants from the waiting list.

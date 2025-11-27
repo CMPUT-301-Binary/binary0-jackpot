@@ -1,5 +1,7 @@
 package com.example.jackpot;
 
+import android.os.Build;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -28,9 +30,9 @@ import java.util.UUID;
  * This is a data model only; transport is handled by services/repositories.
  */
 public class Notification {
-    private UUID notificationID;
-    private UUID recipientID;
-    private UUID eventID;
+    private String notificationID;
+    private String recipientID;
+    private String eventID;
     private String notifType;
     private String payload;
     private Instant sentAt;
@@ -47,13 +49,15 @@ public class Notification {
      * @param notifType A string representing the type of notification (e.g., "NEW_EVENT", "WINNER_ANNOUNCEMENT").
      * @param payload The main content/message of the notification.
      */
-    public Notification( UUID recipientID, UUID eventID, String notifType, String payload){
-        this.notificationID = UUID.randomUUID();
+    public Notification(String recipientID, String eventID, String notifType, String payload){
+        this.notificationID = UUID.randomUUID().toString();
         this.recipientID = recipientID;
         this.eventID = eventID;
         this.notifType = notifType;
         this.payload = payload;
-        this.sentAt = Instant.now();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            this.sentAt = Instant.now();
+        }
         this.deliverStatus = false;
     }
 
@@ -61,7 +65,7 @@ public class Notification {
      * Gets the unique identifier of the notification.
      * @return The notification's UUID.
      */
-    public UUID getNotificationID() {
+    public String getNotificationID() {
         return notificationID;
     }
 
@@ -69,7 +73,7 @@ public class Notification {
      * Sets the unique identifier of the notification.
      * @param notificationID The UUID to set.
      */
-    public void setNotificationID(UUID notificationID) {
+    public void setNotificationID(String notificationID) {
         this.notificationID = notificationID;
     }
 
@@ -77,7 +81,7 @@ public class Notification {
      * Gets the ID of the recipient user.
      * @return The recipient's UUID.
      */
-    public UUID getRecipientID() {
+    public String getRecipientID() {
         return recipientID;
     }
 
@@ -85,7 +89,7 @@ public class Notification {
      * Sets the ID of the recipient user.
      * @param recipientID The recipient's UUID to set.
      */
-    public void setRecipientID(UUID recipientID) {
+    public void setRecipientID(String recipientID) {
         this.recipientID = recipientID;
     }
 
@@ -93,7 +97,7 @@ public class Notification {
      * Gets the ID of the related event.
      * @return The event's UUID.
      */
-    public UUID getEventID() {
+    public String getEventID() {
         return eventID;
     }
 
@@ -101,7 +105,7 @@ public class Notification {
      * Sets the ID of the related event.
      * @param eventID The event's UUID to set.
      */
-    public void setEventID(UUID eventID) {
+    public void setEventID(String eventID) {
         this.eventID = eventID;
     }
 

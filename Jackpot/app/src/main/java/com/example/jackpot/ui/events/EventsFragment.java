@@ -86,7 +86,7 @@ public class EventsFragment extends Fragment {
         switch (userRole) {
             case ORGANIZER:
                 root = inflater.inflate(R.layout.fragment_events_organizer, container, false);
-                eventItemLayoutResource = R.layout.fragment_events_organizer;  // Use organizer-specific layout
+                eventItemLayoutResource = R.layout.item_event;  // Use organizer-specific layout
                 break;
             default:
                 root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
