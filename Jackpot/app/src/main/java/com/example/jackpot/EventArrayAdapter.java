@@ -108,7 +108,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         // Handle the correct layout
         switch (viewType) {
             case EVENTS:
-                setupEntrantEventView(view, event);
+                setupEventView(view, event);
                 break;
             case HOME:
             default:
@@ -124,7 +124,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
      * @param view The view to set up.
      * @param event The event to set up the view for.
      */
-    private void setupEntrantEventView(View view, Event event) {
+    private void setupEventView(View view, Event event) {
         ImageView eventImage = view.findViewById(R.id.event_pic);
         TextView eventTitle = view.findViewById(R.id.event_text);
         TextView eventDetails = view.findViewById(R.id.event_details);
