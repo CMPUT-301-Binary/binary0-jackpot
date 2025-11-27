@@ -8,6 +8,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.example.jackpot.MainActivity;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
 
@@ -39,15 +41,20 @@ public class NotificationFragment extends Fragment {
 //        ((ViewGroup) root).addView(tv);
 //        return root;
         String roleName = getArguments() != null ? getArguments().getString("role") : "ENTRANT";
-        User.Role role = User.Role.valueOf(roleName);
+        //User.Role role = User.Role.valueOf(roleName);
+        User.Role role = ((MainActivity) requireActivity()).getCurrentUserRole();
 
-        if (roleName != null) {
-            role = User.Role.valueOf(roleName);
-        } else {
-            // Default to ENTRANT or whatever makes sense
+//        if (roleName != null) {
+//            role = User.Role.valueOf(roleName);
+//        } else {
+//            // Default to ENTRANT or whatever makes sense
+//            role = User.Role.ENTRANT;
+//        }
+//        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+
+        if (role == null){
             role = User.Role.ENTRANT;
         }
-//        role = User.Role.ORGANIZER; // TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         // Inflate correct home layout
         View root;
         switch (role) {
