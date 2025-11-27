@@ -115,6 +115,15 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reload the event data when activity resumes to catch any changes
+        if (eventId != null) {
+            loadFullEventFromDatabase();
+        }
+    }
+
     /**
      * Initialize all views.
      */
@@ -183,6 +192,8 @@ public class EventDetailsActivity extends AppCompatActivity {
 
                         case ENTRANT:
                             joinButton.setVisibility(View.VISIBLE);
+                            // Check button state immediately after making it visible
+                            updateJoinButtonState();
                             break;
                     }
                 })
@@ -282,6 +293,21 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     /**
+     * Update the join button state based on whether user is in waiting list
+     */
+    private void updateJoinButtonState() {
+        if (currentEvent != null && currentUser != null && currentUser.getRole() == User.Role.ENTRANT) {
+            if (isUserInWaitingList(currentEvent)) {
+                joinButton.setEnabled(false);
+                joinButton.setText("Joined");
+            } else {
+                joinButton.setEnabled(true);
+                joinButton.setText("Join Waiting List");
+            }
+        }
+    }
+
+    /**
      * Fetch full event from Firestore (including waitingList, posterUri, qrCodeId).
      */
     private void loadFullEventFromDatabase() {
@@ -300,16 +326,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 "%d people waiting", waitingCount));
                     }
 
-                    // Check if user is already in waiting list and update button
-                    if (currentUser != null && currentUser.getRole() == User.Role.ENTRANT) {
-                        if (isUserInWaitingList(event)) {
-                            joinButton.setEnabled(false);
-                            joinButton.setText("Joined");
-                        } else {
-                            joinButton.setEnabled(true);
-                            joinButton.setText("Join Waiting List");
-                        }
-                    }
+                    // Update join button state
+                    updateJoinButtonState();
 
                     // Load poster + QR code into ViewPager2
                     loadEventImages(event);
@@ -512,16 +530,27 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         try {
             entrant.joinWaitingList(event);
+
+            // Update the database
             FDatabase.getInstance().updateEvent(event);
 
+            // Update the waiting count
             waitingCount++;
             eventWaiting.setText(String.format(Locale.getDefault(),
                     "%d people waiting", waitingCount));
 
+            // Update button state immediately
             joinButton.setEnabled(false);
             joinButton.setText("Joined");
+
+            // Update the current event reference
+            currentEvent = event;
+
+            Toast.makeText(this, "Joined waiting list!", Toast.LENGTH_SHORT).show();
+
         } catch (Exception e) {
             Toast.makeText(this, "Failed to join: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Error joining waiting list", e);
         }
     }
 
