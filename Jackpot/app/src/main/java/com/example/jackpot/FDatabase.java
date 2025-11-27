@@ -8,6 +8,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
@@ -283,5 +284,43 @@ public class FDatabase {
                 .delete()
                 .addOnSuccessListener(aVoid -> callback.onSuccess())
                 .addOnFailureListener(e -> callback.onFailure(e.getMessage()));
+    }
+
+
+    /**
+     * Queries events created by a specific organizer.
+     *
+     * @param creatorId The ID of the organizer who created the events
+     * @param callback Callback to handle the results
+     */
+    public void queryEventsByCreator(String creatorId, DataCallback<Event> callback) {
+        // Query using "createdBy" field (from EventCreationFragment)
+        // If your Event class uses "organizerId", Firestore will automatically map it
+        db.collection("events")
+                .whereEqualTo("createdBy", creatorId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    ArrayList<Event> events = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        try {
+                            Event event = document.toObject(Event.class);
+                            if (event != null) {
+                                // Manually set organizerId from createdBy if needed
+                                if (event.getOrganizerId() == null) {
+                                    String createdBy = document.getString("createdBy");
+                                    event.setOrganizerId(createdBy);
+                                }
+                                events.add(event);
+                            }
+                        } catch (Exception e) {
+                            Log.e("FDatabase", "Error parsing event: " + document.getId(), e);
+                        }
+                    }
+                    callback.onSuccess(events);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FDatabase", "Failed to query events by creator", e);
+                    callback.onFailure(e);
+                });
     }
 }

@@ -175,6 +175,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
     }
 
+
     /**
      * Set up the view for a regular event.
      * @param view The view to set up.
@@ -242,17 +243,18 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             }
         }
 
-        //Load the image from the database and show it. Use glide
-        String imageUri = event.getPosterUri();
-        //Log imageUri for debugging
-        if (imageUri != null && !imageUri.isEmpty()) {
-            Glide.with(getContext())
-                    .load(imageUri)
-                    .placeholder(R.drawable._ukj7h)
-                    .error(R.drawable.jackpottitletext)
-                    .into(eventImage);
-        } else {
-            eventImage.setImageResource(R.drawable._ukj7h);
+        // IMPORTANT: Only load image if ImageView exists
+        if (eventImage != null) {
+            String imageUri = event.getPosterUri();
+            if (imageUri != null && !imageUri.isEmpty()) {
+                Glide.with(getContext())
+                        .load(imageUri)
+                        .placeholder(R.drawable._ukj7h)
+                        .error(R.drawable.jackpottitletext)
+                        .into(eventImage);
+            } else {
+                eventImage.setImageResource(R.drawable._ukj7h);
+            }
         }
     }
 
