@@ -28,6 +28,10 @@
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
         tools:layout="@layout/fragment_notification_entrant" />
+        <argument
+            android:name="role"
+            app:argType="string"
+            android:defaultValue="ENTRANT" />
 
     <!-- Bottom bar fragments organizer-->
     <fragment
@@ -52,6 +56,10 @@
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
         tools:layout="@layout/fragment_notification_organizer" />
+        <argument
+            android:name="role"
+            app:argType="string"
+            android:defaultValue="ENTRANT" />
 
     <fragment
         android:id="@+id/nav_event_creation"
@@ -77,6 +85,10 @@
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
         tools:layout="@layout/fragment_notification_admin" />
+        <argument
+            android:name="role"
+            app:argType="string"
+            android:defaultValue="ENTRANT" />
 
     <!-- Sidebar fragments -->
     <fragment
