@@ -216,25 +216,26 @@ public class EventsFragment extends Fragment {
     }
 
     /**
-     * Loads all events created by the organizer.
+     * Loads all events created by the organizer using a direct Firestore query.
      */
     private void loadOrganizerEvents() {
         if (currentUser == null) {
-            Log.d("EventsFragment", "User null");
+            Log.d("EventsFragment", "User null, cannot load organizer events");
             return;
         }
 
         fDatabase.queryEventsByCreator(currentUser.getId(), new FDatabase.DataCallback<Event>() {
             @Override
-            public void onSuccess(ArrayList<Event> events) {
+            public void onSuccess(ArrayList<Event> organizerEvents) {
                 if (isAdded()) {
-                    updateEventList(events);
+                    Toast.makeText(getContext(), organizerEvents.size() + " organizer events found.", Toast.LENGTH_SHORT).show();
+                    updateEventList(organizerEvents);
                 }
             }
 
             @Override
             public void onFailure(Exception e) {
-                Log.e("EventsFragment", "Failed to load organizer events", e);
+                Log.e("EventsFragment", "Failed to load events by creator", e);
                 if (isAdded()) {
                     Toast.makeText(getContext(), "Error loading your events.", Toast.LENGTH_SHORT).show();
                 }

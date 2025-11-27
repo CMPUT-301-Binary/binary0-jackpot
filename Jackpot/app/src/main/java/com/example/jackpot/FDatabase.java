@@ -294,6 +294,6 @@ public class FDatabase {
      * @param callback Callback to handle the results
      */
     public void queryEventsByCreator(String creatorId, DataCallback<Event> callback) {
-        queryCollection("events", "organizerId", creatorId, Event.class, callback);
+        queryCollection("events", "createdBy", creatorId, Event.class, callback);
     }
 }

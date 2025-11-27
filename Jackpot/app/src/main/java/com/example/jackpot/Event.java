@@ -20,7 +20,7 @@ import java.util.UUID;
  */
 public class Event implements Serializable {
     private String eventId;
-    private String organizerId;
+    private String createdBy;
     private String name;
     private String description;
     private UserList waitingList;
@@ -49,7 +49,7 @@ public class Event implements Serializable {
     /**
      * Constructor for an event.
      * @param eventId The id of the event
-     * @param organizerId The id of the organizer
+     * @param createdBy The id of the organizer
      * @param name The name of the event
      * @param description The description of the event
      * @param waitingList The waiting list of the event
@@ -68,12 +68,12 @@ public class Event implements Serializable {
      * @param geoRequired The geo required of the event
      * @param category The category of the event
      */
-    public Event(String eventId, String organizerId, String name, String description,
+    public Event(String eventId, String createdBy, String name, String description,
                  UserList waitingList, UserList joinedList, UserList invitedList, String location, Date date, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
                  Date regCloseAt, String posterUri, String qrCodeId, boolean geoRequired, String category){
         this.eventId = eventId;
-        this.organizerId = organizerId;
+        this.createdBy = createdBy;
         this.name = name;
         this.description = description;
         this.waitingList = waitingList;
@@ -116,17 +116,17 @@ public class Event implements Serializable {
      *
      * @return The id of the organizer.
      */
-    public String getOrganizerId() {
-        return organizerId;
+    public String getCreatedBy() {
+        return createdBy;
     }
 
     /**
      * Sets the id of the organizer.
      *
-     * @param organizerId The id to set.
+     * @param createdBy The id to set.
      */
-    public void setOrganizerId(String organizerId) {
-        this.organizerId = organizerId;
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 
     /**

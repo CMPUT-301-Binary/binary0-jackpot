@@ -155,7 +155,16 @@ public class MainActivity extends AppCompatActivity {
 
         //Attach bottom navigation
         if (bottomNav != null && bottomNav.getMenu().size() > 0) {
-            NavigationUI.setupWithNavController(bottomNav, navController);
+            bottomNav.setOnItemSelectedListener(item -> {
+                Bundle bundle = new Bundle();
+                bundle.putString("role", currentRole.name());
+                NavOptions navOptions = new NavOptions.Builder()
+                        .setLaunchSingleTop(true)
+                        .setPopUpTo(navController.getGraph().getStartDestinationId(), false)
+                        .build();
+                navController.navigate(item.getItemId(), bundle, navOptions);
+                return true;
+            });
         }
     }
 
