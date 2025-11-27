@@ -163,7 +163,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         Button leaveButton = view.findViewById(R.id.leave_button);
         if (leaveButton != null) {
             // Check if user is in waiting list to show/hide button
-            boolean isInWaitingList = isUserInWaitingList(event, currentUser != null ? currentUser.getId() : null);
+            boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
 
             if (isInWaitingList) {
                 leaveButton.setVisibility(View.VISIBLE);
@@ -293,24 +293,6 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         } else {
             Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
         }
-    }
-    // Helper method to check if user is in waiting list by comparing IDs
-    private boolean isUserInWaitingList(Event event, String userId) {
-        if (event.getWaitingList() == null || userId == null) {
-            return false;
-        }
-
-        ArrayList<User> users = event.getWaitingList().getUsers();
-        if (users == null) {
-            return false;
-        }
-
-        for (User user : users) {
-            if (user != null && user.getId() != null && user.getId().equals(userId)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // Helper method to find the User object in the waiting list
