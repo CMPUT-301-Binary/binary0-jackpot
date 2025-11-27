@@ -414,7 +414,7 @@ public class EventsFragment extends Fragment {
                             currentUser.getGeoPoint()
                     );
                     for (Event event : events) {
-                        if (event.getWaitingList() != null && event.hasEntrant(check)) {
+                        if (event.getWaitingList() != null && event.hasEntrant(check.getId())) {
                             wishlistEvents.add(event);
                         }
                     }

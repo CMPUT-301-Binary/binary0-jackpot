@@ -523,7 +523,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                 currentUser.getGeoPoint()
         );
 
-        if (event.hasEntrant(entrant)) {
+        if (event.hasEntrant(entrant.getId())) {
             Toast.makeText(this, "You are already in this event", Toast.LENGTH_SHORT).show();
             return;
         }

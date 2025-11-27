@@ -2,6 +2,7 @@ package com.example.jackpot;
 import android.util.Log;
 
 import com.example.jackpot.ui.image.Image;
+import com.google.firebase.Timestamp;
 
 import java.io.Serializable;
 import java.text.ParseException;
@@ -319,8 +320,8 @@ public class Event implements Serializable {
 
         if (dateObj instanceof Date) {
             return (Date) dateObj;
-        } else if (dateObj instanceof com.google.firebase.Timestamp) {
-            return ((com.google.firebase.Timestamp) dateObj).toDate();
+        } else if (dateObj instanceof Timestamp) {
+            return ((Timestamp) dateObj).toDate();
         } else if (dateObj instanceof Map) {
             // Firestore Timestamp as Map
             Map<String, Object> timestampMap = (Map<String, Object>) dateObj;
@@ -509,13 +510,13 @@ public class Event implements Serializable {
 
     /**
      * Checks if an entrant is in the waiting list.
-     * @param entrant The entrant to check.
+     * @param id The entrant to check bu id.
      * @return True if the entrant is in the waiting list, false otherwise.
      */
-    public boolean hasEntrant(Entrant entrant) {
+    public boolean hasEntrant(String id) {
         //Loop through the waiting list and see if an identical entrant is in there
-        for (int i = 0; i < waitingList.size(); i++) {
-            if (Objects.equals(waitingList.get(i).getId(), entrant.getId())) {
+        for (User e : waitingList.getUsers()) {
+            if (Objects.equals(e.getId(), id)) {
                 return true;
             }
         }

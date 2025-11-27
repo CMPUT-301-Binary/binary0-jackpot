@@ -226,7 +226,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 joinButton.setVisibility(View.VISIBLE);
 
                 // Check if user is already in waiting list
-                boolean isJoined = isUserInWaitingList(event, currentUser != null ? currentUser.getId() : null);
+                boolean isJoined = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
 
                 if (isJoined) {
                     joinButton.setEnabled(false);

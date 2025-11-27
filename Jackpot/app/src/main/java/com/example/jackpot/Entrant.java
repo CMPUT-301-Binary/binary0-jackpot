@@ -25,7 +25,7 @@ public class Entrant extends User {
         if (event==null) {
             throw new NullPointerException("Event is null");
         }
-        if (event.hasEntrant(this)) {
+        if (event.hasEntrant(id)) {
             throw new IllegalArgumentException("Event already has entrant");
         }
         event.addEntrantWaitingList(this);
@@ -41,7 +41,7 @@ public class Entrant extends User {
         if (event==null) {
             throw new NullPointerException("Event is null");
         }
-        if (event.hasEntrant(this)) {
+        if (event.hasEntrant(id)) {
             event.removeEntrantWaitingList(this);
         } else {
             throw new IllegalArgumentException("Event does not have entrant");
