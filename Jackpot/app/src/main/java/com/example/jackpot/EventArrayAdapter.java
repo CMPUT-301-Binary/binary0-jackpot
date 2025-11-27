@@ -163,7 +163,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         Button leaveButton = view.findViewById(R.id.leave_button);
         if (leaveButton != null) {
             // Check if user is in waiting list to show/hide button
-            boolean isInWaitingList = isUserInWaitingList(event, currentUser != null ? currentUser.getId() : null);
+            boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
 
             if (isInWaitingList) {
                 leaveButton.setVisibility(View.VISIBLE);
@@ -174,6 +174,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         }
 
     }
+
 
     /**
      * Set up the view for a regular event.
@@ -225,7 +226,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 joinButton.setVisibility(View.VISIBLE);
 
                 // Check if user is already in waiting list
-                boolean isJoined = isUserInWaitingList(event, currentUser != null ? currentUser.getId() : null);
+                boolean isJoined = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
 
                 if (isJoined) {
                     joinButton.setEnabled(false);
@@ -242,17 +243,18 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             }
         }
 
-        //Load the image from the database and show it. Use glide
-        String imageUri = event.getPosterUri();
-        //Log imageUri for debugging
-        if (imageUri != null && !imageUri.isEmpty()) {
-            Glide.with(getContext())
-                    .load(imageUri)
-                    .placeholder(R.drawable._ukj7h)
-                    .error(R.drawable.jackpottitletext)
-                    .into(eventImage);
-        } else {
-            eventImage.setImageResource(R.drawable._ukj7h);
+        // IMPORTANT: Only load image if ImageView exists
+        if (eventImage != null) {
+            String imageUri = event.getPosterUri();
+            if (imageUri != null && !imageUri.isEmpty()) {
+                Glide.with(getContext())
+                        .load(imageUri)
+                        .placeholder(R.drawable._ukj7h)
+                        .error(R.drawable.jackpottitletext)
+                        .into(eventImage);
+            } else {
+                eventImage.setImageResource(R.drawable._ukj7h);
+            }
         }
     }
 
@@ -291,24 +293,6 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         } else {
             Toast.makeText(getContext(), "Only entrants can join events.", Toast.LENGTH_SHORT).show();
         }
-    }
-    // Helper method to check if user is in waiting list by comparing IDs
-    private boolean isUserInWaitingList(Event event, String userId) {
-        if (event.getWaitingList() == null || userId == null) {
-            return false;
-        }
-
-        ArrayList<User> users = event.getWaitingList().getUsers();
-        if (users == null) {
-            return false;
-        }
-
-        for (User user : users) {
-            if (user != null && user.getId() != null && user.getId().equals(userId)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // Helper method to find the User object in the waiting list

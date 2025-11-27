@@ -39,6 +39,8 @@ public class EventsFragment extends Fragment {
     private FDatabase fDatabase = FDatabase.getInstance();
     private User currentUser;
     private EventList displayedEvents = new EventList(new ArrayList<>());
+    private User.Role userRole;
+
     private enum EventTab {
         JOINED, WISHLIST, INVITATIONS
     }
@@ -86,22 +88,27 @@ public class EventsFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         String roleName = getArguments() != null ? getArguments().getString("role") : User.Role.ENTRANT.name();
-        User.Role role = User.Role.valueOf(roleName);
+        userRole = User.Role.valueOf(roleName);
         Log.d("ROLE_CHECK", "Received role = " + roleName);
+
         View root;
         int eventItemLayoutResource;
-        switch (role) {
+
+        switch (userRole) {
             case ORGANIZER:
                 root = inflater.inflate(R.layout.fragment_events_organizer, container, false);
-                eventItemLayoutResource = R.layout.item_event;
+                eventItemLayoutResource = R.layout.item_event;  // Use organizer-specific layout
                 break;
             default:
                 root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
                 eventItemLayoutResource = R.layout.entrant_event_content;
                 break;
         }
+
         assert root != null;
-        if (role == User.Role.ENTRANT) {
+
+        // Setup for ENTRANT
+        if (userRole == User.Role.ENTRANT) {
             eventList = root.findViewById(R.id.entrant_events);
             eventAdapter = new EventArrayAdapter(requireActivity(),
                     displayedEvents.getEvents(),
@@ -109,16 +116,208 @@ public class EventsFragment extends Fragment {
                     EventArrayAdapter.ViewType.EVENTS,
                     null);
             eventList.setAdapter(eventAdapter);
-
             setupTabs(root);
             getUserAndLoadEvents();
         }
+        // Setup for ORGANIZER
+        else if (userRole == User.Role.ORGANIZER) {
+            eventList = root.findViewById(R.id.organizer_events);
+            eventAdapter = new EventArrayAdapter(requireActivity(),
+                    displayedEvents.getEvents(),
+                    eventItemLayoutResource,
+                    EventArrayAdapter.ViewType.HOME,  // Use HOME view type for organizers
+                    null);
+            eventList.setAdapter(eventAdapter);
+            setupOrganizerTabs(root);
+            getUserAndLoadOrganizerEvents();
+        }
+
         return root;
     }
 
     /**
-     * Sets up the tabs for the event list.
-     * @param root The root view of the fragment.
+     * Sets up the tabs for organizer view.
+     */
+    private void setupOrganizerTabs(View root) {
+        Button myEventsButton = root.findViewById(R.id.my_events_button);
+        Button activeButton = root.findViewById(R.id.active_events_button);
+        Button pastButton = root.findViewById(R.id.past_events_button);
+
+        int activeColor = ContextCompat.getColor(requireContext(), R.color.black);
+        int inactiveColor = ContextCompat.getColor(requireContext(), R.color.white);
+        int activeTextColor = ContextCompat.getColor(requireContext(), R.color.white);
+        int inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.black);
+
+        // Set initial state - My Events active
+        myEventsButton.setBackgroundColor(activeColor);
+        myEventsButton.setTextColor(activeTextColor);
+        activeButton.setBackgroundColor(inactiveColor);
+        activeButton.setTextColor(inactiveTextColor);
+        pastButton.setBackgroundColor(inactiveColor);
+        pastButton.setTextColor(inactiveTextColor);
+
+        myEventsButton.setOnClickListener(v -> {
+            myEventsButton.setBackgroundColor(activeColor);
+            myEventsButton.setTextColor(activeTextColor);
+            activeButton.setBackgroundColor(inactiveColor);
+            activeButton.setTextColor(inactiveTextColor);
+            pastButton.setBackgroundColor(inactiveColor);
+            pastButton.setTextColor(inactiveTextColor);
+            loadOrganizerEvents();
+        });
+
+        activeButton.setOnClickListener(v -> {
+            activeButton.setBackgroundColor(activeColor);
+            activeButton.setTextColor(activeTextColor);
+            myEventsButton.setBackgroundColor(inactiveColor);
+            myEventsButton.setTextColor(inactiveTextColor);
+            pastButton.setBackgroundColor(inactiveColor);
+            pastButton.setTextColor(inactiveTextColor);
+            loadActiveOrganizerEvents();
+        });
+
+        pastButton.setOnClickListener(v -> {
+            pastButton.setBackgroundColor(activeColor);
+            pastButton.setTextColor(activeTextColor);
+            myEventsButton.setBackgroundColor(inactiveColor);
+            myEventsButton.setTextColor(inactiveTextColor);
+            activeButton.setBackgroundColor(inactiveColor);
+            activeButton.setTextColor(inactiveTextColor);
+            loadPastOrganizerEvents();
+        });
+    }
+
+    /**
+     * Gets the current user and loads their created events (for organizers).
+     */
+    private void getUserAndLoadOrganizerEvents() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null && firebaseUser.getUid() != null) {
+            fDatabase.getUserById(firebaseUser.getUid(), new FDatabase.DataCallback<User>() {
+                @Override
+                public void onSuccess(ArrayList<User> data) {
+                    if (isAdded() && !data.isEmpty()) {
+                        currentUser = data.get(0);
+                        eventAdapter.setCurrentUser(currentUser);
+                        loadOrganizerEvents();
+                    } else {
+                        Log.d("EventsFragment", "User not found in database.");
+                    }
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("EventsFragment", "Failed to fetch user.", e);
+                }
+            });
+        } else {
+            Log.d("EventsFragment", "No Firebase user logged in.");
+        }
+    }
+
+    /**
+     * Loads all events created by the organizer.
+     */
+    private void loadOrganizerEvents() {
+        if (currentUser == null) {
+            Log.d("EventsFragment", "User null");
+            return;
+        }
+
+        fDatabase.queryEventsByCreator(currentUser.getId(), new FDatabase.DataCallback<Event>() {
+            @Override
+            public void onSuccess(ArrayList<Event> events) {
+                if (isAdded()) {
+                    updateEventList(events);
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("EventsFragment", "Failed to load organizer events", e);
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Error loading your events.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Loads active events created by the organizer (events in the future).
+     */
+    private void loadActiveOrganizerEvents() {
+        if (currentUser == null) {
+            Log.d("EventsFragment", "User null");
+            return;
+        }
+
+        fDatabase.queryEventsByCreator(currentUser.getId(), new FDatabase.DataCallback<Event>() {
+            @Override
+            public void onSuccess(ArrayList<Event> events) {
+                if (isAdded()) {
+                    ArrayList<Event> activeEvents = new ArrayList<>();
+                    long currentTime = System.currentTimeMillis();
+
+                    for (Event event : events) {
+                        // Check if event is in the future using the date field
+                        if (event.getDate() != null &&
+                                event.getDate().getTime() > currentTime) {
+                            activeEvents.add(event);
+                        }
+                    }
+                    updateEventList(activeEvents);
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("EventsFragment", "Failed to load active events", e);
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Error loading active events.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Loads past events created by the organizer.
+     */
+    private void loadPastOrganizerEvents() {
+        if (currentUser == null) {
+            Log.d("EventsFragment", "User null");
+            return;
+        }
+
+        fDatabase.queryEventsByCreator(currentUser.getId(), new FDatabase.DataCallback<Event>() {
+            @Override
+            public void onSuccess(ArrayList<Event> events) {
+                if (isAdded()) {
+                    ArrayList<Event> pastEvents = new ArrayList<>();
+                    long currentTime = System.currentTimeMillis();
+
+                    for (Event event : events) {
+                        // Check if event is in the past using the date field
+                        if (event.getDate() != null &&
+                                event.getDate().getTime() <= currentTime) {
+                            pastEvents.add(event);
+                        }
+                    }
+                    updateEventList(pastEvents);
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("EventsFragment", "Failed to load past events", e);
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Error loading past events.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Sets up the tabs for the event list (entrant view).
      */
     private void setupTabs(View root) {
         Button joinedButton = root.findViewById(R.id.joined_events_button);
@@ -151,6 +350,7 @@ public class EventsFragment extends Fragment {
             invitsButton.setTextColor(inactiveTextColor);
             loadEventsForTab();
         });
+
         wishlistButton.setOnClickListener(v -> {
             currentTab = EventTab.WISHLIST;
             // Set active state for Wishlist button
@@ -163,6 +363,7 @@ public class EventsFragment extends Fragment {
             invitsButton.setTextColor(inactiveTextColor);
             loadEventsForTab();
         });
+
         invitsButton.setOnClickListener(v -> {
             currentTab = EventTab.INVITATIONS;
             // Set active state for Invitations button
@@ -207,7 +408,7 @@ public class EventsFragment extends Fragment {
     }
 
     /**
-     * Loads the events for the current tab.
+     * Loads the events for the current tab (entrant view).
      */
     private void loadEventsForTab() {
         if (currentUser == null) {
@@ -246,7 +447,7 @@ public class EventsFragment extends Fragment {
                                 listToSearch = event.getInvitedList();
                                 break;
                         }
-                        if (listToSearch != null && event.entrantInList(check, listToSearch)) {
+                        if (listToSearch != null && event.entrantInList(check.getId(), listToSearch)) {
                             listToDisplay.add(event);
                         }
                     }

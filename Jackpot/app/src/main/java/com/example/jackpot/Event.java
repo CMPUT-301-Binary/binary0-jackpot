@@ -2,6 +2,7 @@ package com.example.jackpot;
 import android.util.Log;
 
 import com.example.jackpot.ui.image.Image;
+import com.google.firebase.Timestamp;
 
 import java.io.Serializable;
 import java.text.ParseException;
@@ -359,8 +360,8 @@ public class Event implements Serializable {
 
         if (dateObj instanceof Date) {
             return (Date) dateObj;
-        } else if (dateObj instanceof com.google.firebase.Timestamp) {
-            return ((com.google.firebase.Timestamp) dateObj).toDate();
+        } else if (dateObj instanceof Timestamp) {
+            return ((Timestamp) dateObj).toDate();
         } else if (dateObj instanceof Map) {
             // Firestore Timestamp as Map
             Map<String, Object> timestampMap = (Map<String, Object>) dateObj;
@@ -549,13 +550,13 @@ public class Event implements Serializable {
 
     /**
      * Checks if an entrant is in the waiting list.
-     * @param entrant The entrant to check.
+     * @param id The entrant to check bu id.
      * @return True if the entrant is in the waiting list, false otherwise.
      */
-    public boolean entrantInWaitingList(Entrant entrant) {
+    public boolean hasEntrant(String id) {
         //Loop through the waiting list and see if an identical entrant is in there
-        for (int i = 0; i < waitingList.size(); i++) {
-            if (Objects.equals(waitingList.get(i).getId(), entrant.getId())) {
+        for (User e : waitingList.getUsers()) {
+            if (Objects.equals(e.getId(), id)) {
                 return true;
             }
         }
@@ -602,14 +603,14 @@ public class Event implements Serializable {
 
     /**
      * Checks if an entrant is in the list.
-     * @param entrant The entrant to check.
+     * @param id The entrant to check.
      * @param list The list to check.
      * @return True if the entrant is in the joined list, false otherwise.
      */
-    public boolean entrantInList(Entrant entrant, UserList list) {
+    public boolean entrantInList(String id, UserList list) {
         //Loop through the list and see if an identical entrant is in there
-        for (int i = 0; i < list.size(); i++) {
-            if (Objects.equals(list.get(i).getId(), entrant.getId())) {
+        for (User e : list.getUsers()) {
+            if (Objects.equals(e.getId(), id)) {
                 return true;
             }
         }
@@ -621,12 +622,12 @@ public class Event implements Serializable {
      * @param reason The reason for the cancellation.
      * @throws IllegalArgumentException If the enrollment is null.
      */
-    public Notification cancelEnrollment(Notification enrollment, String reason) {
-        if (enrollment == null) {
-            throw new IllegalArgumentException("enrollment is null");
-        }
-        return new Notification(enrollment.getRecipientID(), enrollment.getEventID(), "Cancellation", reason);
-    }
+//    public Notification cancelEnrollment(Notification enrollment, String reason) {
+//        if (enrollment == null) {
+//            throw new IllegalArgumentException("enrollment is null");
+//        }
+//        return new Notification(enrollment.getRecipientID(), enrollment.getEventID(), "Cancellation", reason);
+//    }
 
     /**
      * Draws a random sample of entrants from the waiting list.
