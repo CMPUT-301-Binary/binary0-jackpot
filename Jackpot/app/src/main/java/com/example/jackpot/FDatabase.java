@@ -294,33 +294,6 @@ public class FDatabase {
      * @param callback Callback to handle the results
      */
     public void queryEventsByCreator(String creatorId, DataCallback<Event> callback) {
-        // Query using "createdBy" field (from EventCreationFragment)
-        // If your Event class uses "organizerId", Firestore will automatically map it
-        db.collection("events")
-                .whereEqualTo("createdBy", creatorId)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    ArrayList<Event> events = new ArrayList<>();
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        try {
-                            Event event = document.toObject(Event.class);
-                            if (event != null) {
-                                // Manually set organizerId from createdBy if needed
-                                if (event.getOrganizerId() == null) {
-                                    String createdBy = document.getString("createdBy");
-                                    event.setOrganizerId(createdBy);
-                                }
-                                events.add(event);
-                            }
-                        } catch (Exception e) {
-                            Log.e("FDatabase", "Error parsing event: " + document.getId(), e);
-                        }
-                    }
-                    callback.onSuccess(events);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("FDatabase", "Failed to query events by creator", e);
-                    callback.onFailure(e);
-                });
+        queryCollection("events", "organizerId", creatorId, Event.class, callback);
     }
 }
