@@ -83,14 +83,11 @@ public class ProfileFragment extends Fragment {
         profileImage = root.findViewById(R.id.profile_image);
         nameField = root.findViewById(R.id.profile_name);
         emailField = root.findViewById(R.id.profile_email);
-        emailField.setEnabled(false);  // Add this line
-        emailField.setFocusable(false);  // Add this line
         phoneField = root.findViewById(R.id.profile_phone);
         bioField = root.findViewById(R.id.profile_bio);
         logoutButton = root.findViewById(R.id.logout_button);
         deleteAccountButton = root.findViewById(R.id.delete_account_button);
         Button saveProfileButton = root.findViewById(R.id.save_profile_button);
-        //saveProfileButton.setOnClickListener(v -> saveUserProfile());
 
         // Load user info
         loadUserProfile();
