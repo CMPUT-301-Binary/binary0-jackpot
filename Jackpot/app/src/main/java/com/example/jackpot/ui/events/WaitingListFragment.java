@@ -48,7 +48,6 @@ public class WaitingListFragment extends Fragment {
 
         // Initialize views
         eventTitle = root.findViewById(R.id.event_title);
-        eventImage = root.findViewById(R.id.event_image);
         recyclerView = root.findViewById(R.id.waiting_list_recycler_view);
         backButton = root.findViewById(R.id.back_button);
         notifyAllButton = root.findViewById(R.id.notify_all_button);
