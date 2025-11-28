@@ -146,16 +146,18 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             priceString = String.format(Locale.getDefault(), "$%.2f", event.getPrice());
         }
 
-        int waitingCount = 0;
-        if (event.getWaitingList() != null) {
-            waitingCount = event.getWaitingList().size();
-        }
+        int waitingCount = event.getWaitingCount();
+        int invitedCount = event.getInvitedCount();
 
-        String details = String.format(Locale.getDefault(), "Location: %s\nSpots: %d | Waiting: %d | Price: %s",
+        String details = String.format(
+                Locale.getDefault(),
+                "Location: %s\nSpots: %d | Waiting: %d | Invited: %d | Price: %s",
                 event.getLocation() != null ? event.getLocation() : "N/A",
                 event.getCapacity(),
                 waitingCount,
-                priceString);
+                invitedCount,
+                priceString
+        );
         eventDetails.setText(details);
 
         // Load the image from the database and show it. Use glide
@@ -173,11 +175,46 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         // Check if current user is an organizer
         boolean isOrganizer = currentUser != null && currentUser.getRole() == User.Role.ORGANIZER;
 
-        // Handle Leave Button
+        Button drawLotteryButton = view.findViewById(R.id.draw_lottery_button);
+        if (drawLotteryButton != null) {
+            if (!isOrganizer) {
+                // should never really show for entrants, but be safe
+                drawLotteryButton.setVisibility(View.GONE);
+            } else {
+                drawLotteryButton.setVisibility(View.VISIBLE);
+                drawLotteryButton.setOnClickListener(v -> {
+                    try {
+                        // run the lottery for this event only
+                        ArrayList<User> invitedNow = event.drawEvent();
+                        // persist to Firestore
+                        FDatabase.getInstance().updateEvent(event);
+                        // refresh list row counts etc.
+                        notifyDataSetChanged();
+
+                        if (invitedNow.isEmpty()) {
+                            Toast.makeText(getContext(),
+                                    "No entrants to invite or no capacity left.",
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(),
+                                    "Invited " + invitedNow.size() + " entrant(s).",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(getContext(),
+                                "Error drawing lottery: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                        Log.e("EventArrayAdapter", "Error in drawEvent()", e);
+                    }
+                });
+            }
+        }
+
+        // handle Leave Button
         Button leaveButton = view.findViewById(R.id.leave_button);
         if (leaveButton != null) {
             if (isOrganizer) {
-                // Hide leave button for organizers
+                // hide leave button for organizers
                 leaveButton.setVisibility(View.GONE);
             } else {
                 boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);

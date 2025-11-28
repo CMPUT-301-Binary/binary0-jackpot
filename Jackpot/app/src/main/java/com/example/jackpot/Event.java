@@ -564,6 +564,14 @@ public class Event implements Serializable {
         return false;
     }
 
+    public int getInvitedCount() {
+        return invitedList != null ? invitedList.size() : 0;
+    }
+
+    public int getWaitingCount() {
+        return waitingList != null ? waitingList.size() : 0;
+    }
+
     /**
      * Adds an entrant to the waiting list.
      * @param entrant The entrant to add to the waiting list.
