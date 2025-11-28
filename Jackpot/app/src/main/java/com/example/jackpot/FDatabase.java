@@ -12,6 +12,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 /*
  * CMPUT 301 – Event Lottery App (“Jackpot”)
@@ -295,5 +296,15 @@ public class FDatabase {
      */
     public void queryEventsByCreator(String creatorId, DataCallback<Event> callback) {
         queryCollection("events", "createdBy", creatorId, Event.class, callback);
+    }
+
+    public void addNotification(Map<String, Object> notificationDoc, String notificationID){
+        db.collection("notifications")
+                .document(notificationID)
+                .set(notificationDoc)
+                .addOnSuccessListener(aVoid -> Log.d("FDatabase", "Notification added successfully"))
+                .addOnFailureListener(e -> Log.e("FDatabase", "Error adding notification", e));
+
+
     }
 }

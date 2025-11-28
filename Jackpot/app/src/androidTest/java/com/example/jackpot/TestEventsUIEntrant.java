@@ -254,7 +254,7 @@ public class TestEventsUIEntrant {
         // 6. Verification on EventsFragment: Navigate and check count is 4.
         onView(withId(R.id.nav_events)).perform(click());
         Thread.sleep(2000);
-        onData(anything()).inAdapterView(withId(R.id.entrant_events)).atPosition(0).onChildView(withId(R.id.event_details)).check(matches(withText(containsString("Waiting: 4"))));
+        onData(anything()).inAdapterView(withId(R.id.entrant_events)).atPosition(0).onChildView(withId(R.id.eventPrice)).check(matches(withText(containsString("Waiting: 4"))));
     }
 
     /**

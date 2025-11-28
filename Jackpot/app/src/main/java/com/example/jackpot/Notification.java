@@ -39,6 +39,7 @@ public class Notification {
     private boolean deliverStatus;
     private String providerMsgID;
     private String error;
+    private String organizerID;
 
     /**
      * Constructs a new Notification object, initializing it with essential details.
@@ -60,6 +61,7 @@ public class Notification {
         }
         this.deliverStatus = false;
     }
+
 
     /**
      * Gets the unique identifier of the notification.
