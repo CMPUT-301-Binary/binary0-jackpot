@@ -27,18 +27,25 @@
         android:id="@+id/nav_notification_entrant"
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
-        tools:layout="@layout/fragment_notification_entrant" />
+        tools:layout="@layout/fragment_notification_entrant">
         <argument
             android:name="role"
             app:argType="string"
             android:defaultValue="ENTRANT" />
+    </fragment>
 
     <!-- Bottom bar fragments organizer-->
     <fragment
         android:id="@+id/nav_map"
         android:name="com.example.jackpot.ui.map.MapFragment"
         android:label="@string/map"
-        tools:layout="@layout/fragment_map_organizer" />
+        tools:layout="@layout/fragment_map_organizer">
+
+        <action
+            android:id="@+id/action_map_to_map_detail"
+            app:destination="@id/nav_map_detail" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/nav_events_organizer"
@@ -55,11 +62,12 @@
         android:id="@+id/nav_notification_organizer"
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
-        tools:layout="@layout/fragment_notification_organizer" />
+        tools:layout="@layout/fragment_notification_organizer">
         <argument
             android:name="role"
             app:argType="string"
-            android:defaultValue="ENTRANT" />
+            android:defaultValue="ORGANIZER" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_event_creation"
@@ -84,11 +92,12 @@
         android:id="@+id/nav_notification_admin"
         android:name="com.example.jackpot.ui.notification.NotificationFragment"
         android:label="Notification"
-        tools:layout="@layout/fragment_notification_admin" />
+        tools:layout="@layout/fragment_notification_admin">
         <argument
             android:name="role"
             app:argType="string"
-            android:defaultValue="ENTRANT" />
+            android:defaultValue="ADMIN" />
+    </fragment>
 
     <!-- Sidebar fragments -->
     <fragment
@@ -120,5 +129,21 @@
         android:name="com.example.jackpot.ui.event_creation.EventCreationFragment"
         android:label="EventCreationFragment"
         tools:layout="@layout/fragment_event_creation"/>
+
+    <!-- Map Detail Fragment -->
+    <fragment
+        android:id="@+id/nav_map_detail"
+        android:name="com.example.jackpot.ui.map.MapDetailFragment"
+        android:label="Event Map"
+        tools:layout="@layout/fragment_map_detail">
+
+        <argument
+            android:name="EVENT_ID"
+            app:argType="string" />
+
+        <argument
+            android:name="EVENT_NAME"
+            app:argType="string" />
+    </fragment>
 
 </navigation>
