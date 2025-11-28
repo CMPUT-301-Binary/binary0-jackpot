@@ -1,6 +1,7 @@
 package com.example.jackpot.ui.events;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +16,14 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.jackpot.Event;
-import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
+import com.example.jackpot.User;
+import com.google.firebase.firestore.GeoPoint;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class WaitingListFragment extends Fragment {
     private Event event;
@@ -26,6 +32,7 @@ public class WaitingListFragment extends Fragment {
     private ImageView eventImage;
     private Button backButton;
     private Button notifyAllButton;
+    private UserArrayAdapter adapter;
 
     public static WaitingListFragment newInstance(Event event) {
         WaitingListFragment fragment = new WaitingListFragment();
@@ -48,6 +55,7 @@ public class WaitingListFragment extends Fragment {
 
         // Initialize views
         eventTitle = root.findViewById(R.id.event_title);
+//        eventImage = root.findViewById(R.id.event_image);
         recyclerView = root.findViewById(R.id.waiting_list_recycler_view);
         backButton = root.findViewById(R.id.back_button);
         notifyAllButton = root.findViewById(R.id.notify_all_button);
@@ -55,14 +63,42 @@ public class WaitingListFragment extends Fragment {
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Set event details
+        // Set event details and populate the list
         if (event != null) {
             eventTitle.setText(event.getName());
-            // Load event image if you have an image loader
-            // Glide.with(this).load(event.getImageUrl()).into(eventImage);
 
-            // TODO: Setup RecyclerView adapter with waiting list entrants
-            // You'll need to create an adapter for displaying entrants
+//            if (event.getPosterUri() != null && !event.getPosterUri().isEmpty()) {
+//                Glide.with(this).load(event.getPosterUri()).into(eventImage);
+//            }
+
+            // Manually convert Firestore's list of HashMaps into a list of User objects
+            ArrayList<User> userList = new ArrayList<>();
+            if (event.getWaitingList() != null && event.getWaitingList().getUsers() != null) {
+                for (Object obj : event.getWaitingList().getUsers()) {
+                    if (obj instanceof HashMap) {
+                        try {
+                            HashMap<String, Object> map = (HashMap<String, Object>) obj;
+                            User user = new User();
+                            user.setId((String) map.get("id"));
+                            user.setName((String) map.get("name"));
+                            user.setEmail((String) map.get("email"));
+                            // Add any other fields you need for the User object here
+                            userList.add(user);
+                        } catch (Exception e) {
+                            Log.e("WaitingListFragment", "Failed to convert HashMap to User", e);
+                        }
+                    } else if (obj instanceof User) {
+                        userList.add((User) obj);
+                    }
+                }
+            }
+
+            // Now pass the correctly typed list to the adapter
+            adapter = new UserArrayAdapter(requireContext(), userList);
+            recyclerView.setAdapter(adapter);
+
+        } else {
+            Toast.makeText(getContext(), "Event data is missing.", Toast.LENGTH_SHORT).show();
         }
 
         // Back button
