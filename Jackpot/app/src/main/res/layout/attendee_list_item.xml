@@ -22,8 +22,7 @@
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/attendee_checkbox"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/notify_button"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/attendee_status"
@@ -32,17 +31,7 @@
         android:layout_marginStart="16dp"
         android:text="Status"
         app:layout_constraintStart_toEndOf="@id/attendee_checkbox"
-        app:layout_constraintTop_toBottomOf="@+id/attendee_name"
-        app:layout_constraintEnd_toStartOf="@id/notify_button"/>
-
-    <Button
-        android:id="@+id/notify_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Notify"
-        app:layout_constraintEnd_toStartOf="@id/replace_button"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/attendee_name" />
 
     <Button
         android:id="@+id/replace_button"
