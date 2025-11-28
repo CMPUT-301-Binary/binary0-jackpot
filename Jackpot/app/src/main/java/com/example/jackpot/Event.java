@@ -636,6 +636,9 @@ public class Event implements Serializable {
      * @return True if the entrant is in the joined list, false otherwise.
      */
     public boolean entrantInList(String id, UserList list) {
+        if (list == null || list.getUsers() == null || id == null) {
+            return false;
+        }
         //Loop through the list and see if an identical entrant is in there
         for (User e : list.getUsers()) {
             if (Objects.equals(e.getId(), id)) {
