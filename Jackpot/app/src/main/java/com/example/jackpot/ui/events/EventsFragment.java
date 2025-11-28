@@ -218,6 +218,12 @@ public class EventsFragment extends Fragment {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
+                    eventAdapter = new EventArrayAdapter(requireActivity(),
+                            displayedEvents.getEvents(),
+                            R.layout.item_event_organizer,
+                            EventArrayAdapter.ViewType.EVENTS,
+                            currentUser);
+                    eventList.setAdapter(eventAdapter);
                     updateEventList(events);
                 }
             }
@@ -255,6 +261,12 @@ public class EventsFragment extends Fragment {
                             activeEvents.add(event);
                         }
                     }
+                    eventAdapter = new EventArrayAdapter(requireActivity(),
+                            displayedEvents.getEvents(),
+                            R.layout.drawlist_item_for_organizer,
+                            EventArrayAdapter.ViewType.EVENTS,
+                            currentUser);
+                    eventList.setAdapter(eventAdapter);
                     updateEventList(activeEvents);
                 }
             }
@@ -292,6 +304,12 @@ public class EventsFragment extends Fragment {
                             pastEvents.add(event);
                         }
                     }
+                    eventAdapter = new EventArrayAdapter(requireActivity(),
+                            displayedEvents.getEvents(),
+                            R.layout.item_event_organizer,
+                            EventArrayAdapter.ViewType.EVENTS,
+                            currentUser);
+                    eventList.setAdapter(eventAdapter);
                     updateEventList(pastEvents);
                 }
             }

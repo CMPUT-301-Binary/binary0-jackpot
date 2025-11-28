@@ -296,6 +296,7 @@ public class Event implements Serializable {
     public void setPrice(Double price) {
         this.price = price;
     }
+
     /**
      * Gets the capacity of the event
      *
@@ -563,6 +564,14 @@ public class Event implements Serializable {
         return false;
     }
 
+    public int getInvitedCount() {
+        return invitedList != null ? invitedList.size() : 0;
+    }
+
+    public int getWaitingCount() {
+        return waitingList != null ? waitingList.size() : 0;
+    }
+
     /**
      * Adds an entrant to the waiting list.
      * @param entrant The entrant to add to the waiting list.
@@ -630,23 +639,46 @@ public class Event implements Serializable {
 //    }
 
     /**
-     * Draws a random sample of entrants from the waiting list.
-     * @param amountEntrants The number of entrants to draw.
-     * @throws IllegalArgumentException If there are not enough entrants in the waiting list.
-     * @return A list of entrants.
+     * Draws entrants from the waiting list into the invited list based on capacity.
+     * If waiting list size > capacity, randomly draws `capacity` entrants.
+     * If waiting list size <= capacity, all entrants are invited.
+     *
+     * @return A list of invited users for this draw.
      */
-    public ArrayList<User> drawEvent(int amountEntrants){
-        if(amountEntrants>waitingList.size()){
-            throw new IllegalArgumentException("Too few entrants in waiting list");
+    public ArrayList<User> drawEvent() {
+        if (waitingList == null) {
+            throw new NullPointerException("Waiting list is null");
         }
-        ArrayList<User> list = new ArrayList<>();
-        for(int i = 0; i < amountEntrants; i++){
-            int index = (int)(Math.random()*waitingList.size());
-            User e = waitingList.get(index);
-            list.add(e);
-            waitingList.remove(e);
+        // Nothing to draw or no capacity
+        if (waitingList.size() == 0 || capacity <= 0) {
+            return new ArrayList<>();
         }
-        return list;
+        // Make sure invitedList exists
+        if (invitedList == null) {
+            invitedList = new UserList(0);
+        }
+        ArrayList<User> invitations = new ArrayList<>();
+
+        int spotsToFill = capacity;
+        if (waitingList.size() <= spotsToFill) {
+            // Everyone in waiting list gets invited
+            ArrayList<User> waitingCopy = new ArrayList<>(waitingList.getUsers());
+            for (User u : waitingCopy) {
+                invitations.add(u);
+                invitedList.add(u);
+                waitingList.remove(u);
+            }
+        } else {
+            // More people than spots -> random lottery of `capacity` entrants
+            for (int i = 0; i < spotsToFill; i++) {
+                int index = (int) (Math.random() * waitingList.size());
+                User selected = waitingList.get(index);
+                invitations.add(selected);
+                invitedList.add(selected);
+                waitingList.remove(selected);
+            }
+        }
+        return invitations;
     }
 //    public FinalRef exportFinalCSV(){
 //        return new FinalRef();
