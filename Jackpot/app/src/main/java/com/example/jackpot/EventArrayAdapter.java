@@ -37,7 +37,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
     }
 
     private final ViewType viewType;
-    private final int layoutResource;
+    private int layoutResource;
     private User currentUser;
     private OnButtonClickListener buttonClickListener;
 
@@ -53,6 +53,9 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         this.viewType = type;
         this.layoutResource = layoutResource;
         this.currentUser = currentUser;
+    }
+    public void setLayoutResource(int layoutResource) {
+        this.layoutResource = layoutResource;
     }
 
     /**

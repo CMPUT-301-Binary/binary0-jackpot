@@ -21,6 +21,7 @@ import com.example.jackpot.EventList;
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.example.jackpot.UserList;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -45,20 +46,10 @@ public class EventsFragment extends Fragment {
     }
     private EventTab currentTab = EventTab.WISHLIST;
 
-    /**
-     * Required empty public constructor
-     */
     public EventsFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param role The role of the user.
-     * @return A new instance of fragment EventsFragment.
-     */
     public static EventsFragment newInstance(String role) {
         EventsFragment fragment = new EventsFragment();
         Bundle args = new Bundle();
@@ -67,10 +58,6 @@ public class EventsFragment extends Fragment {
         return fragment;
     }
 
-    /**
-     * Called to have the fragment instantiate its user interface view.
-     * This will check the user's role to ensure the correct layout is inflated.
-     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -79,7 +66,6 @@ public class EventsFragment extends Fragment {
         String roleName = getArguments() != null ? getArguments().getString("role") : User.Role.ENTRANT.name();
         userRole = User.Role.valueOf(roleName);
         Log.d("ROLE_CHECK", "Received role = " + roleName);
-        Log.d("EventsFragment", "User role enum = " + userRole);
 
         View root;
         int eventItemLayoutResource;
@@ -88,7 +74,7 @@ public class EventsFragment extends Fragment {
             case ORGANIZER:
             case ADMIN:
                 root = inflater.inflate(R.layout.fragment_events_organizer, container, false);
-                eventItemLayoutResource = R.layout.item_event_organizer;
+                eventItemLayoutResource = R.layout.drawlist_item_for_organizer;
                 break;
             default:
                 root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
@@ -96,24 +82,18 @@ public class EventsFragment extends Fragment {
                 break;
         }
 
+        eventList = root.findViewById(userRole == User.Role.ENTRANT ? R.id.entrant_events : R.id.organizer_events);
+        eventAdapter = new EventArrayAdapter(requireActivity(),
+                displayedEvents.getEvents(),
+                eventItemLayoutResource,
+                EventArrayAdapter.ViewType.EVENTS,
+                null);
+        eventList.setAdapter(eventAdapter);
+
         if (userRole == User.Role.ENTRANT) {
-            eventList = root.findViewById(R.id.entrant_events);
-            eventAdapter = new EventArrayAdapter(requireActivity(),
-                    displayedEvents.getEvents(),
-                    eventItemLayoutResource,
-                    EventArrayAdapter.ViewType.EVENTS,
-                    null);
-            eventList.setAdapter(eventAdapter);
             setupTabs(root);
             getUserAndLoadEvents();
         } else { // ORGANIZER or ADMIN
-            eventList = root.findViewById(R.id.organizer_events);
-            eventAdapter = new EventArrayAdapter(requireActivity(),
-                    displayedEvents.getEvents(),
-                    eventItemLayoutResource,
-                    EventArrayAdapter.ViewType.EVENTS,
-                    null);
-            eventList.setAdapter(eventAdapter);
             setupOrganizerTabs(root);
             getUserAndLoadOrganizerEvents();
             setupOrganizerEventListeners();
@@ -122,11 +102,7 @@ public class EventsFragment extends Fragment {
         return root;
     }
 
-    /**
-     * Sets up click listeners for organizer event list items
-     */
     private void setupOrganizerEventListeners() {
-        // Set up button click listener for waiting list and cancel list buttons
         eventAdapter.setOnButtonClickListener(new EventArrayAdapter.OnButtonClickListener() {
             @Override
             public void onWaitingListClick(Event event) {
@@ -140,9 +116,6 @@ public class EventsFragment extends Fragment {
         });
     }
 
-    /**
-     * Navigate to the Waiting List fragment
-     */
     private void navigateToWaitingList(Event event) {
         WaitingListFragment fragment = WaitingListFragment.newInstance(event);
         requireActivity().getSupportFragmentManager()
@@ -152,9 +125,6 @@ public class EventsFragment extends Fragment {
                 .commit();
     }
 
-    /**
-     * Navigate to the Cancel List fragment
-     */
     private void navigateToCancelList(Event event) {
         CancelListFragment fragment = CancelListFragment.newInstance(event);
         requireActivity().getSupportFragmentManager()
@@ -164,9 +134,6 @@ public class EventsFragment extends Fragment {
                 .commit();
     }
 
-    /**
-     * Sets up the tabs for organizer view.
-     */
     private void setupOrganizerTabs(View root) {
         Button myEventsButton = root.findViewById(R.id.my_events_button);
         Button activeButton = root.findViewById(R.id.active_events_button);
@@ -177,7 +144,6 @@ public class EventsFragment extends Fragment {
         int activeTextColor = ContextCompat.getColor(requireContext(), R.color.white);
         int inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.black);
 
-        // Set initial state - My Events active
         myEventsButton.setBackgroundColor(activeColor);
         myEventsButton.setTextColor(activeTextColor);
         activeButton.setBackgroundColor(inactiveColor);
@@ -192,6 +158,11 @@ public class EventsFragment extends Fragment {
             activeButton.setTextColor(inactiveTextColor);
             pastButton.setBackgroundColor(inactiveColor);
             pastButton.setTextColor(inactiveTextColor);
+            
+            // Set the new layout and reset the adapter to force a refresh
+            eventAdapter.setLayoutResource(R.layout.drawlist_item_for_organizer);
+            eventList.setAdapter(eventAdapter);
+            
             loadOrganizerEvents();
         });
 
@@ -202,6 +173,10 @@ public class EventsFragment extends Fragment {
             myEventsButton.setTextColor(inactiveTextColor);
             pastButton.setBackgroundColor(inactiveColor);
             pastButton.setTextColor(inactiveTextColor);
+
+            // Set the new layout and reset the adapter to force a refresh
+            eventAdapter.setLayoutResource(R.layout.item_event_organizer);
+            eventList.setAdapter(eventAdapter);
             loadActiveOrganizerEvents();
         });
 
@@ -212,13 +187,14 @@ public class EventsFragment extends Fragment {
             myEventsButton.setTextColor(inactiveTextColor);
             activeButton.setBackgroundColor(inactiveColor);
             activeButton.setTextColor(inactiveTextColor);
+
+            // Set the new layout and reset the adapter to force a refresh
+            eventAdapter.setLayoutResource(R.layout.item_event_organizer);
+            eventList.setAdapter(eventAdapter);
             loadPastOrganizerEvents();
         });
     }
 
-    /**
-     * Gets the current user and loads their created events (for organizers).
-     */
     private void getUserAndLoadOrganizerEvents() {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null && firebaseUser.getUid() != null) {
@@ -244,12 +220,9 @@ public class EventsFragment extends Fragment {
         }
     }
 
-    /**
-     * Loads all events created by the organizer.
-     */
     private void loadOrganizerEvents() {
         if (currentUser == null) {
-            Log.d("EventsFragment", "User null");
+            Log.d("EventsFragment", "User null, cannot load organizer events");
             return;
         }
 
@@ -257,12 +230,6 @@ public class EventsFragment extends Fragment {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
-                    eventAdapter = new EventArrayAdapter(requireActivity(),
-                            displayedEvents.getEvents(),
-                            R.layout.item_event_organizer,
-                            EventArrayAdapter.ViewType.EVENTS,
-                            currentUser);
-                    eventList.setAdapter(eventAdapter);
                     updateEventList(events);
                 }
             }
@@ -277,9 +244,6 @@ public class EventsFragment extends Fragment {
         });
     }
 
-    /**
-     * Loads active events created by the organizer (events in the future).
-     */
     private void loadActiveOrganizerEvents() {
         if (currentUser == null) {
             Log.d("EventsFragment", "User null");
@@ -294,18 +258,10 @@ public class EventsFragment extends Fragment {
                     long currentTime = System.currentTimeMillis();
 
                     for (Event event : events) {
-                        // Check if event is in the future using the date field
-                        if (event.getDate() != null &&
-                                event.getDate().getTime() > currentTime) {
+                        if (event.getDate() != null && event.getDate().getTime() > currentTime) {
                             activeEvents.add(event);
                         }
                     }
-                    eventAdapter = new EventArrayAdapter(requireActivity(),
-                            displayedEvents.getEvents(),
-                            R.layout.drawlist_item_for_organizer,
-                            EventArrayAdapter.ViewType.EVENTS,
-                            currentUser);
-                    eventList.setAdapter(eventAdapter);
                     updateEventList(activeEvents);
                 }
             }
@@ -313,16 +269,10 @@ public class EventsFragment extends Fragment {
             @Override
             public void onFailure(Exception e) {
                 Log.e("EventsFragment", "Failed to load active events", e);
-                if (isAdded()) {
-                    Toast.makeText(getContext(), "Error loading active events.", Toast.LENGTH_SHORT).show();
-                }
             }
         });
     }
 
-    /**
-     * Loads past events created by the organizer.
-     */
     private void loadPastOrganizerEvents() {
         if (currentUser == null) {
             Log.d("EventsFragment", "User null");
@@ -337,18 +287,10 @@ public class EventsFragment extends Fragment {
                     long currentTime = System.currentTimeMillis();
 
                     for (Event event : events) {
-                        // Check if event is in the past using the date field
-                        if (event.getDate() != null &&
-                                event.getDate().getTime() <= currentTime) {
+                        if (event.getDate() != null && event.getDate().getTime() <= currentTime) {
                             pastEvents.add(event);
                         }
                     }
-                    eventAdapter = new EventArrayAdapter(requireActivity(),
-                            displayedEvents.getEvents(),
-                            R.layout.item_event_organizer,
-                            EventArrayAdapter.ViewType.EVENTS,
-                            currentUser);
-                    eventList.setAdapter(eventAdapter);
                     updateEventList(pastEvents);
                 }
             }
@@ -356,16 +298,10 @@ public class EventsFragment extends Fragment {
             @Override
             public void onFailure(Exception e) {
                 Log.e("EventsFragment", "Failed to load past events", e);
-                if (isAdded()) {
-                    Toast.makeText(getContext(), "Error loading past events.", Toast.LENGTH_SHORT).show();
-                }
             }
         });
     }
 
-    /**
-     * Sets up the tabs for the event list (entrant view).
-     */
     private void setupTabs(View root) {
         Button joinedButton = root.findViewById(R.id.joined_events_button);
         Button wishlistButton = root.findViewById(R.id.wishlist_events_button);
@@ -417,9 +353,6 @@ public class EventsFragment extends Fragment {
         });
     }
 
-    /**
-     * Gets the current user and loads their events. Loads the events from firebase.
-     */
     private void getUserAndLoadEvents() {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null && firebaseUser.getUid() != null) {
@@ -428,7 +361,6 @@ public class EventsFragment extends Fragment {
                 public void onSuccess(ArrayList<User> data) {
                     if (isAdded() && !data.isEmpty()) {
                         currentUser = data.get(0);
-                        Log.d("EventsFragment", "Current user loaded: " + currentUser.getName());
                         eventAdapter.setCurrentUser(currentUser);
                         loadEventsForTab();
                     } else {
@@ -446,45 +378,23 @@ public class EventsFragment extends Fragment {
         }
     }
 
-    /**
-     * Loads the events for the current tab (entrant view).
-     */
     private void loadEventsForTab() {
         if (currentUser == null) {
-            Log.d("EventsFragment", "User null in loadEventsForTab");
+            Log.d("EventsFragment", "User null");
             return;
         }
 
-        Log.d("EventsFragment", "Loading events for tab: " + currentTab);
-
-        FDatabase.DataCallback<Event> callback = new FDatabase.DataCallback<Event>() {
+        fDatabase.getAllEvents(new FDatabase.DataCallback<Event>() {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
-                    Log.d("EventsFragment", "Total events fetched: " + events.size());
-                    Log.d("EventsFragment", "Current user ID: " + currentUser.getId());
-
-                    ArrayList<Event> filteredEvents = new ArrayList<>();
-
+                    ArrayList<Event> listToDisplay = new ArrayList<>();
                     for (Event event : events) {
-                        Log.d("EventsFragment", "Checking event: " + event.getName());
-
-                        if (event.getWaitingList() != null) {
-                            Log.d("EventsFragment", "Waiting list size: " + event.getWaitingList().size());
-
-                            if (event.hasEntrant(currentUser.getId())) {
-                                Log.d("EventsFragment", "User found in event: " + event.getName());
-                                filteredEvents.add(event);
-                            } else {
-                                Log.d("EventsFragment", "User NOT in event: " + event.getName());
-                            }
-                        } else {
-                            Log.d("EventsFragment", "Event has null waiting list: " + event.getName());
+                        if (event.entrantInList(currentUser.getId(), event.getWaitingList())) {
+                            listToDisplay.add(event);
                         }
                     }
-
-                    Log.d("EventsFragment", "Filtered events: " + filteredEvents.size());
-                    updateEventList(filteredEvents);
+                    updateEventList(listToDisplay);
                 }
             }
 
@@ -495,51 +405,14 @@ public class EventsFragment extends Fragment {
                     Toast.makeText(getContext(), "Error loading events.", Toast.LENGTH_SHORT).show();
                 }
             }
-        };
-
-        switch (currentTab) {
-            case JOINED:
-                Toast.makeText(getContext(), "TODO: Joined Events", Toast.LENGTH_SHORT).show();
-                break;
-            case WISHLIST:
-                fDatabase.getAllEvents(callback);
-                break;
-            case INVITATIONS:
-                Toast.makeText(getContext(), "TODO: Invitations Events", Toast.LENGTH_SHORT).show();
-                break;
-        }
+        });
     }
 
-    /**
-     * Updates the event list with the given events.
-     */
     private void updateEventList(ArrayList<Event> events) {
-        Log.d("EventsFragment", "updateEventList called with " + (events != null ? events.size() : 0) + " events");
-
-        ArrayList<Event> adapterList = displayedEvents.getEvents();
-        adapterList.clear();
-
-        if (events != null && !events.isEmpty()) {
-            adapterList.addAll(events);
-            Log.d("EventsFragment", "Added events to adapter list. New size: " + adapterList.size());
+        eventAdapter.clear();
+        if (events != null) {
+            eventAdapter.addAll(events);
         }
-
-        // Force adapter refresh
-        if (eventAdapter != null) {
-            Log.d("EventsFragment", "Calling notifyDataSetChanged on adapter");
-            eventAdapter.notifyDataSetChanged();
-        } else {
-            Log.e("EventsFragment", "eventAdapter is NULL!");
-        }
-
-        // Log ListView state
-        if (eventList != null) {
-            Log.d("EventsFragment", "ListView adapter count: " + eventList.getAdapter().getCount());
-            Log.d("EventsFragment", "ListView visibility: " + eventList.getVisibility());
-        } else {
-            Log.e("EventsFragment", "eventList ListView is NULL!");
-        }
-
         if (events == null || events.isEmpty()) {
             Toast.makeText(getContext(), "No events found.", Toast.LENGTH_SHORT).show();
         }
