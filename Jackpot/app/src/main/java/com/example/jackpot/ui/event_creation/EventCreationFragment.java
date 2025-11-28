@@ -356,6 +356,8 @@ public class EventCreationFragment extends Fragment {
         eventDoc.put("joinedList", joinedList);
         UserList invitedList = new UserList(capacityVal);
         eventDoc.put("invitedList", invitedList);
+        UserList cancelledList = new UserList(capacityVal);
+        eventDoc.put("cancelledList", cancelledList);
         // endregion
 
         submitButton.setEnabled(false);
