@@ -84,4 +84,7 @@ dependencies {
     // Declare test dependencies WITHOUT specifying versions.
     androidTestImplementation("com.google.firebase:firebase-firestore")
     androidTestImplementation("com.google.firebase:firebase-auth")
+
+    
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
 }
