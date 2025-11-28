@@ -229,6 +229,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                                 Toast.LENGTH_SHORT).show();
                         Log.e("EventArrayAdapter", "Error in drawEvent()", e);
                     }
+                    sendNotifications(event);
                 });
             }
         }
