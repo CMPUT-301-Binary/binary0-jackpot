@@ -120,6 +120,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
     /**
      * Set up the view for an entrant event.
+     * Replace your existing setupEntrantEventView method with this updated version.
      * @param view The view to set up.
      * @param event The event to set up the view for.
      */
@@ -147,10 +148,8 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 priceString);
         eventDetails.setText(details);
 
-        //Load the image from the database and show it. Use glide
+        // Load the image from the database and show it. Use glide
         String imageUri = event.getPosterUri();
-        //Log imageUri for debugging
-        Log.d("EventArrayAdapter", "Image URI: " + details);
         if (imageUri != null && !imageUri.isEmpty()) {
             Glide.with(getContext())
                     .load(imageUri)
@@ -160,9 +159,10 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         } else {
             eventImage.setImageResource(R.drawable._ukj7h);
         }
+
+        // Handle Leave Button (existing functionality)
         Button leaveButton = view.findViewById(R.id.leave_button);
         if (leaveButton != null) {
-            // Check if user is in waiting list to show/hide button
             boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
 
             if (isInWaitingList) {
@@ -173,6 +173,116 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             }
         }
 
+        // Handle Waiting List Button
+        Button waitingListButton = view.findViewById(R.id.waiting_list_button);
+        if (waitingListButton != null) {
+            // Check if user is already in waiting list
+            boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
+
+            if (isInWaitingList) {
+                // User already joined, disable button
+                waitingListButton.setEnabled(false);
+                waitingListButton.setText("Joined");
+                waitingListButton.setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(
+                                android.graphics.Color.parseColor("#9E9E9E")
+                        )
+                );
+            } else {
+                // User not joined, enable button
+                waitingListButton.setEnabled(true);
+                waitingListButton.setText("Waiting-list");
+                waitingListButton.setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(
+                                android.graphics.Color.parseColor("#4CAF50")
+                        )
+                );
+
+                waitingListButton.setOnClickListener(v -> {
+                    if (currentUser == null) {
+                        Toast.makeText(getContext(), "Please log in first", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (currentUser.getRole() != User.Role.ENTRANT) {
+                        Toast.makeText(getContext(), "Only entrants can join events", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Add user to waiting list
+                    Entrant entrant = new Entrant(
+                            currentUser.getId(),
+                            currentUser.getName(),
+                            currentUser.getRole(),
+                            currentUser.getEmail(),
+                            currentUser.getPhone(),
+                            currentUser.getProfileImageUrl(),
+                            currentUser.getPassword(),
+                            currentUser.getNotificationPreferences(),
+                            currentUser.getDevice(),
+                            currentUser.getGeoPoint()
+                    );
+
+                    try {
+                        entrant.joinWaitingList(event);
+                        FDatabase.getInstance().updateEvent(event);
+                        Toast.makeText(getContext(), "Added to waiting list!", Toast.LENGTH_SHORT).show();
+                        notifyDataSetChanged();
+                    } catch (Exception e) {
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("EventArrayAdapter", "Error joining waiting list", e);
+                    }
+                });
+            }
+        }
+
+        // Handle Cancel List Button
+        Button cancelListButton = view.findViewById(R.id.cancel_list_button);
+        if (cancelListButton != null) {
+            // Check if user is in waiting list
+            boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
+
+            if (isInWaitingList) {
+                // User is in list, enable cancel button
+                cancelListButton.setEnabled(true);
+                cancelListButton.setVisibility(View.VISIBLE);
+
+                cancelListButton.setOnClickListener(v -> {
+                    if (currentUser == null) {
+                        Toast.makeText(getContext(), "Please log in first", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (currentUser.getRole() != User.Role.ENTRANT) {
+                        Toast.makeText(getContext(), "Only entrants can leave events", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Find the user in the waiting list
+                    User userInList = findUserInWaitingList(event, currentUser.getId());
+
+                    if (userInList == null) {
+                        Toast.makeText(getContext(), "You are not in this event's waiting list", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    try {
+                        // Remove user from waiting list
+                        event.getWaitingList().remove(userInList);
+                        FDatabase.getInstance().updateEvent(event);
+                        Toast.makeText(getContext(), "Removed from waiting list!", Toast.LENGTH_SHORT).show();
+                        notifyDataSetChanged();
+                    } catch (Exception e) {
+                        Toast.makeText(getContext(), "Error leaving event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("EventArrayAdapter", "Error removing from waiting list", e);
+                    }
+                });
+            } else {
+                // User not in list, disable or hide cancel button
+                cancelListButton.setEnabled(false);
+                cancelListButton.setVisibility(View.GONE);
+            }
+        }
     }
 
 
