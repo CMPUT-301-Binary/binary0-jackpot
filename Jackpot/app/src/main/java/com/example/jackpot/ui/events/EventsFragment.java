@@ -400,25 +400,15 @@ public class EventsFragment extends Fragment {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
-                    ArrayList<Event> wishlistEvents = new ArrayList<>();
-                    Entrant check = new Entrant(
-                            currentUser.getId(),
-                            currentUser.getName(),
-                            currentUser.getRole(),
-                            currentUser.getEmail(),
-                            currentUser.getPhone(),
-                            currentUser.getProfileImageUrl(),
-                            currentUser.getPassword(),
-                            currentUser.getNotificationPreferences(),
-                            currentUser.getDevice(),
-                            currentUser.getGeoPoint()
-                    );
+                    ArrayList<Event> filteredEvents = new ArrayList<>();
+
                     for (Event event : events) {
-                        if (event.getWaitingList() != null && event.hasEntrant(String.valueOf(check))) {
-                            wishlistEvents.add(event);
+                        // Use the user ID directly instead of converting Entrant object to string
+                        if (event.getWaitingList() != null && event.hasEntrant(currentUser.getId())) {
+                            filteredEvents.add(event);
                         }
                     }
-                    updateEventList(wishlistEvents);
+                    updateEventList(filteredEvents);
                 }
             }
 
