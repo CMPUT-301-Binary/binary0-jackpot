@@ -340,9 +340,20 @@ public class EventsFragment extends Fragment {
                 if (isAdded()) {
                     ArrayList<Event> listToDisplay = new ArrayList<>();
                     for (Event event : events) {
-                        if (event.entrantInList(currentUser.getId(), event.getWaitingList())) {
-                            listToDisplay.add(event);
+                        boolean shouldInclude = false;
+                        switch (currentTab) {
+                            case JOINED:
+                                shouldInclude = event.entrantInList(currentUser.getId(), event.getJoinedList());
+                                break;
+                            case INVITATIONS:
+                                shouldInclude = event.entrantInList(currentUser.getId(), event.getInvitedList());
+                                break;
+                            case WISHLIST:
+                            default:
+                                shouldInclude = event.entrantInList(currentUser.getId(), event.getWaitingList());
+                                break;
                         }
+                        if (shouldInclude) listToDisplay.add(event);
                     }
                     updateEventList(listToDisplay);
                 }
