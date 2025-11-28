@@ -141,7 +141,10 @@ public class MainActivity extends AppCompatActivity {
                                         NavigationView drawerNav) {
         // Combine all top-level destinations from BOTH
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_events, R.id.nav_notification, R.id.nav_profile, R.id.nav_map,
+                R.id.nav_home,
+                R.id.nav_events_entrant, R.id.nav_events_organizer,
+                R.id.nav_notification_entrant, R.id.nav_notification_organizer, R.id.nav_notification_admin,
+                R.id.nav_profile, R.id.nav_image, R.id.nav_map,
                 R.id.drawer_settings, R.id.drawer_privacy_policy, R.id.drawer_location)
                 .setOpenableLayout(binding.drawerLayout)
                 .build();
