@@ -387,6 +387,12 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                             return;
                         }
 
+                        if (event.entrantInList(currentUser.getId(), event.getInvitedList())
+                                || event.entrantInList(currentUser.getId(), event.getJoinedList())) {
+                            Toast.makeText(getContext(), "Already invited/confirmed for this event.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
                         Entrant entrant = new Entrant(
                                 currentUser.getId(),
                                 currentUser.getName(),
@@ -546,6 +552,12 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 if (isJoined) {
                     joinButton.setEnabled(false);
                     joinButton.setText("Joined");
+                } else if (event.entrantInList(currentUser != null ? currentUser.getId() : null, event.getInvitedList())) {
+                    joinButton.setEnabled(false);
+                    joinButton.setText("Invited");
+                } else if (event.entrantInList(currentUser != null ? currentUser.getId() : null, event.getJoinedList())) {
+                    joinButton.setEnabled(false);
+                    joinButton.setText("Confirmed");
                 } else {
                     joinButton.setEnabled(true);
                     joinButton.setText("Join");
@@ -597,6 +609,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                     currentUser.getGeoPoint()
             );
             try {
+                if (event.entrantInList(currentUser.getId(), event.getInvitedList())
+                        || event.entrantInList(currentUser.getId(), event.getJoinedList())) {
+                    Toast.makeText(getContext(), "Already invited/confirmed for this event.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 entrant.joinWaitingList(event);
                 FDatabase.getInstance().updateEvent(event);
                 Toast.makeText(getContext(), "Joined waiting list!", Toast.LENGTH_SHORT).show();
