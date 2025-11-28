@@ -1,93 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp">
+        android:padding="16dp">
 
+        <!-- Event Image -->
         <ImageView
-            android:id="@+id/event_image"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:id="@+id/event_pic"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:scaleType="centerCrop"
-            android:contentDescription="Event poster" />
+            android:contentDescription="Event image"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
+        <!-- Event Title -->
+        <TextView
+            android:id="@+id/event_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:orientation="vertical">
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            android:text="Event Name"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/event_pic"
+            app:layout_constraintTop_toTopOf="@+id/event_pic" />
 
-            <TextView
-                android:id="@+id/event_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/black"
-                android:text="Event Name" />
+        <!-- Event Details -->
+        <TextView
+            android:id="@+id/event_details"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:text="Location: TBD\nSpots: 0 | Waiting: 0 | Price: Free"
+            android:textColor="#666666"
+            android:textSize="13sp"
+            app:layout_constraintStart_toEndOf="@+id/event_pic"
+            app:layout_constraintTop_toBottomOf="@+id/event_text"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-            <TextView
-                android:id="@+id/event_category"
+        <!-- Button Container -->
+        <LinearLayout
+            android:id="@+id/button_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:gravity="end"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/event_pic">
+
+            <!-- Leave Button (existing) -->
+            <Button
+                android:id="@+id/leave_button"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"
-                android:text="Category" />
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#FF9800"
+                android:text="Leave"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textAllCaps="false"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:visibility="gone" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal">
+            <!-- Waiting List Button -->
+            <Button
+                android:id="@+id/waiting_list_button"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#4CAF50"
+                android:text="Waiting-list"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textAllCaps="false"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp" />
 
-                <TextView
-                    android:id="@+id/event_price"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp"
-                    android:textColor="@android:color/black"
-                    android:text="$0.00" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text=" | " />
-
-                <TextView
-                    android:id="@+id/event_spots"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textSize="14sp"
-                    android:text="0 spots" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text=" | " />
-
-                <TextView
-                    android:id="@+id/event_waiting"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textSize="14sp"
-                    android:text="0 waiting" />
-            </LinearLayout>
+            <!-- Cancel List Button -->
+            <Button
+                android:id="@+id/cancel_list_button"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:backgroundTint="#F44336"
+                android:text="Cancel-list"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textAllCaps="false"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp" />
         </LinearLayout>
-    </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
