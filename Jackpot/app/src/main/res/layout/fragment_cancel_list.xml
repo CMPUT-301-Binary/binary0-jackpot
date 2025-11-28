@@ -48,22 +48,10 @@
         android:id="@+id/back_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="48dp"
+        android:layout_marginStart="144dp"
+        android:layout_marginBottom="44dp"
         android:text="Back"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/notify_all_button"
         app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/notify_all_button"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="48dp"
-        android:text="Notify All"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/back_button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
