@@ -194,9 +194,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
     private void setupEventView(View view, Event event) {
         ImageView eventImage = view.findViewById(R.id.event_pic);
         TextView eventTitle = view.findViewById(R.id.event_text);
-        TextView eventDetails = view.findViewById(R.id.eventPrice);
+        TextView eventDetails = view.findViewById(R.id.event_details);
 
-        eventTitle.setText(event.getName());
+        if (eventTitle != null) {
+            eventTitle.setText(event.getName());
+        }
 
         String priceString = "Free";
         if (event.getPrice() != null && event.getPrice() > 0) {
@@ -217,7 +219,9 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 joinedCount,
                 priceString
         );
-        eventDetails.setText(details);
+        if (eventDetails != null) {
+            eventDetails.setText(details);
+        }
 
         // Load the image from the database and show it. Use glide
         String imageUri = event.getPosterUri();
@@ -703,5 +707,3 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         notifyDataSetChanged();
     }
 }
-
-
