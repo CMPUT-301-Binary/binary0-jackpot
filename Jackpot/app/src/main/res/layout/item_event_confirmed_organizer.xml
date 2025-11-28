@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
@@ -13,7 +12,6 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Event Image -->
         <ImageView
             android:id="@+id/event_pic"
             android:layout_width="100dp"
@@ -23,7 +21,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Event Title -->
         <TextView
             android:id="@+id/event_text"
             android:layout_width="0dp"
@@ -38,98 +35,41 @@
             app:layout_constraintStart_toEndOf="@+id/event_pic"
             app:layout_constraintTop_toTopOf="@+id/event_pic" />
 
-        <!-- Event Details -->
         <TextView
-            android:id="@+id/eventPrice"
+            android:id="@+id/event_details"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
-            android:text="Location: TBD\nSpots: 0 | Waiting: 0 | Price: Free"
+            android:text="Location: TBD\nSpots: 0 | Waiting: 0 | Invited: 0 | Joined: 0"
             android:textColor="#666666"
             android:textSize="13sp"
             app:layout_constraintStart_toEndOf="@+id/event_pic"
             app:layout_constraintTop_toBottomOf="@+id/event_text"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Button Container -->
         <LinearLayout
             android:id="@+id/button_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:gravity="end"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/event_pic">
 
-            <!-- Leave Button (existing) -->
             <Button
-                android:id="@+id/leave_button"
+                android:id="@+id/confirmed_list_button"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:layout_marginEnd="8dp"
-                android:backgroundTint="#FF9800"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:text="Leave"
+                android:backgroundTint="#03A9F4"
+                android:text="Confirmed list"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textSize="13sp"
-                android:visibility="gone" />
-
-            <!-- Waiting List Button -->
-
-            <!-- Cancel List Button -->
-
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp" />
         </LinearLayout>
-
-        <Button
-            android:id="@+id/waiting_list_button"
-            android:layout_width="wrap_content"
-            android:layout_height="58dp"
-            android:layout_marginStart="136dp"
-            android:backgroundTint="#4CAF50"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:text="Waiting-list"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="13sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
-
-        <Button
-            android:id="@+id/cancel_list_button"
-            android:layout_width="wrap_content"
-            android:layout_height="58dp"
-            android:backgroundTint="#F44336"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:text="Cancel-list"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="13sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
-
-        <Button
-            android:id="@+id/list_attendees_button"
-            android:layout_width="130dp"
-            android:layout_height="58dp"
-            android:layout_marginTop="116dp"
-            android:layout_weight="1"
-            android:backgroundTint="#03A9F4"
-            android:text="Invitations"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

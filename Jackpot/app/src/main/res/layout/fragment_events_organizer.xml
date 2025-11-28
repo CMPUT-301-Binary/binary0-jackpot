@@ -33,6 +33,15 @@
             android:backgroundTint="@color/white"
             android:text="My Events"
             android:textColor="@color/black" />
+
+        <Button
+            android:id="@+id/confirmed_events_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/white"
+            android:text="Confirmed"
+            android:textColor="@color/black" />
     </LinearLayout>
 
     <ListView

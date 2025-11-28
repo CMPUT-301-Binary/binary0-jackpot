@@ -40,6 +40,8 @@ public class EventsFragment extends Fragment {
     private User currentUser;
     private EventList displayedEvents = new EventList(new ArrayList<>());
     private User.Role userRole;
+    private enum OrganizerTab { DRAW, MY_EVENTS, CONFIRMED }
+    private OrganizerTab currentOrganizerTab = OrganizerTab.DRAW;
 
     private enum EventTab {
         JOINED, WISHLIST, INVITATIONS
@@ -113,6 +115,16 @@ public class EventsFragment extends Fragment {
             public void onCancelListClick(Event event) {
                 navigateToCancelList(event);
             }
+
+            @Override
+            public void onInvitedListClick(Event event) {
+                navigateToInvitedList(event);
+            }
+
+            @Override
+            public void onConfirmedListClick(Event event) {
+                navigateToConfirmedList(event);
+            }
         });
     }
 
@@ -134,9 +146,28 @@ public class EventsFragment extends Fragment {
                 .commit();
     }
 
+    private void navigateToInvitedList(Event event) {
+        InvitedListFragment fragment = InvitedListFragment.newInstance(event);
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.nav_host_fragment_content_main, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    private void navigateToConfirmedList(Event event) {
+        AttendeesListFragment fragment = AttendeesListFragment.newInstance(event);
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.nav_host_fragment_content_main, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
     private void setupOrganizerTabs(View root) {
         Button myEventsButton = root.findViewById(R.id.my_events_button);
         Button activeButton = root.findViewById(R.id.active_events_button);
+        Button confirmedButton = root.findViewById(R.id.confirmed_events_button);
 
         int activeColor = ContextCompat.getColor(requireContext(), R.color.black);
         int inactiveColor = ContextCompat.getColor(requireContext(), R.color.white);
@@ -149,10 +180,13 @@ public class EventsFragment extends Fragment {
         activeButton.setTextColor(inactiveTextColor);
 
         myEventsButton.setOnClickListener(v -> {
+            currentOrganizerTab = OrganizerTab.DRAW;
             myEventsButton.setBackgroundColor(activeColor);
             myEventsButton.setTextColor(activeTextColor);
             activeButton.setBackgroundColor(inactiveColor);
             activeButton.setTextColor(inactiveTextColor);
+            confirmedButton.setBackgroundColor(inactiveColor);
+            confirmedButton.setTextColor(inactiveTextColor);
             
             // Set the new layout and reset the adapter to force a refresh
             eventAdapter.setLayoutResource(R.layout.drawlist_item_for_organizer);
@@ -162,15 +196,32 @@ public class EventsFragment extends Fragment {
         });
 
         activeButton.setOnClickListener(v -> {
+            currentOrganizerTab = OrganizerTab.MY_EVENTS;
             activeButton.setBackgroundColor(activeColor);
             activeButton.setTextColor(activeTextColor);
             myEventsButton.setBackgroundColor(inactiveColor);
             myEventsButton.setTextColor(inactiveTextColor);
+            confirmedButton.setBackgroundColor(inactiveColor);
+            confirmedButton.setTextColor(inactiveTextColor);
 
             // Set the new layout and reset the adapter to force a refresh
             eventAdapter.setLayoutResource(R.layout.item_event_organizer);
             eventList.setAdapter(eventAdapter);
             loadActiveOrganizerEvents();
+        });
+
+        confirmedButton.setOnClickListener(v -> {
+            currentOrganizerTab = OrganizerTab.CONFIRMED;
+            confirmedButton.setBackgroundColor(activeColor);
+            confirmedButton.setTextColor(activeTextColor);
+            myEventsButton.setBackgroundColor(inactiveColor);
+            myEventsButton.setTextColor(inactiveTextColor);
+            activeButton.setBackgroundColor(inactiveColor);
+            activeButton.setTextColor(inactiveTextColor);
+
+            eventAdapter.setLayoutResource(R.layout.item_event_confirmed_organizer);
+            eventList.setAdapter(eventAdapter);
+            loadOrganizerEvents();
         });
     }
 
@@ -209,7 +260,17 @@ public class EventsFragment extends Fragment {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
-                    updateEventList(events);
+                    if (currentOrganizerTab == OrganizerTab.CONFIRMED) {
+                        ArrayList<Event> confirmedEvents = new ArrayList<>();
+                        for (Event e : events) {
+                            if (e.getJoinedList() != null && e.getJoinedList().size() > 0) {
+                                confirmedEvents.add(e);
+                            }
+                        }
+                        updateEventList(confirmedEvents);
+                    } else {
+                        updateEventList(events);
+                    }
                 }
             }
 
