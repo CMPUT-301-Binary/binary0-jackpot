@@ -1,8 +1,8 @@
 package com.example.jackpot;
 
+import android.content.Intent;
 import android.content.Context;
 import android.util.Log;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import android.app.AlertDialog;
 
 import com.bumptech.glide.Glide;
 
@@ -230,6 +231,16 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                         Log.e("EventArrayAdapter", "Error in drawEvent()", e);
                     }
                 });
+            }
+        }
+
+        Button listAttendeesButton = view.findViewById(R.id.list_attendees_button);
+        if (listAttendeesButton != null) {
+            if (!isOrganizer) {
+                listAttendeesButton.setVisibility(View.GONE);
+            } else {
+                listAttendeesButton.setVisibility(View.VISIBLE);
+                listAttendeesButton.setOnClickListener(v -> showAttendees(event));
             }
         }
 
@@ -633,5 +644,34 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         Toast.makeText(getContext(), "Invitation declined.", Toast.LENGTH_SHORT).show();
         remove(event);
         notifyDataSetChanged();
+    }
+
+    private void showAttendees(Event event) {
+        Context context = getContext();
+        if (context == null) return;
+
+        UserList joinedList = event.getJoinedList();
+        ArrayList<User> attendees = joinedList != null ? joinedList.getUsers() : new ArrayList<>();
+        if (attendees == null || attendees.isEmpty()) {
+            Toast.makeText(context, "No accepted attendees yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ArrayList<String> names = new ArrayList<>();
+        for (User user : attendees) {
+            if (user != null) {
+                names.add(user.getName() != null ? user.getName() : user.getEmail());
+            }
+        }
+        if (names.isEmpty()) {
+            Toast.makeText(context, "No accepted attendees yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(context)
+                .setTitle("Attendees")
+                .setItems(names.toArray(new String[0]), null)
+                .setPositiveButton("Close", null)
+                .show();
     }
 }
