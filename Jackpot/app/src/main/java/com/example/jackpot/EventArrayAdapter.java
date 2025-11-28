@@ -14,7 +14,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.app.AlertDialog;
 
 import com.bumptech.glide.Glide;
 
@@ -35,6 +34,8 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
     public interface OnButtonClickListener {
         void onWaitingListClick(Event event);
         void onCancelListClick(Event event);
+        void onInvitedListClick(Event event);
+        void onConfirmedListClick(Event event);
     }
 
     private final ViewType viewType;
@@ -168,14 +169,16 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
         int waitingCount = event.getWaitingCount();
         int invitedCount = event.getInvitedCount();
+        int joinedCount = event.getJoinedList() != null ? event.getJoinedList().size() : 0;
 
         String details = String.format(
                 Locale.getDefault(),
-                "Location: %s\nSpots: %d | Waiting: %d | Invited: %d | Price: %s",
+                "Location: %s\nSpots: %d | Waiting: %d | Invited: %d | Joined: %d | Price: %s",
                 event.getLocation() != null ? event.getLocation() : "N/A",
                 event.getCapacity(),
                 waitingCount,
                 invitedCount,
+                joinedCount,
                 priceString
         );
         eventDetails.setText(details);
@@ -235,12 +238,29 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         }
 
         Button listAttendeesButton = view.findViewById(R.id.list_attendees_button);
+        Button confirmedListButton = view.findViewById(R.id.confirmed_list_button);
         if (listAttendeesButton != null) {
             if (!isOrganizer) {
                 listAttendeesButton.setVisibility(View.GONE);
             } else {
                 listAttendeesButton.setVisibility(View.VISIBLE);
-                listAttendeesButton.setOnClickListener(v -> showAttendees(event));
+                listAttendeesButton.setOnClickListener(v -> {
+                    if (buttonClickListener != null) {
+                        buttonClickListener.onInvitedListClick(event);
+                    }
+                });
+            }
+        }
+        if (confirmedListButton != null) {
+            if (!isOrganizer) {
+                confirmedListButton.setVisibility(View.GONE);
+            } else {
+                confirmedListButton.setVisibility(View.VISIBLE);
+                confirmedListButton.setOnClickListener(v -> {
+                    if (buttonClickListener != null) {
+                        buttonClickListener.onConfirmedListClick(event);
+                    }
+                });
             }
         }
 
@@ -644,34 +664,5 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         Toast.makeText(getContext(), "Invitation declined.", Toast.LENGTH_SHORT).show();
         remove(event);
         notifyDataSetChanged();
-    }
-
-    private void showAttendees(Event event) {
-        Context context = getContext();
-        if (context == null) return;
-
-        UserList joinedList = event.getJoinedList();
-        ArrayList<User> attendees = joinedList != null ? joinedList.getUsers() : new ArrayList<>();
-        if (attendees == null || attendees.isEmpty()) {
-            Toast.makeText(context, "No accepted attendees yet.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        ArrayList<String> names = new ArrayList<>();
-        for (User user : attendees) {
-            if (user != null) {
-                names.add(user.getName() != null ? user.getName() : user.getEmail());
-            }
-        }
-        if (names.isEmpty()) {
-            Toast.makeText(context, "No accepted attendees yet.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        new AlertDialog.Builder(context)
-                .setTitle("Attendees")
-                .setItems(names.toArray(new String[0]), null)
-                .setPositiveButton("Close", null)
-                .show();
     }
 }
