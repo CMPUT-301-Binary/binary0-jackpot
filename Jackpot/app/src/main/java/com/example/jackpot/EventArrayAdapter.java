@@ -1,8 +1,8 @@
 package com.example.jackpot;
 
+import android.content.Intent;
 import android.content.Context;
 import android.util.Log;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import android.app.AlertDialog;
 
 import com.bumptech.glide.Glide;
 
@@ -29,6 +30,38 @@ import java.util.UUID;
  */
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
+    private void sendNotifications(Event event){
+        //We want to loop through the list of people who were invited and send them a notification.
+        //We then want to loop through the list of people who were NOT invited and send them a notification.
+
+        //Loop through the list of people who are invited.
+
+        for (User user : event.getInvitedList().getUsers()){
+            createNotification(UUID.randomUUID().toString(), user.getId(), event.getEventId(), "Event",
+                    "Status: You're selected!", event.getCreatedBy());
+        }
+        for (User user : event.getWaitingList().getUsers()){
+            createNotification(UUID.randomUUID().toString(), user.getId(), event.getEventId(), "Event",
+                    "Status: Not selected", event.getCreatedBy());
+        }
+
+    }
+
+    private void createNotification(String notificationID, String recipientID, String eventID, String notifType, String payload, String organizerID){
+        //Create a notification and store it in the firebase.
+        Map<String, Object> notificationDoc = new HashMap<>();
+        notificationDoc.put("notificationID", notificationID);
+        notificationDoc.put("recipientID", recipientID);
+        notificationDoc.put("eventID", eventID);
+        notificationDoc.put("notifType", notifType);
+        notificationDoc.put("payload", payload);
+        notificationDoc.put("organizerID", organizerID);
+        //TODO: Write this object to the database
+        FDatabase.getInstance().addNotification(notificationDoc, notificationID);
+
+
+    }
+
     public enum ViewType {
         HOME,
         EVENTS
@@ -197,6 +230,10 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
         // Check if current user is an organizer
         boolean isOrganizer = currentUser != null && currentUser.getRole() == User.Role.ORGANIZER;
+        String userId = currentUser != null ? currentUser.getId() : null;
+        boolean isInWaitingList = event.entrantInList(userId, event.getWaitingList());
+        boolean isInvited = event.entrantInList(userId, event.getInvitedList());
+        boolean isJoined = event.entrantInList(userId, event.getJoinedList());
 
         Button drawLotteryButton = view.findViewById(R.id.draw_lottery_button);
         if (drawLotteryButton != null) {
@@ -234,6 +271,16 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             }
         }
 
+        Button listAttendeesButton = view.findViewById(R.id.list_attendees_button);
+        if (listAttendeesButton != null) {
+            if (!isOrganizer) {
+                listAttendeesButton.setVisibility(View.GONE);
+            } else {
+                listAttendeesButton.setVisibility(View.VISIBLE);
+                listAttendeesButton.setOnClickListener(v -> showAttendees(event));
+            }
+        }
+
         // handle Leave Button
         Button leaveButton = view.findViewById(R.id.leave_button);
         if (leaveButton != null) {
@@ -241,7 +288,6 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 // hide leave button for organizers
                 leaveButton.setVisibility(View.GONE);
             } else {
-                boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
                 if (isInWaitingList) {
                     leaveButton.setVisibility(View.VISIBLE);
                     leaveButton.setOnClickListener(v -> handleLeaveButtonClick(event));
@@ -273,9 +319,23 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 });
             } else {
                 // Entrant logic
-                boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
-
-                if (isInWaitingList) {
+                if (isJoined) {
+                    waitingListButton.setEnabled(false);
+                    waitingListButton.setText("Joined");
+                    waitingListButton.setBackgroundTintList(
+                            android.content.res.ColorStateList.valueOf(
+                                    android.graphics.Color.parseColor("#9E9E9E")
+                            )
+                    );
+                } else if (isInvited) {
+                    waitingListButton.setEnabled(false);
+                    waitingListButton.setText("Invited");
+                    waitingListButton.setBackgroundTintList(
+                            android.content.res.ColorStateList.valueOf(
+                                    android.graphics.Color.parseColor("#9E9E9E")
+                            )
+                    );
+                } else if (isInWaitingList) {
                     waitingListButton.setEnabled(false);
                     waitingListButton.setText("Joined");
                     waitingListButton.setBackgroundTintList(
@@ -330,6 +390,20 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             }
         }
 
+        Button acceptInviteButton = view.findViewById(R.id.accept_invite_button);
+        Button declineInviteButton = view.findViewById(R.id.decline_invite_button);
+        if (acceptInviteButton != null && declineInviteButton != null) {
+            if (isOrganizer || !isInvited) {
+                acceptInviteButton.setVisibility(View.GONE);
+                declineInviteButton.setVisibility(View.GONE);
+            } else {
+                acceptInviteButton.setVisibility(View.VISIBLE);
+                declineInviteButton.setVisibility(View.VISIBLE);
+                acceptInviteButton.setOnClickListener(v -> handleAcceptInvitation(event));
+                declineInviteButton.setOnClickListener(v -> handleDeclineInvitation(event));
+            }
+        }
+
         // Handle Cancel List Button
         Button cancelListButton = view.findViewById(R.id.cancel_list_button);
         if (cancelListButton != null) {
@@ -352,8 +426,6 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 });
             } else {
                 // Entrant logic
-                boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
-
                 if (isInWaitingList) {
                     cancelListButton.setEnabled(true);
                     cancelListButton.setVisibility(View.VISIBLE);
@@ -369,7 +441,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                             return;
                         }
 
-                        User userInList = findUserInWaitingList(event, currentUser.getId());
+                        User userInList = findUserInList(event.getWaitingList(), currentUser.getId());
 
                         if (userInList == null) {
                             Toast.makeText(getContext(), "You are not in this event's waiting list", Toast.LENGTH_SHORT).show();
@@ -514,19 +586,16 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         }
     }
 
-    // Helper method to find the User object in the waiting list
-    private User findUserInWaitingList(Event event, String userId) {
-        if (event.getWaitingList() == null || userId == null) {
+    private User findUserInList(UserList list, String userId) {
+        if (list == null || userId == null) {
             return null;
         }
-
-        ArrayList<User> users = event.getWaitingList().getUsers();
+        ArrayList<User> users = list.getUsers();
         if (users == null) {
             return null;
         }
-
         for (User user : users) {
-            if (user != null && user.getId() != null && user.getId().equals(userId)) {
+            if (user != null && userId.equals(user.getId())) {
                 return user;
             }
         }
@@ -541,7 +610,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         }
 
         // Find the user in the waiting list
-        User userInList = findUserInWaitingList(event, currentUser.getId());
+        User userInList = findUserInList(event.getWaitingList(), currentUser.getId());
 
         if (userInList == null) {
             Toast.makeText(getContext(), "You are not in this event's waiting list.", Toast.LENGTH_SHORT).show();
@@ -565,35 +634,83 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         }
     }
 
-    private void sendNotifications(Event event){
-        //We want to loop through the list of people who were invited and send them a notification.
-        //We then want to loop through the list of people who were NOT invited and send them a notification.
-
-        //Loop through the list of people who are invited.
-
-        for (User user : event.getInvitedList().getUsers()){
-            createNotification(UUID.randomUUID().toString(), user.getId(), event.getEventId(), "Event",
-                    "Status: You're selected!", event.getCreatedBy());
+    private void handleAcceptInvitation(Event event) {
+        if (currentUser == null || currentUser.getRole() != User.Role.ENTRANT) {
+            Toast.makeText(getContext(), "Only entrants can accept invites.", Toast.LENGTH_SHORT).show();
+            return;
         }
-        for (User user : event.getWaitingList().getUsers()){
-            createNotification(UUID.randomUUID().toString(), user.getId(), event.getEventId(), "Event",
-                    "Status: Not selected", event.getCreatedBy());
+        if (event.getInvitedList() == null) {
+            Toast.makeText(getContext(), "No invitation found.", Toast.LENGTH_SHORT).show();
+            return;
         }
+        User invitee = findUserInList(event.getInvitedList(), currentUser.getId());
+        if (invitee == null) {
+            Toast.makeText(getContext(), "No invitation found.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (event.getJoinedList() == null) {
+            event.setJoinedList(new UserList(event.getCapacity()));
+        }
+        if (!event.entrantInList(currentUser.getId(), event.getJoinedList())) {
+            event.getJoinedList().add(invitee);
+        }
+        event.getInvitedList().remove(invitee);
 
+        FDatabase.getInstance().updateEvent(event);
+        Toast.makeText(getContext(), "Invitation accepted!", Toast.LENGTH_SHORT).show();
+        remove(event);
+        notifyDataSetChanged();
     }
 
-    private void createNotification(String notificationID, String recipientID, String eventID, String notifType, String payload, String organizerID){
-        //Create a notification and store it in the firebase.
-        Map<String, Object> notificationDoc = new HashMap<>();
-        notificationDoc.put("notificationID", notificationID);
-        notificationDoc.put("recipientID", recipientID);
-        notificationDoc.put("eventID", eventID);
-        notificationDoc.put("notifType", notifType);
-        notificationDoc.put("payload", payload);
-        notificationDoc.put("organizerID", organizerID);
-        //TODO: Write this object to the database
-        FDatabase.getInstance().addNotification(notificationDoc, notificationID);
+    private void handleDeclineInvitation(Event event) {
+        if (currentUser == null || currentUser.getRole() != User.Role.ENTRANT) {
+            Toast.makeText(getContext(), "Only entrants can decline invites.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (event.getInvitedList() == null) {
+            Toast.makeText(getContext(), "No invitation found.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        User invitee = findUserInList(event.getInvitedList(), currentUser.getId());
+        if (invitee == null) {
+            Toast.makeText(getContext(), "No invitation found.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        event.getInvitedList().remove(invitee);
+        FDatabase.getInstance().updateEvent(event);
+        Toast.makeText(getContext(), "Invitation declined.", Toast.LENGTH_SHORT).show();
+        remove(event);
+        notifyDataSetChanged();
+    }
 
+    private void showAttendees(Event event) {
+        Context context = getContext();
+        if (context == null) return;
 
+        UserList joinedList = event.getJoinedList();
+        ArrayList<User> attendees = joinedList != null ? joinedList.getUsers() : new ArrayList<>();
+        if (attendees == null || attendees.isEmpty()) {
+            Toast.makeText(context, "No accepted attendees yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ArrayList<String> names = new ArrayList<>();
+        for (User user : attendees) {
+            if (user != null) {
+                names.add(user.getName() != null ? user.getName() : user.getEmail());
+            }
+        }
+        if (names.isEmpty()) {
+            Toast.makeText(context, "No accepted attendees yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(context)
+                .setTitle("Attendees")
+                .setItems(names.toArray(new String[0]), null)
+                .setPositiveButton("Close", null)
+                .show();
     }
 }
+
+

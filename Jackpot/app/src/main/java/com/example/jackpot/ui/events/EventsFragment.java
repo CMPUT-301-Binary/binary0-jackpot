@@ -137,7 +137,6 @@ public class EventsFragment extends Fragment {
     private void setupOrganizerTabs(View root) {
         Button myEventsButton = root.findViewById(R.id.my_events_button);
         Button activeButton = root.findViewById(R.id.active_events_button);
-        Button pastButton = root.findViewById(R.id.past_events_button);
 
         int activeColor = ContextCompat.getColor(requireContext(), R.color.black);
         int inactiveColor = ContextCompat.getColor(requireContext(), R.color.white);
@@ -148,16 +147,12 @@ public class EventsFragment extends Fragment {
         myEventsButton.setTextColor(activeTextColor);
         activeButton.setBackgroundColor(inactiveColor);
         activeButton.setTextColor(inactiveTextColor);
-        pastButton.setBackgroundColor(inactiveColor);
-        pastButton.setTextColor(inactiveTextColor);
 
         myEventsButton.setOnClickListener(v -> {
             myEventsButton.setBackgroundColor(activeColor);
             myEventsButton.setTextColor(activeTextColor);
             activeButton.setBackgroundColor(inactiveColor);
             activeButton.setTextColor(inactiveTextColor);
-            pastButton.setBackgroundColor(inactiveColor);
-            pastButton.setTextColor(inactiveTextColor);
             
             // Set the new layout and reset the adapter to force a refresh
             eventAdapter.setLayoutResource(R.layout.drawlist_item_for_organizer);
@@ -171,27 +166,11 @@ public class EventsFragment extends Fragment {
             activeButton.setTextColor(activeTextColor);
             myEventsButton.setBackgroundColor(inactiveColor);
             myEventsButton.setTextColor(inactiveTextColor);
-            pastButton.setBackgroundColor(inactiveColor);
-            pastButton.setTextColor(inactiveTextColor);
 
             // Set the new layout and reset the adapter to force a refresh
             eventAdapter.setLayoutResource(R.layout.item_event_organizer);
             eventList.setAdapter(eventAdapter);
             loadActiveOrganizerEvents();
-        });
-
-        pastButton.setOnClickListener(v -> {
-            pastButton.setBackgroundColor(activeColor);
-            pastButton.setTextColor(activeTextColor);
-            myEventsButton.setBackgroundColor(inactiveColor);
-            myEventsButton.setTextColor(inactiveTextColor);
-            activeButton.setBackgroundColor(inactiveColor);
-            activeButton.setTextColor(inactiveTextColor);
-
-            // Set the new layout and reset the adapter to force a refresh
-            eventAdapter.setLayoutResource(R.layout.item_event_organizer);
-            eventList.setAdapter(eventAdapter);
-            loadPastOrganizerEvents();
         });
     }
 
@@ -269,35 +248,6 @@ public class EventsFragment extends Fragment {
             @Override
             public void onFailure(Exception e) {
                 Log.e("EventsFragment", "Failed to load active events", e);
-            }
-        });
-    }
-
-    private void loadPastOrganizerEvents() {
-        if (currentUser == null) {
-            Log.d("EventsFragment", "User null");
-            return;
-        }
-
-        fDatabase.queryEventsByCreator(currentUser.getId(), new FDatabase.DataCallback<Event>() {
-            @Override
-            public void onSuccess(ArrayList<Event> events) {
-                if (isAdded()) {
-                    ArrayList<Event> pastEvents = new ArrayList<>();
-                    long currentTime = System.currentTimeMillis();
-
-                    for (Event event : events) {
-                        if (event.getDate() != null && event.getDate().getTime() <= currentTime) {
-                            pastEvents.add(event);
-                        }
-                    }
-                    updateEventList(pastEvents);
-                }
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Log.e("EventsFragment", "Failed to load past events", e);
             }
         });
     }
@@ -390,9 +340,20 @@ public class EventsFragment extends Fragment {
                 if (isAdded()) {
                     ArrayList<Event> listToDisplay = new ArrayList<>();
                     for (Event event : events) {
-                        if (event.entrantInList(currentUser.getId(), event.getWaitingList())) {
-                            listToDisplay.add(event);
+                        boolean shouldInclude = false;
+                        switch (currentTab) {
+                            case JOINED:
+                                shouldInclude = event.entrantInList(currentUser.getId(), event.getJoinedList());
+                                break;
+                            case INVITATIONS:
+                                shouldInclude = event.entrantInList(currentUser.getId(), event.getInvitedList());
+                                break;
+                            case WISHLIST:
+                            default:
+                                shouldInclude = event.entrantInList(currentUser.getId(), event.getWaitingList());
+                                break;
                         }
+                        if (shouldInclude) listToDisplay.add(event);
                     }
                     updateEventList(listToDisplay);
                 }

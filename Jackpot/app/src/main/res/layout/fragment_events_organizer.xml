@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:backgroundTint="@color/black"
-            android:text="My Events"
+            android:text="Draw"
             android:textColor="@color/white" />
 
         <Button
@@ -31,16 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:backgroundTint="@color/white"
-            android:text="Active"
-            android:textColor="@color/black" />
-
-        <Button
-            android:id="@+id/past_events_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:backgroundTint="@color/white"
-            android:text="Past"
+            android:text="My Events"
             android:textColor="@color/black" />
     </LinearLayout>
 

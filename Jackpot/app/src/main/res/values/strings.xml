@@ -50,4 +50,6 @@
     <string name="loading_users">Loading users...</string>
     <string name="no_users_location">No users have shared their location</string>
     <string name="users_with_locations">%1$d of %2$d users with locations</string>
+    <string name="accept">Accept</string>
+    <string name="decline">Decline</string>
 </resources>

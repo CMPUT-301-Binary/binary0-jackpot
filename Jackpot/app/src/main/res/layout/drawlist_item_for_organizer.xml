@@ -64,7 +64,7 @@ Spots: 0 | Waiting: 0 | Price: Free"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/event_pic">
 
-<!--            Draw Lottery Button -->
+            <!--            Draw Lottery Button -->
             <Button
                 android:id="@+id/draw_lottery_button"
                 android:layout_width="wrap_content"
