@@ -127,6 +127,7 @@
             android:backgroundTint="#03A9F4"
             android:text="List Attendees"
             android:textAllCaps="false"
+            android:textColor="@android:color/white"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
