@@ -79,6 +79,7 @@ public class EventsFragment extends Fragment {
         String roleName = getArguments() != null ? getArguments().getString("role") : User.Role.ENTRANT.name();
         userRole = User.Role.valueOf(roleName);
         Log.d("ROLE_CHECK", "Received role = " + roleName);
+        Log.d("EventsFragment", "User role enum = " + userRole);
 
         View root;
         int eventItemLayoutResource;
@@ -108,13 +109,13 @@ public class EventsFragment extends Fragment {
             setupTabs(root);
             getUserAndLoadEvents();
         }
-        // Setup for ORGANIZER
+// Setup for ORGANIZER
         else if (userRole == User.Role.ORGANIZER) {
             eventList = root.findViewById(R.id.organizer_events);
             eventAdapter = new EventArrayAdapter(requireActivity(),
                     displayedEvents.getEvents(),
                     eventItemLayoutResource,
-                    EventArrayAdapter.ViewType.HOME,  // Use HOME view type for organizers
+                    EventArrayAdapter.ViewType.EVENTS,  // Changed from HOME to EVENTS
                     null);
             eventList.setAdapter(eventAdapter);
             setupOrganizerTabs(root);
@@ -370,6 +371,7 @@ public class EventsFragment extends Fragment {
                 public void onSuccess(ArrayList<User> data) {
                     if (isAdded() && !data.isEmpty()) {
                         currentUser = data.get(0);
+                        Log.d("EventsFragment", "Current user loaded: " + currentUser.getName());
                         eventAdapter.setCurrentUser(currentUser);
                         loadEventsForTab();
                     } else {
@@ -392,22 +394,39 @@ public class EventsFragment extends Fragment {
      */
     private void loadEventsForTab() {
         if (currentUser == null) {
-            Log.d("EventsFragment", "User null");
+            Log.d("EventsFragment", "User null in loadEventsForTab");
             return;
         }
+
+        Log.d("EventsFragment", "Loading events for tab: " + currentTab);
 
         FDatabase.DataCallback<Event> callback = new FDatabase.DataCallback<Event>() {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
+                    Log.d("EventsFragment", "Total events fetched: " + events.size());
+                    Log.d("EventsFragment", "Current user ID: " + currentUser.getId());
+
                     ArrayList<Event> filteredEvents = new ArrayList<>();
 
                     for (Event event : events) {
-                        // Use the user ID directly instead of converting Entrant object to string
-                        if (event.getWaitingList() != null && event.hasEntrant(currentUser.getId())) {
-                            filteredEvents.add(event);
+                        Log.d("EventsFragment", "Checking event: " + event.getName());
+
+                        if (event.getWaitingList() != null) {
+                            Log.d("EventsFragment", "Waiting list size: " + event.getWaitingList().size());
+
+                            if (event.hasEntrant(currentUser.getId())) {
+                                Log.d("EventsFragment", "User found in event: " + event.getName());
+                                filteredEvents.add(event);
+                            } else {
+                                Log.d("EventsFragment", "User NOT in event: " + event.getName());
+                            }
+                        } else {
+                            Log.d("EventsFragment", "Event has null waiting list: " + event.getName());
                         }
                     }
+
+                    Log.d("EventsFragment", "Filtered events: " + filteredEvents.size());
                     updateEventList(filteredEvents);
                 }
             }
@@ -438,13 +457,33 @@ public class EventsFragment extends Fragment {
      * Updates the event list with the given events.
      */
     private void updateEventList(ArrayList<Event> events) {
+        Log.d("EventsFragment", "updateEventList called with " + (events != null ? events.size() : 0) + " events");
+
         ArrayList<Event> adapterList = displayedEvents.getEvents();
         adapterList.clear();
-        if (events != null) {
+
+        if (events != null && !events.isEmpty()) {
             adapterList.addAll(events);
+            Log.d("EventsFragment", "Added events to adapter list. New size: " + adapterList.size());
         }
-        eventAdapter.notifyDataSetChanged();
-        if (events.isEmpty()) {
+
+        // Force adapter refresh
+        if (eventAdapter != null) {
+            Log.d("EventsFragment", "Calling notifyDataSetChanged on adapter");
+            eventAdapter.notifyDataSetChanged();
+        } else {
+            Log.e("EventsFragment", "eventAdapter is NULL!");
+        }
+
+        // Log ListView state
+        if (eventList != null) {
+            Log.d("EventsFragment", "ListView adapter count: " + eventList.getAdapter().getCount());
+            Log.d("EventsFragment", "ListView visibility: " + eventList.getVisibility());
+        } else {
+            Log.e("EventsFragment", "eventList ListView is NULL!");
+        }
+
+        if (events == null || events.isEmpty()) {
             Toast.makeText(getContext(), "No events found.", Toast.LENGTH_SHORT).show();
         }
     }

@@ -71,25 +71,30 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        Log.d("EventArrayAdapter", "getView called for position: " + position + ", viewType: " + viewType);
+
         View view;
         if (convertView == null) {
             view = LayoutInflater.from(getContext()).inflate(this.layoutResource, parent, false);
+            Log.d("EventArrayAdapter", "Inflated new view with layout resource: " + this.layoutResource);
         } else {
             view = convertView;
+            Log.d("EventArrayAdapter", "Reusing existing view");
         }
 
         Event event = getItem(position);
         if (event == null) {
+            Log.e("EventArrayAdapter", "Event is null at position: " + position);
             Toast.makeText(getContext(), "Event is null", Toast.LENGTH_SHORT).show();
             return view;
         }
 
+        Log.d("EventArrayAdapter", "Setting up view for event: " + event.getName());
+
         // Make the entire view clickable to navigate to details
         view.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), EventDetailsActivity.class);
-            // Only pass the event ID instead of the whole object
             intent.putExtra("EVENT_ID", event.getEventId());
-            // Pass basic data that doesn't need serialization
             intent.putExtra("EVENT_NAME", event.getName());
             intent.putExtra("EVENT_DESCRIPTION", event.getDescription());
             intent.putExtra("EVENT_LOCATION", event.getLocation());
@@ -105,22 +110,27 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             intent.putExtra("EVENT_GEO_REQUIRED", event.isGeoRequired());
             getContext().startActivity(intent);
         });
+
         // Handle the correct layout
         switch (viewType) {
             case EVENTS:
+                Log.d("EventArrayAdapter", "Setting up EVENTS view type");
                 setupEventView(view, event);
                 break;
             case HOME:
             default:
+                Log.d("EventArrayAdapter", "Setting up HOME view type");
                 setupEventListItemView(view, event);
                 break;
         }
+
+        Log.d("EventArrayAdapter", "Finished setting up view for position: " + position);
         return view;
     }
 
     /**
      * Set up the view for an entrant event.
-     * Replace your existing setupEntrantEventView method with this updated version.
+     * Replace your existing setupEventView method with this updated version.
      * @param view The view to set up.
      * @param event The event to set up the view for.
      */
@@ -160,36 +170,32 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             eventImage.setImageResource(R.drawable._ukj7h);
         }
 
-        // Handle Leave Button (existing functionality)
+        // Check if current user is an organizer
+        boolean isOrganizer = currentUser != null && currentUser.getRole() == User.Role.ORGANIZER;
+
+        // Handle Leave Button
         Button leaveButton = view.findViewById(R.id.leave_button);
         if (leaveButton != null) {
-            boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
-
-            if (isInWaitingList) {
-                leaveButton.setVisibility(View.VISIBLE);
-                leaveButton.setOnClickListener(v -> handleLeaveButtonClick(event));
-            } else {
+            if (isOrganizer) {
+                // Hide leave button for organizers
                 leaveButton.setVisibility(View.GONE);
+            } else {
+                boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
+                if (isInWaitingList) {
+                    leaveButton.setVisibility(View.VISIBLE);
+                    leaveButton.setOnClickListener(v -> handleLeaveButtonClick(event));
+                } else {
+                    leaveButton.setVisibility(View.GONE);
+                }
             }
         }
 
         // Handle Waiting List Button
         Button waitingListButton = view.findViewById(R.id.waiting_list_button);
         if (waitingListButton != null) {
-            // Check if user is already in waiting list
-            boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
-
-            if (isInWaitingList) {
-                // User already joined, disable button
-                waitingListButton.setEnabled(false);
-                waitingListButton.setText("Joined");
-                waitingListButton.setBackgroundTintList(
-                        android.content.res.ColorStateList.valueOf(
-                                android.graphics.Color.parseColor("#9E9E9E")
-                        )
-                );
-            } else {
-                // User not joined, enable button
+            if (isOrganizer) {
+                // For organizers, show the waiting list button
+                waitingListButton.setVisibility(View.VISIBLE);
                 waitingListButton.setEnabled(true);
                 waitingListButton.setText("Waiting-list");
                 waitingListButton.setBackgroundTintList(
@@ -197,90 +203,126 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                                 android.graphics.Color.parseColor("#4CAF50")
                         )
                 );
-
                 waitingListButton.setOnClickListener(v -> {
-                    if (currentUser == null) {
-                        Toast.makeText(getContext(), "Please log in first", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+                    // TODO: Add functionality later
+                    Toast.makeText(getContext(), "View waiting list - TODO", Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                // Entrant logic
+                boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
 
-                    if (currentUser.getRole() != User.Role.ENTRANT) {
-                        Toast.makeText(getContext(), "Only entrants can join events", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    // Add user to waiting list
-                    Entrant entrant = new Entrant(
-                            currentUser.getId(),
-                            currentUser.getName(),
-                            currentUser.getRole(),
-                            currentUser.getEmail(),
-                            currentUser.getPhone(),
-                            currentUser.getProfileImageUrl(),
-                            currentUser.getPassword(),
-                            currentUser.getNotificationPreferences(),
-                            currentUser.getDevice(),
-                            currentUser.getGeoPoint()
+                if (isInWaitingList) {
+                    waitingListButton.setEnabled(false);
+                    waitingListButton.setText("Joined");
+                    waitingListButton.setBackgroundTintList(
+                            android.content.res.ColorStateList.valueOf(
+                                    android.graphics.Color.parseColor("#9E9E9E")
+                            )
+                    );
+                } else {
+                    waitingListButton.setEnabled(true);
+                    waitingListButton.setText("Waiting-list");
+                    waitingListButton.setBackgroundTintList(
+                            android.content.res.ColorStateList.valueOf(
+                                    android.graphics.Color.parseColor("#4CAF50")
+                            )
                     );
 
-                    try {
-                        entrant.joinWaitingList(event);
-                        FDatabase.getInstance().updateEvent(event);
-                        Toast.makeText(getContext(), "Added to waiting list!", Toast.LENGTH_SHORT).show();
-                        notifyDataSetChanged();
-                    } catch (Exception e) {
-                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                        Log.e("EventArrayAdapter", "Error joining waiting list", e);
-                    }
-                });
+                    waitingListButton.setOnClickListener(v -> {
+                        if (currentUser == null) {
+                            Toast.makeText(getContext(), "Please log in first", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        if (currentUser.getRole() != User.Role.ENTRANT) {
+                            Toast.makeText(getContext(), "Only entrants can join events", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        Entrant entrant = new Entrant(
+                                currentUser.getId(),
+                                currentUser.getName(),
+                                currentUser.getRole(),
+                                currentUser.getEmail(),
+                                currentUser.getPhone(),
+                                currentUser.getProfileImageUrl(),
+                                currentUser.getPassword(),
+                                currentUser.getNotificationPreferences(),
+                                currentUser.getDevice(),
+                                currentUser.getGeoPoint()
+                        );
+
+                        try {
+                            entrant.joinWaitingList(event);
+                            FDatabase.getInstance().updateEvent(event);
+                            Toast.makeText(getContext(), "Added to waiting list!", Toast.LENGTH_SHORT).show();
+                            notifyDataSetChanged();
+                        } catch (Exception e) {
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e("EventArrayAdapter", "Error joining waiting list", e);
+                        }
+                    });
+                }
             }
         }
 
         // Handle Cancel List Button
         Button cancelListButton = view.findViewById(R.id.cancel_list_button);
         if (cancelListButton != null) {
-            // Check if user is in waiting list
-            boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
-
-            if (isInWaitingList) {
-                // User is in list, enable cancel button
-                cancelListButton.setEnabled(true);
+            if (isOrganizer) {
+                // For organizers, show the cancel list button
                 cancelListButton.setVisibility(View.VISIBLE);
-
+                cancelListButton.setEnabled(true);
+                cancelListButton.setText("Cancel-list");
+                cancelListButton.setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(
+                                android.graphics.Color.parseColor("#F44336")
+                        )
+                );
                 cancelListButton.setOnClickListener(v -> {
-                    if (currentUser == null) {
-                        Toast.makeText(getContext(), "Please log in first", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    if (currentUser.getRole() != User.Role.ENTRANT) {
-                        Toast.makeText(getContext(), "Only entrants can leave events", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    // Find the user in the waiting list
-                    User userInList = findUserInWaitingList(event, currentUser.getId());
-
-                    if (userInList == null) {
-                        Toast.makeText(getContext(), "You are not in this event's waiting list", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    try {
-                        // Remove user from waiting list
-                        event.getWaitingList().remove(userInList);
-                        FDatabase.getInstance().updateEvent(event);
-                        Toast.makeText(getContext(), "Removed from waiting list!", Toast.LENGTH_SHORT).show();
-                        notifyDataSetChanged();
-                    } catch (Exception e) {
-                        Toast.makeText(getContext(), "Error leaving event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        Log.e("EventArrayAdapter", "Error removing from waiting list", e);
-                    }
+                    // TODO: Add functionality later
+                    Toast.makeText(getContext(), "View cancel list - TODO", Toast.LENGTH_SHORT).show();
                 });
             } else {
-                // User not in list, disable or hide cancel button
-                cancelListButton.setEnabled(false);
-                cancelListButton.setVisibility(View.GONE);
+                // Entrant logic
+                boolean isInWaitingList = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
+
+                if (isInWaitingList) {
+                    cancelListButton.setEnabled(true);
+                    cancelListButton.setVisibility(View.VISIBLE);
+
+                    cancelListButton.setOnClickListener(v -> {
+                        if (currentUser == null) {
+                            Toast.makeText(getContext(), "Please log in first", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        if (currentUser.getRole() != User.Role.ENTRANT) {
+                            Toast.makeText(getContext(), "Only entrants can leave events", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        User userInList = findUserInWaitingList(event, currentUser.getId());
+
+                        if (userInList == null) {
+                            Toast.makeText(getContext(), "You are not in this event's waiting list", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        try {
+                            event.getWaitingList().remove(userInList);
+                            FDatabase.getInstance().updateEvent(event);
+                            Toast.makeText(getContext(), "Removed from waiting list!", Toast.LENGTH_SHORT).show();
+                            notifyDataSetChanged();
+                        } catch (Exception e) {
+                            Toast.makeText(getContext(), "Error leaving event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e("EventArrayAdapter", "Error removing from waiting list", e);
+                        }
+                    });
+                } else {
+                    cancelListButton.setEnabled(false);
+                    cancelListButton.setVisibility(View.GONE);
+                }
             }
         }
     }
