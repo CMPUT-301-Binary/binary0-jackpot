@@ -44,32 +44,36 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/waiting_list_recycler_view"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="450dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/back_button"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/event_image" />
+        app:layout_constraintTop_toBottomOf="@+id/event_image"
+        app:layout_constraintVertical_bias="0.857" />
 
     <Button
         android:id="@+id/back_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Back"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="48dp"
+        android:text="Back"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/notify_all_button"/>
+        app:layout_constraintEnd_toStartOf="@+id/notify_all_button"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/notify_all_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Notify All"
         android:layout_marginStart="8dp"
+        android:layout_marginBottom="48dp"
+        android:text="Notify All"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/back_button"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/back_button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

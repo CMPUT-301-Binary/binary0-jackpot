@@ -29,9 +29,17 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         HOME,
         EVENTS
     }
+
+    // Interface for button click callbacks
+    public interface OnButtonClickListener {
+        void onWaitingListClick(Event event);
+        void onCancelListClick(Event event);
+    }
+
     private final ViewType viewType;
     private final int layoutResource;
     private User currentUser;
+    private OnButtonClickListener buttonClickListener;
 
     /**
      * Constructor for the adapter.
@@ -53,6 +61,14 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
      */
     public void setCurrentUser(User user) {
         this.currentUser = user;
+    }
+
+    /**
+     * Set the button click listener for organizer buttons.
+     * @param listener The listener to set.
+     */
+    public void setOnButtonClickListener(OnButtonClickListener listener) {
+        this.buttonClickListener = listener;
     }
 
     /**
@@ -204,8 +220,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                         )
                 );
                 waitingListButton.setOnClickListener(v -> {
-                    // TODO: Add functionality later
-                    Toast.makeText(getContext(), "View waiting list - TODO", Toast.LENGTH_SHORT).show();
+                    if (buttonClickListener != null) {
+                        buttonClickListener.onWaitingListClick(event);
+                    } else {
+                        Toast.makeText(getContext(), "View waiting list - TODO", Toast.LENGTH_SHORT).show();
+                    }
                 });
             } else {
                 // Entrant logic
@@ -280,8 +299,11 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                         )
                 );
                 cancelListButton.setOnClickListener(v -> {
-                    // TODO: Add functionality later
-                    Toast.makeText(getContext(), "View cancel list - TODO", Toast.LENGTH_SHORT).show();
+                    if (buttonClickListener != null) {
+                        buttonClickListener.onCancelListClick(event);
+                    } else {
+                        Toast.makeText(getContext(), "View cancel list - TODO", Toast.LENGTH_SHORT).show();
+                    }
                 });
             } else {
                 // Entrant logic

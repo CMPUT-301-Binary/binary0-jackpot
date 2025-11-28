@@ -1,5 +1,6 @@
 package com.example.jackpot;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -243,13 +244,40 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Handles the Up button behavior to navigate back in the navigation graph.
+     * Also handles manual fragment transactions that bypass the NavController.
      * @return true if navigation was successful, false otherwise.
      */
     @Override
     public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
-                || super.onSupportNavigateUp();
+        try {
+            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+            return NavigationUI.navigateUp(navController, mAppBarConfiguration)
+                    || super.onSupportNavigateUp();
+        } catch (IllegalStateException e) {
+            // NavController not available - handle manually added fragments
+            Log.d("MainActivity", "NavController not found, using FragmentManager for back navigation");
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStack();
+                return true;
+            }
+            return super.onSupportNavigateUp();
+        }
+    }
+
+    /**
+     * Handles the device back button press.
+     * Supports both NavController navigation and manual fragment transactions.
+     */
+    @SuppressLint("GestureBackNavigation")
+    @Override
+    public void onBackPressed() {
+        // First, try to pop from FragmentManager back stack
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
+        } else {
+            // If no manual fragments, let NavController handle it
+            super.onBackPressed();
+        }
     }
 
     /**

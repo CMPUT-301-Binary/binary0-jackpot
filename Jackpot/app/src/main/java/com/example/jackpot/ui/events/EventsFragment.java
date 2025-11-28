@@ -86,8 +86,9 @@ public class EventsFragment extends Fragment {
 
         switch (userRole) {
             case ORGANIZER:
+            case ADMIN:
                 root = inflater.inflate(R.layout.fragment_events_organizer, container, false);
-                eventItemLayoutResource = R.layout.item_event_organizer;  // Use organizer-specific layout
+                eventItemLayoutResource = R.layout.item_event_organizer;
                 break;
             default:
                 root = inflater.inflate(R.layout.fragment_events_entrant, container, false);
@@ -95,9 +96,6 @@ public class EventsFragment extends Fragment {
                 break;
         }
 
-        assert root != null;
-
-        // Setup for ENTRANT
         if (userRole == User.Role.ENTRANT) {
             eventList = root.findViewById(R.id.entrant_events);
             eventAdapter = new EventArrayAdapter(requireActivity(),
@@ -108,21 +106,62 @@ public class EventsFragment extends Fragment {
             eventList.setAdapter(eventAdapter);
             setupTabs(root);
             getUserAndLoadEvents();
-        }
-// Setup for ORGANIZER
-        else if (userRole == User.Role.ORGANIZER) {
+        } else { // ORGANIZER or ADMIN
             eventList = root.findViewById(R.id.organizer_events);
             eventAdapter = new EventArrayAdapter(requireActivity(),
                     displayedEvents.getEvents(),
                     eventItemLayoutResource,
-                    EventArrayAdapter.ViewType.EVENTS,  // Changed from HOME to EVENTS
+                    EventArrayAdapter.ViewType.EVENTS,
                     null);
             eventList.setAdapter(eventAdapter);
             setupOrganizerTabs(root);
             getUserAndLoadOrganizerEvents();
+            setupOrganizerEventListeners();
         }
 
         return root;
+    }
+
+    /**
+     * Sets up click listeners for organizer event list items
+     */
+    private void setupOrganizerEventListeners() {
+        // Set up button click listener for waiting list and cancel list buttons
+        eventAdapter.setOnButtonClickListener(new EventArrayAdapter.OnButtonClickListener() {
+            @Override
+            public void onWaitingListClick(Event event) {
+                navigateToWaitingList(event);
+            }
+
+            @Override
+            public void onCancelListClick(Event event) {
+                navigateToCancelList(event);
+            }
+        });
+    }
+
+    /**
+     * Navigate to the Waiting List fragment
+     */
+    private void navigateToWaitingList(Event event) {
+        WaitingListFragment fragment = WaitingListFragment.newInstance(event);
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.nav_host_fragment_content_main, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    /**
+     * Navigate to the Cancel List fragment
+     */
+    private void navigateToCancelList(Event event) {
+        CancelListFragment fragment = CancelListFragment.newInstance(event);
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.nav_host_fragment_content_main, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     /**
