@@ -18,14 +18,50 @@ import android.app.AlertDialog;
 
 import com.bumptech.glide.Glide;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * The adapter for an event array. This is used to help display the events in the event list.
  */
 
 public class EventArrayAdapter extends ArrayAdapter<Event> {
+    private void sendNotifications(Event event){
+        //We want to loop through the list of people who were invited and send them a notification.
+        //We then want to loop through the list of people who were NOT invited and send them a notification.
+
+        //Loop through the list of people who are invited.
+
+        for (User user : event.getInvitedList().getUsers()){
+            createNotification(UUID.randomUUID().toString(), user.getId(), event.getEventId(), "Event",
+                    "Status: You're selected!", event.getCreatedBy());
+        }
+        for (User user : event.getWaitingList().getUsers()){
+            createNotification(UUID.randomUUID().toString(), user.getId(), event.getEventId(), "Event",
+                    "Status: Not selected", event.getCreatedBy());
+        }
+
+    }
+
+    private void createNotification(String notificationID, String recipientID, String eventID, String notifType, String payload, String organizerID){
+        //Create a notification and store it in the firebase.
+        Map<String, Object> notificationDoc = new HashMap<>();
+        notificationDoc.put("notificationID", notificationID);
+        notificationDoc.put("recipientID", recipientID);
+        notificationDoc.put("eventID", eventID);
+        notificationDoc.put("notifType", notifType);
+        notificationDoc.put("payload", payload);
+        notificationDoc.put("organizerID", organizerID);
+        //TODO: Write this object to the database
+        FDatabase.getInstance().addNotification(notificationDoc, notificationID);
+
+
+    }
+
     public enum ViewType {
         HOME,
         EVENTS
@@ -157,7 +193,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
     private void setupEventView(View view, Event event) {
         ImageView eventImage = view.findViewById(R.id.event_pic);
         TextView eventTitle = view.findViewById(R.id.event_text);
-        TextView eventDetails = view.findViewById(R.id.event_details);
+        TextView eventDetails = view.findViewById(R.id.eventPrice);
 
         eventTitle.setText(event.getName());
 
@@ -230,6 +266,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                                 Toast.LENGTH_SHORT).show();
                         Log.e("EventArrayAdapter", "Error in drawEvent()", e);
                     }
+                    sendNotifications(event);
                 });
             }
         }
@@ -675,3 +712,5 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 .show();
     }
 }
+
+
