@@ -10,6 +10,7 @@
         android:layout_height="wrap_content"
         android:paddingBottom="80dp">
 
+        <!-- BACK BUTTON -->
         <ImageButton
             android:id="@+id/event_details_back_button"
             android:layout_width="48dp"
@@ -23,34 +24,19 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!--<ImageView
-            android:id="@+id/event_details_poster"
-            android:layout_width="300dp"
-            android:layout_height="300dp"
-            android:layout_marginTop="16dp"
-            android:scaleType="centerCrop"
-            android:background="#E0E0E0"
-            android:contentDescription="Event poster"
-            android:src="@android:drawable/ic_menu_gallery"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/event_details_back_button" />
-        -->
-        <!-- ViewPager2 for swipeable images -->
+        <!-- IMAGE VIEWER -->
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/event_details_pager"
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:layout_marginTop="16dp"
-            android:scaleType="centerCrop"
             android:background="#E0E0E0"
-            android:contentDescription="Event poster"
-            android:src="@android:drawable/ic_menu_gallery"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:scaleType="centerCrop"
+            app:layout_constraintTop_toBottomOf="@id/event_details_back_button"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/event_details_back_button" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
-
+        <!-- EVENT NAME -->
         <TextView
             android:id="@+id/event_details_name"
             android:layout_width="match_parent"
@@ -60,10 +46,11 @@
             android:textColor="@color/black"
             android:textSize="28sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/event_details_pager"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/event_details_pager" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- CATEGORY -->
         <TextView
             android:id="@+id/event_details_category"
             android:layout_width="wrap_content"
@@ -73,9 +60,10 @@
             android:textColor="@color/purple_500"
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/event_details_name" />
+            app:layout_constraintTop_toBottomOf="@id/event_details_name"
+            app:layout_constraintStart_toStartOf="parent" />
 
+        <!-- DIVIDER -->
         <View
             android:id="@+id/divider1"
             android:layout_width="match_parent"
@@ -84,6 +72,7 @@
             android:background="#E0E0E0"
             app:layout_constraintTop_toBottomOf="@id/event_details_category" />
 
+        <!-- DESCRIPTION LABEL -->
         <TextView
             android:id="@+id/label_description"
             android:layout_width="wrap_content"
@@ -93,9 +82,10 @@
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider1" />
+            app:layout_constraintTop_toBottomOf="@id/divider1"
+            app:layout_constraintStart_toStartOf="parent" />
 
+        <!-- DESCRIPTION TEXT -->
         <TextView
             android:id="@+id/event_details_description"
             android:layout_width="match_parent"
@@ -104,18 +94,46 @@
             android:text="Event description will appear here"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/label_description"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_description" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- CRITERIA LABEL -->
+        <TextView
+            android:id="@+id/label_criteria"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Criteria"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/event_details_description"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- CRITERIA TEXT -->
+        <TextView
+            android:id="@+id/event_details_criteria"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Event criteria will appear here"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@id/label_criteria"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- DIVIDER UNDER CRITERIA -->
         <View
             android:id="@+id/divider2"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="16dp"
             android:background="#E0E0E0"
-            app:layout_constraintTop_toBottomOf="@id/event_details_description" />
+            app:layout_constraintTop_toBottomOf="@id/event_details_criteria" />
 
+        <!-- EVENT DETAILS LABEL -->
         <TextView
             android:id="@+id/label_details"
             android:layout_width="wrap_content"
@@ -125,20 +143,21 @@
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider2" />
+            app:layout_constraintTop_toBottomOf="@id/divider2"
+            app:layout_constraintStart_toStartOf="parent" />
 
+        <!-- DATE LABEL -->
         <TextView
             android:id="@+id/label_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="📅 Date:"
+            android:textStyle="bold"
             android:textColor="@color/black"
             android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_details" />
+            app:layout_constraintTop_toBottomOf="@id/label_details"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/event_details_date"
@@ -148,21 +167,22 @@
             android:text="Date TBD"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/label_date"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/label_date" />
 
+        <!-- LOCATION LABEL -->
         <TextView
             android:id="@+id/label_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="📍 Location:"
+            android:textStyle="bold"
             android:textColor="@color/black"
             android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_date" />
+            app:layout_constraintTop_toBottomOf="@id/label_date"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/event_details_location"
@@ -172,10 +192,11 @@
             android:text="Location TBD"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/label_location"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/label_location" />
 
+        <!-- PRICE LABEL -->
         <TextView
             android:id="@+id/label_price"
             android:layout_width="wrap_content"
@@ -183,10 +204,10 @@
             android:layout_marginTop="12dp"
             android:text="💰 Price:"
             android:textColor="@color/black"
-            android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_location" />
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@id/label_location"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/event_details_price"
@@ -196,10 +217,11 @@
             android:text="Free"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/label_price"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/label_price" />
 
+        <!-- CAPACITY LABEL -->
         <TextView
             android:id="@+id/label_capacity"
             android:layout_width="wrap_content"
@@ -207,10 +229,10 @@
             android:layout_marginTop="12dp"
             android:text="👥 Capacity:"
             android:textColor="@color/black"
-            android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_price" />
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@id/label_price"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/event_details_capacity"
@@ -220,21 +242,22 @@
             android:text="0 spots"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/label_capacity"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/label_capacity" />
 
+        <!-- WAITING LABEL -->
         <TextView
             android:id="@+id/label_waiting"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="⏳ Waiting:"
+            android:textStyle="bold"
             android:textColor="@color/black"
             android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_capacity" />
+            app:layout_constraintTop_toBottomOf="@id/label_capacity"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/event_details_waiting"
@@ -244,10 +267,11 @@
             android:text="0 people"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/label_waiting"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/label_waiting" />
 
+        <!-- DIVIDER -->
         <View
             android:id="@+id/divider3"
             android:layout_width="match_parent"
@@ -256,6 +280,7 @@
             android:background="#E0E0E0"
             app:layout_constraintTop_toBottomOf="@id/label_waiting" />
 
+        <!-- REGISTRATION LABEL -->
         <TextView
             android:id="@+id/label_registration"
             android:layout_width="wrap_content"
@@ -265,20 +290,21 @@
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider3" />
+            app:layout_constraintTop_toBottomOf="@id/divider3"
+            app:layout_constraintStart_toStartOf="parent" />
 
+        <!-- REGISTRATION OPEN -->
         <TextView
             android:id="@+id/label_reg_open"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Opens:"
+            android:textStyle="bold"
             android:textColor="@color/black"
             android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_registration" />
+            app:layout_constraintTop_toBottomOf="@id/label_registration"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/event_details_reg_open"
@@ -288,21 +314,22 @@
             android:text="Open now"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/label_reg_open"
             app:layout_constraintStart_toEndOf="@id/label_reg_open"
-            app:layout_constraintTop_toTopOf="@id/label_reg_open" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- REGISTRATION CLOSE -->
         <TextView
             android:id="@+id/label_reg_close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Closes:"
+            android:textStyle="bold"
             android:textColor="@color/black"
             android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_reg_open" />
+            app:layout_constraintTop_toBottomOf="@id/label_reg_open"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/event_details_reg_close"
@@ -312,10 +339,11 @@
             android:text="Until full"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/label_reg_close"
             app:layout_constraintStart_toEndOf="@id/label_reg_close"
-            app:layout_constraintTop_toTopOf="@id/label_reg_close" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- JOIN BUTTON -->
         <Button
             android:id="@+id/event_details_join_button"
             android:layout_width="match_parent"
@@ -325,28 +353,27 @@
             android:text="Join Waiting List"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/label_reg_close"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_reg_close" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
-
+        <!-- DELETE BUTTON (Organizer only) -->
         <Button
             android:id="@+id/event_details_delete_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Delete Event"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
             android:backgroundTint="#D32F2F"
             android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/event_details_join_button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- UPDATE PHOTO -->
         <Button
             android:id="@+id/event_details_update_photo_button"
             android:layout_width="match_parent"
@@ -356,10 +383,9 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/event_details_join_button"
+            app:layout_constraintTop_toBottomOf="@id/event_details_delete_button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

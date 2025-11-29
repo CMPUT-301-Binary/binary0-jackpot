@@ -23,6 +23,7 @@ public class Event implements Serializable {
     private String createdBy;
     private String name;
     private String description;
+    private String criteria;
     private UserList waitingList;
     private UserList joinedList;
     private UserList invitedList;
@@ -53,6 +54,7 @@ public class Event implements Serializable {
      * @param createdBy The id of the organizer
      * @param name The name of the event
      * @param description The description of the event
+     * @param criteria The criteria of the event
      * @param waitingList The waiting list of the event
      * @param joinedList The joined list of the event
      * @param invitedList The invited list of the event
@@ -69,7 +71,7 @@ public class Event implements Serializable {
      * @param geoRequired The geo required of the event
      * @param category The category of the event
      */
-    public Event(String eventId, String createdBy, String name, String description,
+    public Event(String eventId, String createdBy, String name, String description, String criteria,
                  UserList waitingList, UserList joinedList, UserList invitedList, UserList cancelledList,
                  String location, Date date, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
@@ -78,6 +80,7 @@ public class Event implements Serializable {
         this.createdBy = createdBy;
         this.name = name;
         this.description = description;
+        this.criteria = criteria;
         this.waitingList = waitingList;
         this.joinedList = joinedList;
         this.invitedList = invitedList;
@@ -166,6 +169,24 @@ public class Event implements Serializable {
      */
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    /**
+     * Gets the criteria of the event.
+     *
+     * @return The criteria of the event.
+     */
+    public String getCriteria() {
+        return criteria;
+    }
+
+    /**
+     * Sets the criteria of the event.
+     *
+     * @param criteria The criteria to set.
+    */
+    public void setCriteria(String criteria) {
+        this.criteria = criteria;
     }
 
     /**
