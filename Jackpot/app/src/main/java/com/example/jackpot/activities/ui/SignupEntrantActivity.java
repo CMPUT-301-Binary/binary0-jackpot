@@ -191,6 +191,11 @@ public class SignupEntrantActivity extends AppCompatActivity {
 
     private void requestAccurateLocation(FusedLocationProviderClient client) {
         CancellationTokenSource tokenSource = new CancellationTokenSource();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            goToMain();
+            return;
+        }
+
         client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, tokenSource.getToken())
                 .addOnSuccessListener(location -> {
                     if (location != null) {
@@ -204,6 +209,10 @@ public class SignupEntrantActivity extends AppCompatActivity {
     }
 
     private void fetchLastKnownLocation(FusedLocationProviderClient client) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            goToMain();
+            return;
+        }
         client.getLastLocation().addOnSuccessListener(location -> {
             if (location != null) {
                 persistInitialLocation(location.getLatitude(), location.getLongitude());
