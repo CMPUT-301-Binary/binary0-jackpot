@@ -1,5 +1,6 @@
 package com.example.jackpot.ui.events;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.jackpot.CSVExporter;
 import com.example.jackpot.Event;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
@@ -26,6 +28,7 @@ import java.util.List;
  */
 public class AttendeesListFragment extends Fragment {
     private Event event;
+    private List<User> attendees;
 
     public static AttendeesListFragment newInstance(Event event) {
         AttendeesListFragment fragment = new AttendeesListFragment();
@@ -51,17 +54,32 @@ public class AttendeesListFragment extends Fragment {
         Button backButton = root.findViewById(R.id.back_button);
         Button exportButton = root.findViewById(R.id.export_csv_button);
 
-
-        // keep export button visible even if not wired yet
-
         if (event != null) {
             UserList joined = event.getJoinedList();
-            List<User> attendees = joined != null && joined.getUsers() != null
+            attendees = joined != null && joined.getUsers() != null
                     ? joined.getUsers() : new ArrayList<>();
             recyclerView.setAdapter(new AttendeesListAdapter(attendees));
+        } else {
+            attendees = new ArrayList<>();
         }
 
-        backButton.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        backButton.setOnClickListener(v ->
+                requireActivity().getSupportFragmentManager().popBackStack());
+
+        // Export CSV functionality
+        exportButton.setOnClickListener(v -> {
+            if (event != null && attendees != null && !attendees.isEmpty()) {
+                Uri csvUri = CSVExporter.exportAttendeesList(requireContext(), event, attendees);
+                if (csvUri != null) {
+                    // Optionally open share dialog
+                    CSVExporter.shareCSVFile(requireContext(), csvUri);
+                }
+            } else {
+                android.widget.Toast.makeText(requireContext(),
+                        "No attendees to export",
+                        android.widget.Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return root;
     }
@@ -86,9 +104,6 @@ public class AttendeesListFragment extends Fragment {
             User user = attendees.get(position);
             String name = user != null ? user.getName() : null;
             holder.nameView.setText(name != null && !name.isEmpty() ? name : "Unnamed entrant");
-            //holder.statusView.setText("Confirmed");
-           // holder.checkBox.setVisibility(View.GONE);
-           // holder.replaceButton.setVisibility(View.GONE);
         }
 
         @Override
@@ -98,14 +113,10 @@ public class AttendeesListFragment extends Fragment {
 
         static class AttendeeViewHolder extends RecyclerView.ViewHolder {
             TextView nameView;
-            TextView statusView;
-            View checkBox;
-            View replaceButton;
 
             AttendeeViewHolder(@NonNull View itemView) {
                 super(itemView);
                 nameView = itemView.findViewById(R.id.attendee_name);
-
             }
         }
     }
