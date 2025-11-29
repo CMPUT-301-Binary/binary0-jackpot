@@ -86,9 +86,9 @@ public class AttendeesListFragment extends Fragment {
             User user = attendees.get(position);
             String name = user != null ? user.getName() : null;
             holder.nameView.setText(name != null && !name.isEmpty() ? name : "Unnamed entrant");
-            holder.statusView.setText("Confirmed");
-            holder.checkBox.setVisibility(View.GONE);
-            holder.replaceButton.setVisibility(View.GONE);
+            //holder.statusView.setText("Confirmed");
+           // holder.checkBox.setVisibility(View.GONE);
+           // holder.replaceButton.setVisibility(View.GONE);
         }
 
         @Override
