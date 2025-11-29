@@ -57,15 +57,20 @@ public class NotificationFragment extends Fragment {
         }
         // Inflate correct home layout
         View root;
-        switch (role) {
+        int notificationLayoutResource;
+                switch (role) {
+                    //NOTE: Possibly change the notificationLayerResource for the different types of users.
             case ORGANIZER:
                 root = inflater.inflate(R.layout.fragment_notification_organizer, container, false);
+                notificationLayoutResource = R.layout.notification_event_item;
                 break;
             case ADMIN:
                 root = inflater.inflate(R.layout.fragment_notification_admin, container, false);
+                notificationLayoutResource = R.layout.notification_event_item;
                 break;
             default:
                 root = inflater.inflate(R.layout.fragment_notification_entrant, container, false);
+                notificationLayoutResource = R.layout.notification_event_item;
                 break;
         }
 
