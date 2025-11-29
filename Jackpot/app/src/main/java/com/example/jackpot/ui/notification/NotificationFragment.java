@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,9 +14,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.jackpot.FDatabase;
 import com.example.jackpot.MainActivity;
+import com.example.jackpot.Notification;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -32,6 +37,14 @@ public class NotificationFragment extends Fragment {
     private RecyclerView recyclerView;
     private AdminNotificationAdapter adapter;
     private FirebaseFirestore db;
+
+    //For entrant notification
+    private ListView notificationListView;
+    private NotificationAdapter notificationAdapter;
+    private ArrayList<Notification> notificationList;
+    private FDatabase fDatabase;
+    private String currentUserId;
+
 
     /**
      * Called to have the fragment instantiate its user interface view.
@@ -62,12 +75,25 @@ public class NotificationFragment extends Fragment {
                 break;
             default:
                 root = inflater.inflate(R.layout.fragment_notification_entrant, container, false);
+                setupEntrantNotifications(root);
                 break;
         }
 
         return root;
     }
 
+    private void setupEntrantNotifications(View root){
+        //Get current user ID from Firebase
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+        } else {
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
+    }
     /**
      * Sets up the RecyclerView and loads organizer data for admin view.
      */
