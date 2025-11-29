@@ -160,6 +160,9 @@ public class MainActivity extends AppCompatActivity {
         //Attach bottom navigation
         if (bottomNav != null && bottomNav.getMenu().size() > 0) {
             bottomNav.setOnItemSelectedListener(item -> {
+                while (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    getSupportFragmentManager().popBackStackImmediate();
+                }
                 Bundle bundle = new Bundle();
                 bundle.putString("role", currentRole.name());
                 NavOptions navOptions = new NavOptions.Builder()
