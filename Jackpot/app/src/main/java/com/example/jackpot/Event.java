@@ -26,6 +26,7 @@ public class Event implements Serializable {
     private UserList waitingList;
     private UserList joinedList;
     private UserList invitedList;
+    private UserList cancelledList;
     private String location;
     private Date date;
     private Double lat;
@@ -69,7 +70,8 @@ public class Event implements Serializable {
      * @param category The category of the event
      */
     public Event(String eventId, String createdBy, String name, String description,
-                 UserList waitingList, UserList joinedList, UserList invitedList, String location, Date date, Double lat,
+                 UserList waitingList, UserList joinedList, UserList invitedList, UserList cancelledList,
+                 String location, Date date, Double lat,
                  Double lng, Double price, int capacity, Date regOpenAt,
                  Date regCloseAt, String posterUri, String qrCodeId, boolean geoRequired, String category){
         this.eventId = eventId;
@@ -79,6 +81,7 @@ public class Event implements Serializable {
         this.waitingList = waitingList;
         this.joinedList = joinedList;
         this.invitedList = invitedList;
+        this.cancelledList = cancelledList;
         this.location = location;
         this.date = date;
         this.lat = lat;
@@ -215,6 +218,22 @@ public class Event implements Serializable {
      */
     public void setInvitedList(UserList invitedList) {
         this.invitedList = invitedList;
+    }
+
+    /**
+     * Gets the cancelled list of the event.
+     * @return The cancelled list of the event.
+     */
+    public UserList getCancelledList() {
+        return cancelledList;
+    }
+
+    /**
+     * Sets the cancelled list of the event.
+     * @param cancelledList The cancelled list to set.
+     */
+    public void setCancelledList(UserList cancelledList) {
+        this.cancelledList = cancelledList;
     }
 
     /**

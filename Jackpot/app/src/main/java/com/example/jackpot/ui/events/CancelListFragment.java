@@ -50,7 +50,7 @@ public class CancelListFragment extends Fragment {
         eventTitle = root.findViewById(R.id.event_title);
         recyclerView = root.findViewById(R.id.cancel_list_recycler_view);
         backButton = root.findViewById(R.id.back_button);
-        notifyAllButton = root.findViewById(R.id.notify_all_button);
+//        notifyAllButton = root.findViewById(R.id.notify_all_button);
 
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -71,10 +71,10 @@ public class CancelListFragment extends Fragment {
         });
 
         // Notify all button
-        notifyAllButton.setOnClickListener(v -> {
-            // TODO: Implement notification logic
-            Toast.makeText(getContext(), "Notifying all canceled members", Toast.LENGTH_SHORT).show();
-        });
+//        notifyAllButton.setOnClickListener(v -> {
+//            // TODO: Implement notification logic
+//            Toast.makeText(getContext(), "Notifying all canceled members", Toast.LENGTH_SHORT).show();
+//        });
 
         return root;
     }
