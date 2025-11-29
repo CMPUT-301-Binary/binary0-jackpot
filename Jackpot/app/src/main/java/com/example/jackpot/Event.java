@@ -702,6 +702,38 @@ public class Event implements Serializable {
         }
         return invitations;
     }
+
+    /**
+     * Promotes up to {@code count} entrants from the waiting list into the invited list,
+     * respecting remaining capacity (capacity - joined - invited).
+     *
+     * @param count number of entrants to invite
+     * @return list of entrants invited in this draw
+     */
+    public ArrayList<User> drawFromWaiting(int count) {
+        ArrayList<User> invited = new ArrayList<>();
+        if (count <= 0 || waitingList == null || waitingList.size() == 0) {
+            return invited;
+        }
+        if (invitedList == null) {
+            invitedList = new UserList(0);
+        }
+
+        int joinedCount = joinedList != null ? joinedList.size() : 0;
+        int invitedCount = invitedList.size();
+        int seatsLeft = capacity - joinedCount - invitedCount;
+        int toDraw = Math.min(count, Math.max(0, seatsLeft));
+        toDraw = Math.min(toDraw, waitingList.size());
+
+        for (int i = 0; i < toDraw; i++) {
+            int index = (int) (Math.random() * waitingList.size());
+            User selected = waitingList.get(index);
+            invited.add(selected);
+            invitedList.add(selected);
+            waitingList.remove(selected);
+        }
+        return invited;
+    }
 //    public FinalRef exportFinalCSV(){
 //        return new FinalRef();
 //    }
