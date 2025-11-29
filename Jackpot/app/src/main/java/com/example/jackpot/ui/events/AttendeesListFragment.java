@@ -39,7 +39,7 @@ public class AttendeesListFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_attendees_list, container, false);
+        View root = inflater.inflate(R.layout.fragment_confirmed_list, container, false);
 
         if (getArguments() != null) {
             event = (Event) getArguments().getSerializable("event");
@@ -47,17 +47,11 @@ public class AttendeesListFragment extends Fragment {
 
         RecyclerView recyclerView = root.findViewById(R.id.attendees_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        TextView title = root.findViewById(R.id.request_sent_button);
-        TextView acceptedLabel = root.findViewById(R.id.accepted_button);
+
         Button backButton = root.findViewById(R.id.back_button);
         Button exportButton = root.findViewById(R.id.export_csv_button);
 
-        if (title != null) {
-            title.setText("Confirmed Attendees");
-        }
-        if (acceptedLabel != null) {
-            acceptedLabel.setVisibility(View.GONE);
-        }
+
         // keep export button visible even if not wired yet
 
         if (event != null) {
@@ -83,7 +77,7 @@ public class AttendeesListFragment extends Fragment {
         @Override
         public AttendeeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.attendee_list_item, parent, false);
+                    .inflate(R.layout.confirmed_list_item, parent, false);
             return new AttendeeViewHolder(view);
         }
 
@@ -111,9 +105,7 @@ public class AttendeesListFragment extends Fragment {
             AttendeeViewHolder(@NonNull View itemView) {
                 super(itemView);
                 nameView = itemView.findViewById(R.id.attendee_name);
-                statusView = itemView.findViewById(R.id.attendee_status);
-                checkBox = itemView.findViewById(R.id.attendee_checkbox);
-                replaceButton = itemView.findViewById(R.id.replace_button);
+
             }
         }
     }
