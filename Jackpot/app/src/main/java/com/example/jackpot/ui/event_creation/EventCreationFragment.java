@@ -61,6 +61,7 @@ public class EventCreationFragment extends Fragment {
     private TextView selectedPhotoTextView;
     private EditText editTextEventName;
     private EditText editTextEventDescription;
+    private EditText editTextEventCriteria;
     private EditText editTextEventLocation;
     private EditText editTextEventDate;
     private EditText editTextEventTime;
@@ -110,6 +111,7 @@ public class EventCreationFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState){
         editTextEventName = view.findViewById(R.id.editTextEventName);
         editTextEventDescription = view.findViewById(R.id.editDescription);
+        editTextEventCriteria = view.findViewById(R.id.editCriteria);
         editTextEventLocation = view.findViewById(R.id.editAddress);
         editTextEventDate = view.findViewById(R.id.editDate);
         editTextEventTime = view.findViewById(R.id.editTime);
@@ -203,6 +205,7 @@ public class EventCreationFragment extends Fragment {
         if (!requireText(editTextEventDate, "Pick a date")) return;
         if (!requireText(editTextEventTime, "Pick a time")) return;
         if (!requireText(editTextEventDescription, "Required")) return;
+        if (!requireText(editTextEventCriteria, "Required")) return;
         if (!requireText(editTextEventCapacity, "Required")) return;
         // endregion
 
@@ -305,6 +308,7 @@ public class EventCreationFragment extends Fragment {
         // region Gather form data
         String eventName = editTextEventName.getText().toString().trim();
         String eventDescription = editTextEventDescription.getText().toString().trim();
+        String eventCriteria = editTextEventCriteria.getText().toString().trim();
         String eventLocation = editTextEventLocation.getText().toString().trim();
         String eventDate = editTextEventDate.getText().toString().trim();
         String eventTime = editTextEventTime.getText().toString().trim();
@@ -322,6 +326,7 @@ public class EventCreationFragment extends Fragment {
         Map<String, Object> eventDoc = new HashMap<>();
         eventDoc.put("eventId", eventId);
         eventDoc.put("name", eventName);
+        eventDoc.put("criteria", eventCriteria);
         eventDoc.put("description", eventDescription);
         eventDoc.put("location", eventLocation);
 

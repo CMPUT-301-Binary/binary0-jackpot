@@ -42,6 +42,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     // Text UI
     private TextView eventName;
     private TextView eventDescription;
+    private TextView eventCriteria;
     private TextView eventLocation;
     private TextView eventDate;
     private TextView eventPrice;
@@ -56,7 +57,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private Button deleteButton;
     private Button updatePhotoBtn;
 
-    // NEW: ViewPager2 for poster + QR code
+    // ViewPager2 for poster + QR code
     private ViewPager2 eventPager;
     private ImagePagerAdapter imagePagerAdapter;
     private final List<String> pagerImages = new ArrayList<>(); // index 0 = poster, 1 = QR (if exists)
@@ -131,6 +132,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         deleteButton = findViewById(R.id.event_details_delete_button);
         eventName = findViewById(R.id.event_details_name);
         eventDescription = findViewById(R.id.event_details_description);
+        eventCriteria = findViewById(R.id.event_details_criteria);
         eventLocation = findViewById(R.id.event_details_location);
         eventDate = findViewById(R.id.event_details_date);
         eventPrice = findViewById(R.id.event_details_price);
@@ -256,6 +258,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         String name = getIntent().getStringExtra("EVENT_NAME");
         String description = getIntent().getStringExtra("EVENT_DESCRIPTION");
+        String criteria = getIntent().getStringExtra("EVENT_CRITERIA");
         String location = getIntent().getStringExtra("EVENT_LOCATION");
         String category = getIntent().getStringExtra("EVENT_CATEGORY");
         Double price = getIntent().hasExtra("EVENT_PRICE")
@@ -267,7 +270,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         long regCloseMillis = getIntent().getLongExtra("EVENT_REG_CLOSE", 0L);
         waitingCount = getIntent().getIntExtra("EVENT_WAITING_COUNT", 0);
 
-        displayEventInfo(name, description, location, category, price, capacity,
+        displayEventInfo(name, description, criteria, location, category, price, capacity,
                 dateMillis, regOpenMillis, regCloseMillis, waitingCount);
 
         loadFullEventFromDatabase();
@@ -324,6 +327,10 @@ public class EventDetailsActivity extends AppCompatActivity {
                         waitingCount = event.getWaitingList().size();
                         eventWaiting.setText(String.format(Locale.getDefault(),
                                 "%d people waiting", waitingCount));
+                    }
+
+                    if (event.getCriteria() != null && !event.getCriteria().isEmpty()) {
+                        eventCriteria.setText(event.getCriteria());
                     }
 
                     // Update join button state
@@ -422,7 +429,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     /**
      * Display basic event info in the UI.
      */
-    private void displayEventInfo(String name, String description, String location,
+    private void displayEventInfo(String name, String description, String criteria, String location,
                                   String category, Double price, int capacity,
                                   long dateMillis, long regOpenMillis, long regCloseMillis,
                                   int waitingCount) {
@@ -434,6 +441,10 @@ public class EventDetailsActivity extends AppCompatActivity {
                 description != null && !description.isEmpty()
                         ? description
                         : "No description available");
+        eventCriteria.setText(
+                criteria != null && !criteria.isEmpty()
+                        ? criteria
+                        : "No criteria available");
         eventLocation.setText(location != null ? location : "Location TBD");
         eventCategory.setText(category != null ? category : "Uncategorized");
 
