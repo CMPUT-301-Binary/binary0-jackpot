@@ -5,9 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,16 +14,20 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.jackpot.Event;
-import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
+import com.example.jackpot.User;
+import com.example.jackpot.UserList;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class CancelListFragment extends Fragment {
     private Event event;
     private RecyclerView recyclerView;
     private TextView eventTitle;
-    private ImageView eventImage;
     private Button backButton;
-    private Button notifyAllButton;
+    private CancelledAdapter adapter;
 
     public static CancelListFragment newInstance(Event event) {
         CancelListFragment fragment = new CancelListFragment();
@@ -50,7 +52,6 @@ public class CancelListFragment extends Fragment {
         eventTitle = root.findViewById(R.id.event_title);
         recyclerView = root.findViewById(R.id.cancel_list_recycler_view);
         backButton = root.findViewById(R.id.back_button);
-//        notifyAllButton = root.findViewById(R.id.notify_all_button);
 
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -58,11 +59,9 @@ public class CancelListFragment extends Fragment {
         // Set event details
         if (event != null) {
             eventTitle.setText(event.getName());
-            // Load event image if you have an image loader
-            // Glide.with(this).load(event.getImageUrl()).into(eventImage);
-
-            // TODO: Setup RecyclerView adapter with canceled entrants
-            // You'll need to create an adapter for displaying entrants
+            ArrayList<User> cancelledUsers = extractUsers(event.getCancelledList());
+            adapter = new CancelledAdapter(cancelledUsers);
+            recyclerView.setAdapter(adapter);
         }
 
         // Back button
@@ -70,12 +69,66 @@ public class CancelListFragment extends Fragment {
             requireActivity().getSupportFragmentManager().popBackStack();
         });
 
-        // Notify all button
-//        notifyAllButton.setOnClickListener(v -> {
-//            // TODO: Implement notification logic
-//            Toast.makeText(getContext(), "Notifying all canceled members", Toast.LENGTH_SHORT).show();
-//        });
-
         return root;
+    }
+
+    private ArrayList<User> extractUsers(UserList list) {
+        ArrayList<User> users = new ArrayList<>();
+        if (list == null || list.getUsers() == null) {
+            return users;
+        }
+
+        for (Object obj : list.getUsers()) {
+            if (obj instanceof User) {
+                users.add((User) obj);
+            } else if (obj instanceof HashMap) {
+                HashMap<String, Object> map = (HashMap<String, Object>) obj;
+                User user = new User();
+                user.setId((String) map.get("id"));
+                user.setName((String) map.get("name"));
+                user.setEmail((String) map.get("email"));
+                users.add(user);
+            }
+        }
+        return users;
+    }
+
+    private static class CancelledAdapter extends RecyclerView.Adapter<CancelledAdapter.CancelledViewHolder> {
+        private final List<User> cancelled;
+
+        CancelledAdapter(List<User> cancelled) {
+            this.cancelled = cancelled != null ? cancelled : new ArrayList<>();
+        }
+
+        @NonNull
+        @Override
+        public CancelledViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_cancelled_user, parent, false);
+            return new CancelledViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull CancelledViewHolder holder, int position) {
+            User user = cancelled.get(position);
+            holder.nameView.setText(user != null && user.getName() != null ? user.getName() : "Unnamed entrant");
+            holder.emailView.setText(user != null && user.getEmail() != null ? user.getEmail() : "No email");
+        }
+
+        @Override
+        public int getItemCount() {
+            return cancelled.size();
+        }
+
+        static class CancelledViewHolder extends RecyclerView.ViewHolder {
+            TextView nameView;
+            TextView emailView;
+
+            CancelledViewHolder(@NonNull View itemView) {
+                super(itemView);
+                nameView = itemView.findViewById(R.id.cancelled_name);
+                emailView = itemView.findViewById(R.id.cancelled_email);
+            }
+        }
     }
 }

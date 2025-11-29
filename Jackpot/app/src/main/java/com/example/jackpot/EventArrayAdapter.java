@@ -717,10 +717,29 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             Toast.makeText(getContext(), "No invitation found.", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (event.getCancelledList() == null) {
+            event.setCancelledList(new UserList(event.getCapacity()));
+        }
         event.getInvitedList().remove(invitee);
+        addIfMissing(event.getCancelledList(), invitee);
         FDatabase.getInstance().updateEvent(event);
         Toast.makeText(getContext(), "Invitation declined.", Toast.LENGTH_SHORT).show();
         remove(event);
         notifyDataSetChanged();
+    }
+
+    private void addIfMissing(UserList list, User user) {
+        if (list == null || user == null) {
+            return;
+        }
+        if (list.getUsers() == null) {
+            list.setUsers(new ArrayList<>());
+        }
+        for (User existing : list.getUsers()) {
+            if (existing != null && user.getId() != null && user.getId().equals(existing.getId())) {
+                return;
+            }
+        }
+        list.add(user);
     }
 }
