@@ -260,17 +260,7 @@ public class EventsFragment extends Fragment {
             @Override
             public void onSuccess(ArrayList<Event> events) {
                 if (isAdded()) {
-                    if (currentOrganizerTab == OrganizerTab.CONFIRMED) {
-                        ArrayList<Event> confirmedEvents = new ArrayList<>();
-                        for (Event e : events) {
-                            if (e.getJoinedList() != null && e.getJoinedList().size() > 0) {
-                                confirmedEvents.add(e);
-                            }
-                        }
-                        updateEventList(confirmedEvents);
-                    } else {
-                        updateEventList(events);
-                    }
+                    updateEventList(events);
                 }
             }
 
