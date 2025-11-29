@@ -9,4 +9,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="gmp_ref_palette_red50">#F44336</color>
     <color name="gmp_ref_palette_green50">#4CAF50</color>
+
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>
