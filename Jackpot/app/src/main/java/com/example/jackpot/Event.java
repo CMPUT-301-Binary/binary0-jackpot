@@ -591,17 +591,14 @@ public class Event implements Serializable {
 
     /**
      * Checks if an entrant is in the waiting list.
-     * @param id The entrant to check bu id.
-     * @return True if the entrant is in the waiting list, false otherwise.
+     * @param id The entrant to check by id.
+     * @return True if the entrant is in any of the core lists (waiting/invited/joined/cancelled), false otherwise.
      */
     public boolean hasEntrant(String id) {
-        //Loop through the waiting list and see if an identical entrant is in there
-        for (User e : waitingList.getUsers()) {
-            if (Objects.equals(e.getId(), id)) {
-                return true;
-            }
-        }
-        return false;
+        return entrantInList(id, waitingList)
+                || entrantInList(id, invitedList)
+                || entrantInList(id, joinedList)
+                || entrantInList(id, cancelledList);
     }
 
     public int getInvitedCount() {

@@ -116,6 +116,43 @@ public class EventTest {
         assertFalse(cancelledList.contains(entrant));
     }
 
+    @Test
+    public void hasEntrantDetectsAcrossAllLists() {
+        Entrant waiting = fakeEntrant("w");
+        Entrant invited = fakeEntrant("i");
+        Entrant joined = fakeEntrant("j");
+        Entrant cancelled = fakeEntrant("c");
+
+        waitingList.add(waiting);
+        invitedList.add(invited);
+        joinedList.add(joined);
+        cancelledList.add(cancelled);
+
+        assertTrue(event.hasEntrant("w"));
+        assertTrue(event.hasEntrant("i"));
+        assertTrue(event.hasEntrant("j"));
+        assertTrue(event.hasEntrant("c"));
+        assertFalse(event.hasEntrant("missing"));
+    }
+
+    @Test
+    public void joinFromOtherListsBlockedByHasEntrant() {
+        Entrant invited = fakeEntrant("block");
+        invitedList.add(invited);
+        assertTrue(event.hasEntrant("block"));
+        assertThrows(IllegalArgumentException.class, () -> invited.joinWaitingList(event));
+    }
+
+    @Test
+    public void cancelledEntrantCanRejoinWaitingList() {
+        Entrant cancelled = fakeEntrant("cancel-rejoin");
+        cancelledList.add(cancelled);
+        // Previously hasEntrant would have blocked; now cancelled can rejoin
+        cancelled.joinWaitingList(event);
+        assertTrue(waitingList.contains(cancelled));
+        assertFalse(cancelledList.contains(cancelled));
+    }
+
     @Test(expected = IllegalStateException.class)
     public void addEntrantWaitingList_respectsCapacity() {
         event.setWaitingList(new UserList(1));
