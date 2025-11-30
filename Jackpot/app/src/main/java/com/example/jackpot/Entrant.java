@@ -46,7 +46,10 @@ public class Entrant extends User {
         if (event==null) {
             throw new NullPointerException("Event is null");
         }
-        if (event.hasEntrant(id)) {
+        // Allow rejoining if previously cancelled; block other list memberships.
+        if (event.entrantInList(id, event.getWaitingList())
+                || event.entrantInList(id, event.getInvitedList())
+                || event.entrantInList(id, event.getJoinedList())) {
             throw new IllegalArgumentException("Event already has entrant");
         }
         event.addEntrantWaitingList(this);
