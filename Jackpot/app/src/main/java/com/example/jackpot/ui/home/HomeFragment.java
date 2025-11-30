@@ -24,11 +24,15 @@ import com.example.jackpot.EventList;
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.example.jackpot.UserList;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -340,7 +344,17 @@ public class HomeFragment extends Fragment {
      * @param events The new list of events to display.
      */
     private void updateEventList(ArrayList<Event> events) {
+        updateEventList(events, Collections.emptyMap());
+    }
+
+    /**
+     * Updates the event list adapter with a new list of events and optional interaction labels.
+     * @param events The new list of events to display.
+     * @param interactionLabels Map of eventId -> label describing user interaction.
+     */
+    private void updateEventList(ArrayList<Event> events, Map<String, String> interactionLabels) {
         if (eventAdapter != null) {
+            eventAdapter.setInteractionLabels(interactionLabels);
             eventAdapter.clear();
             eventAdapter.addAll(events);
             eventAdapter.notifyDataSetChanged();
@@ -355,11 +369,42 @@ public class HomeFragment extends Fragment {
             return;
         }
         ArrayList<Event> filteredList = new ArrayList<>();
+        Map<String, String> labels = new HashMap<>();
+
         for (Event event : dataList.getEvents()) {
-            if (event.getWaitingList() != null && event.getWaitingList().contains(currentUser)) {
+            String label = null;
+            if (userInList(event.getJoinedList(), currentUser.getId())) {
+                label = "Joined";
+            } else if (userInList(event.getInvitedList(), currentUser.getId())) {
+                label = "Invited";
+            } else if (userInList(event.getCancelledList(), currentUser.getId())) {
+                label = "Cancelled";
+            } else if (userInList(event.getWaitingList(), currentUser.getId())) {
+                label = "Waiting list";
+            }
+
+            if (label != null) {
                 filteredList.add(event);
+                if (event.getEventId() != null) {
+                    labels.put(event.getEventId(), label);
+                }
             }
         }
-        updateEventList(filteredList);
+        updateEventList(filteredList, labels);
+    }
+
+    /**
+     * Checks if the given user id exists in the provided list.
+     */
+    private boolean userInList(UserList list, String userId) {
+        if (list == null || list.getUsers() == null || userId == null) {
+            return false;
+        }
+        for (User user : list.getUsers()) {
+            if (user != null && userId.equals(user.getId())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
