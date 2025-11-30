@@ -73,7 +73,7 @@ dependencies {
 
     // Use the Firebase BOM to manage all Firebase library versions.
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
-    androidTestImplementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    androidTestImplementation(platform("com.google.firebase:firebase-bom:34.6.0"))
 
     // Declare Firebase dependencies WITHOUT specifying versions.
     implementation("com.google.firebase:firebase-firestore")

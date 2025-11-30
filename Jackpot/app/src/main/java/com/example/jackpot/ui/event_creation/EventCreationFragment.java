@@ -344,7 +344,7 @@ public class EventCreationFragment extends Fragment {
         }
         eventDoc.put("waitingListLimit", waitLimitVal[0]);
 
-        eventDoc.put("geoLocation", geoLocation);
+        eventDoc.put("geoRequired", geoLocation);
         eventDoc.put("qrCode", qrCode);
         eventDoc.put("createdBy", userId);
         eventDoc.put("createdAt", FieldValue.serverTimestamp());
