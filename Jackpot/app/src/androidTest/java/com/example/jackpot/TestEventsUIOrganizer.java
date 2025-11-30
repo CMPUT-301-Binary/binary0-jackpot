@@ -41,6 +41,7 @@ import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
 import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.matcher.ViewMatchers.hasChildCount;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
@@ -71,6 +72,8 @@ public class TestEventsUIOrganizer {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private final List<String> testEventIds = new ArrayList<>();
+    private final List<String> testUserIds = new ArrayList<>();
+
 
     /**
      * Sets up the test environment before each test.
@@ -103,10 +106,56 @@ public class TestEventsUIOrganizer {
 
         User testUser = new User(uid, "Test Organizer", User.Role.ORGANIZER, email, "1234567890", "", "", "default", null, new GeoPoint(0.0, 0.0));
         Tasks.await(db.collection("users").document(uid).set(testUser), 10, TimeUnit.SECONDS);
+        testUserIds.add(uid);
+
+        mAuth.signInWithEmailAndPassword(email, password);
 
         Thread.sleep(1000); // Allow time for login state to propagate
         return testUser;
     }
+
+    /**
+     * Tests the user story: "As an organizer I want to view a list of all chosen entrants who are invited to apply."
+     * @throws Exception if test execution fails.
+     */
+    @Test
+    public void testViewInvitedEntrantsList() throws Exception {
+        User organizer = createAndLoginOrganizer();
+
+        // 1. Setup: Create an event, add 5 users to waiting list, then draw 2 to invite list.
+        String eventId = "invited-list-test-" + UUID.randomUUID().toString();
+        Event testEvent = new Event(eventId, organizer.getId(), "Invited List Test", "d", "c", new UserList(10), new UserList(10), new UserList(10), new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+
+        for (int i = 0; i < 5; i++) {
+            String dummyId = "dummy-" + i + UUID.randomUUID().toString();
+            User dummyUser = new User(dummyId, "Dummy User " + i, User.Role.ENTRANT, "", "", "", "", "", null, null);
+            testEvent.getWaitingList().add(dummyUser);
+        }
+
+        testEvent.drawEvent(); // Move 2 users from waiting to invited
+
+        Tasks.await(db.collection("events").document(eventId).set(testEvent));
+        testEventIds.add(eventId);
+
+        // 2. Navigate to the Events fragment and then to the 'My Events' tab.
+        onView(withId(R.id.nav_events)).perform(click());
+        Thread.sleep(1000);
+        onView(withId(R.id.active_events_button)).perform(click());
+        Thread.sleep(2000);
+
+        // 3. Action: Find the event and click the 'Invitations' button.
+        onData(anything())
+                .inAdapterView(withId(R.id.organizer_events))
+                .atPosition(0)
+                .onChildView(withId(R.id.list_attendees_button))
+                .perform(click());
+
+        // 4. Verification: Check that the InvitedListFragment is displayed with 2 entrants.
+        Thread.sleep(2000);
+        onView(withId(R.id.invited_recycler_view)).check(matches(isDisplayed()));
+        onView(withId(R.id.invited_recycler_view)).check(matches(hasChildCount(2)));
+    }
+
 
     /**
      * Tests the user story: "As an organizer, I want to upload an event poster to the event details page to provide visual information to entrants."
@@ -444,25 +493,91 @@ public class TestEventsUIOrganizer {
     }
 
     /**
+     * Tests the draw feature in the context of replacing a cancelled entrant.
+     * @throws Exception if test execution fails.
+     */
+    @Test
+    public void testDrawReplacementFromCancelledList() throws Exception {
+        User organizer = createAndLoginOrganizer();
+
+        // 1. Setup: Create an event with capacity 2, add 3 users, draw 2, then have 1 cancel.
+        String eventId = "replacement-draw-test-" + UUID.randomUUID().toString();
+        Event testEvent = new Event(eventId, organizer.getId(), "Replacement Draw Test", "d", "c", new UserList(10), new UserList(10), new UserList(10), new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 2, new Date(), new Date(), "", "", false, "cat");
+
+        // Add 3 users to the waiting list
+        for (int i = 0; i < 3; i++) {
+            String dummyId = "dummy-" + i + UUID.randomUUID().toString();
+            User dummyUser = new User(dummyId, "Dummy User " + i, User.Role.ENTRANT, "", "", "", "", "", null, null);
+            testEvent.getWaitingList().add(dummyUser);
+        }
+        testEvent.drawEvent(); // Initial draw, moves 2 to invited, leaves 1 on waiting
+
+        // Simulate one invited user cancelling
+        User cancelledUser = testEvent.getInvitedList().getUsers().get(0);
+        testEvent.getInvitedList().remove(cancelledUser);
+        testEvent.getCancelledList().add(cancelledUser);
+
+        Tasks.await(db.collection("events").document(eventId).set(testEvent));
+        testEventIds.add(eventId);
+
+        // 2. Navigate to the Events fragment and the "Draw" tab.
+        onView(withId(R.id.nav_events)).perform(click());
+        Thread.sleep(1000);
+        onView(withId(R.id.my_events_button)).perform(click()); // Go to Draw tab
+        Thread.sleep(2000);
+
+        // 3. Action: Click the "Draw Lottery" button to pull a replacement.
+        onData(anything())
+                .inAdapterView(withId(R.id.organizer_events))
+                .atPosition(0)
+                .onChildView(withId(R.id.draw_lottery_button))
+                .perform(click());
+
+        // 4. Verification
+        Thread.sleep(3000); // Wait for Firestore update
+
+        Event updatedEvent = Tasks.await(db.collection("events").document(eventId).get()).toObject(Event.class);
+        assertNotNull("Event should not be null after replacement draw.", updatedEvent);
+
+        assertEquals("Waiting list should be empty after replacement draw.", 0, updatedEvent.getWaitingList().size());
+        assertEquals("Invited list should be full again (2) after replacement draw.", 2, updatedEvent.getInvitedList().size());
+        assertEquals("Cancelled list should still contain 1 user.", 1, updatedEvent.getCancelledList().size());
+    }
+
+    /**
      * Cleans up the test environment by deleting any created users and events from Firebase.
      * @throws Exception if cleanup fails.
      */
     @After
     public void tearDown() throws Exception {
+        // Cleanup events
+        for (String eventId : testEventIds) {
+            try {
+                db.collection("events").document(eventId).delete();
+            } catch (Exception e) {
+                Log.w("TestCleanup", "Could not delete event: " + eventId, e);
+            }
+        }
+        testEventIds.clear();
+
+        // Cleanup users from firestore
+        for (String userId : testUserIds) {
+            try {
+                db.collection("users").document(userId).delete();
+            } catch (Exception e) {
+                Log.w("TestCleanup", "Could not delete user doc: " + userId, e);
+            }
+        }
+        testUserIds.clear();
+
+        // Delete authenticated user
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             try {
-                // Clean up any events created during the test
-                QuerySnapshot eventsToDelete = Tasks.await(db.collection("events").whereEqualTo("createdBy", currentUser.getUid()).get());
-                for (int i = 0; i < eventsToDelete.size(); i++) {
-                    db.collection("events").document(eventsToDelete.getDocuments().get(i).getId()).delete();
-                }
-
-                // Delete the user from Firestore and Auth
-                db.collection("users").document(currentUser.getUid()).delete();
                 Tasks.await(currentUser.delete());
             } catch (Exception e) {
-                Log.w("TestEventsUIOrganizer", "Could not delete test data during teardown: " + e.getMessage());
+                // May fail if auth token is stale, but DB is clean.
+                Log.w("TestCleanup", "Could not delete Firebase auth user.", e);
             }
         }
         Intents.release();
