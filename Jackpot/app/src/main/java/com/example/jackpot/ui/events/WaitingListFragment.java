@@ -108,8 +108,12 @@ public class WaitingListFragment extends Fragment {
 
         // Notify all button
         notifyAllButton.setOnClickListener(v -> {
-            // TODO: Implement notification logic
-            Toast.makeText(getContext(), "Notifying all waiting list members", Toast.LENGTH_SHORT).show();
+            if (event == null || event.getWaitingList() == null || event.getWaitingList().getUsers().isEmpty()) {
+                Toast.makeText(getContext(), "No entrants on the waiting list", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            sendWaitingListNotifications(event);
         });
 
         return root;
