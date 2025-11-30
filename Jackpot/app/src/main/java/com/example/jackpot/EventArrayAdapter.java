@@ -387,6 +387,14 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                             return;
                         }
 
+                        // Check if event requires geolocation
+                        if (event.isGeoRequired() && !userHasLocationEnabled(currentUser)) {
+                            Toast.makeText(getContext(),
+                                    "This event requires location access. Please enable location in Settings.",
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
                         if (event.entrantInList(currentUser.getId(), event.getInvitedList())
                                 || event.entrantInList(currentUser.getId(), event.getJoinedList())) {
                             Toast.makeText(getContext(), "Already invited/confirmed for this event.", Toast.LENGTH_SHORT).show();
@@ -405,6 +413,8 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                                 currentUser.getDevice(),
                                 currentUser.getGeoPoint()
                         );
+
+                        // add geo pont on or off check
 
                         try {
                             entrant.joinWaitingList(event);
@@ -595,6 +605,14 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             return;
         }
 
+        // Check if event requires geolocation
+        if (event.isGeoRequired() && !userHasLocationEnabled(currentUser)) {
+            Toast.makeText(getContext(),
+                    "This event requires location access. Please enable location in Settings.",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+
         if (currentUser.getRole() == User.Role.ENTRANT) {
             Entrant entrant = new Entrant(
                     currentUser.getId(),
@@ -741,5 +759,22 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             }
         }
         list.add(user);
+    }
+
+    /**
+     * Checks if the user has location enabled (not at 0,0).
+     * @param user The user to check
+     * @return true if user has real location, false if disabled (0,0) or null
+     */
+    private boolean userHasLocationEnabled(User user) {
+        if (user == null || user.getGeoPoint() == null) {
+            return false;
+        }
+
+        double lat = user.getGeoPoint().getLatitude();
+        double lng = user.getGeoPoint().getLongitude();
+
+        // Check if location is at (0,0) which means disabled
+        return !(lat == 0.0 && lng == 0.0);
     }
 }
