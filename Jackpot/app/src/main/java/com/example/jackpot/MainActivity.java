@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private final FDatabase fDatabase = FDatabase.getInstance();
     private User.Role currentRole = User.Role.ENTRANT;
     private ActivityMainBinding binding;
+    private NavController.OnDestinationChangedListener fabDestinationListener;
 
     /**
      * Called when the activity is first created. Initializes the view binding, sets up the
@@ -191,13 +192,30 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton fab = findViewById(R.id.fab);
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
 
+        if (fabDestinationListener != null) {
+            navController.removeOnDestinationChangedListener(fabDestinationListener);
+            fabDestinationListener = null;
+        }
+
 
         switch (role) {
             case ORGANIZER:
                 bottomNav.inflateMenu(R.menu.bottom_navigation_organizer);
                 drawerNav.inflateMenu(R.menu.activity_side_bar_drawer);
-                findViewById(R.id.fab).setVisibility(View.VISIBLE);
-                //fab.setOnClickListener(v -> navController.navigate(R.id.nav_event_creation));
+                fabDestinationListener = (controller, destination, arguments) -> {
+                    if (destination.getId() == R.id.nav_home) {
+                        fab.show();
+                    } else {
+                        fab.hide();
+                    }
+                };
+                navController.addOnDestinationChangedListener(fabDestinationListener);
+                if (navController.getCurrentDestination() != null &&
+                        navController.getCurrentDestination().getId() == R.id.nav_home) {
+                    fab.show();
+                } else {
+                    fab.hide();
+                }
                 fab.setOnClickListener(v -> {
                     NavOptions navOptions = new NavOptions.Builder()
                             .setPopUpTo(navController.getGraph().getStartDestinationId(), false)
