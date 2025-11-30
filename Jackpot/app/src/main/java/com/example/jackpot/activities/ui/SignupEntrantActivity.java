@@ -19,6 +19,8 @@ import com.example.jackpot.R;
 import com.example.jackpot.User;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
+import com.google.android.gms.tasks.CancellationTokenSource;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
@@ -184,15 +186,47 @@ public class SignupEntrantActivity extends AppCompatActivity {
             return;
         }
 
+        requestAccurateLocation(client);
+    }
+
+    private void requestAccurateLocation(FusedLocationProviderClient client) {
+        CancellationTokenSource tokenSource = new CancellationTokenSource();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            goToMain();
+            return;
+        }
+
+        client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, tokenSource.getToken())
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        persistInitialLocation(location.getLatitude(), location.getLongitude());
+                        goToMain();
+                    } else {
+                        fetchLastKnownLocation(client);
+                    }
+                })
+                .addOnFailureListener(e -> fetchLastKnownLocation(client));
+    }
+
+    private void fetchLastKnownLocation(FusedLocationProviderClient client) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            goToMain();
+            return;
+        }
         client.getLastLocation().addOnSuccessListener(location -> {
             if (location != null) {
-                GeoPoint gp = new GeoPoint(location.getLatitude(), location.getLongitude());
-                db.collection("users").document(newUserId)
-                        .update("geoPoint", gp)
-                        .addOnSuccessListener(v -> Log.d("Signup", "Initial location saved"));
+                persistInitialLocation(location.getLatitude(), location.getLongitude());
             }
             goToMain();
-        });
+        }).addOnFailureListener(e -> goToMain());
+    }
+
+    private void persistInitialLocation(double latitude, double longitude) {
+        GeoPoint gp = new GeoPoint(latitude, longitude);
+        db.collection("users").document(newUserId)
+                .update("geoPoint", gp)
+                .addOnSuccessListener(v -> Log.d("Signup", "Initial location saved"))
+                .addOnFailureListener(e -> Log.e("Signup", "Failed to save initial location", e));
     }
 
     private void goToMain() {

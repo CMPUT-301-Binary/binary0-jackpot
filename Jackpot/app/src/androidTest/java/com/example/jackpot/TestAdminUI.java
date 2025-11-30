@@ -229,7 +229,7 @@ public class TestAdminUI {
         Image eventImage = new Image("poster_" + eventId, uploaderId, posterUrl, Image.TYPE_POSTER, Image.ORDER_POSTER, eventId);
         Tasks.await(db.collection("images").document(eventImage.getImageID()).set(eventImage));
         
-        Event testEvent = new Event(eventId, uploaderId, "Image Event", "d", new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), posterUrl, "", false, "cat");
+        Event testEvent = new Event(eventId, uploaderId, "Image Event", "d", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), posterUrl, "", false, "cat");
         Tasks.await(db.collection("events").document(eventId).set(testEvent));
         testEventIds.add(eventId);
 
@@ -269,12 +269,12 @@ public class TestAdminUI {
         Thread.sleep(3000);
 
         String eventId1 = "admin-test-event-1-" + UUID.randomUUID().toString();
-        Event testEvent1 = new Event(eventId1, "org1", "Admin Event One", "desc1", new UserList(10), "loc1", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat1");
+        Event testEvent1 = new Event(eventId1, "org1", "Admin Event One", "desc1", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc1", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat1");
         Tasks.await(db.collection("events").document(eventId1).set(testEvent1));
         testEventIds.add(eventId1);
 
         String eventId2 = "admin-test-event-2-" + UUID.randomUUID().toString();
-        Event testEvent2 = new Event(eventId2, "org2", "Admin Event Two", "desc2", new UserList(10), "loc2", new Date(), 0.0, 0.0, 0.0, 20, new Date(), new Date(), "", "", false, "cat2");
+        Event testEvent2 = new Event(eventId2, "org2", "Admin Event Two", "desc2", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc2", new Date(), 0.0, 0.0, 0.0, 20, new Date(), new Date(), "", "", false, "cat2");
         Tasks.await(db.collection("events").document(eventId2).set(testEvent2));
         testEventIds.add(eventId2);
 
@@ -301,12 +301,12 @@ public class TestAdminUI {
         Thread.sleep(3000);
 
         String eventToDeleteId = "admin-delete-this-event-" + UUID.randomUUID().toString();
-        Event eventToDelete = new Event(eventToDeleteId, "org1", "Event To Be Deleted", "desc1", new UserList(10), "loc1", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat1");
+        Event eventToDelete = new Event(eventToDeleteId, "org1", "Event To Be Deleted", "desc1", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc1", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat1");
         Tasks.await(db.collection("events").document(eventToDeleteId).set(eventToDelete));
         testEventIds.add(eventToDeleteId);
 
         String eventToKeepId = "admin-keep-this-event-" + UUID.randomUUID().toString();
-        Event eventToKeep = new Event(eventToKeepId, "org2", "Event To Keep", "desc2", new UserList(10), "loc2", new Date(), 0.0, 0.0, 0.0, 20, new Date(), new Date(), "", "", false, "cat2");
+        Event eventToKeep = new Event(eventToKeepId, "org2", "Event To Keep", "desc2", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc2", new Date(), 0.0, 0.0, 0.0, 20, new Date(), new Date(), "", "", false, "cat2");
         Tasks.await(db.collection("events").document(eventToKeepId).set(eventToKeep));
         testEventIds.add(eventToKeepId);
 

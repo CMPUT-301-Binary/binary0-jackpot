@@ -122,7 +122,7 @@ public class TestEventsUIEntrant {
         createAndLoginTestUser();
         String eventId = "deep-link-event-" + UUID.randomUUID().toString();
         String eventName = "Deep Link Gala";
-        Event testEvent = new Event(eventId, "org", eventName, "desc", new UserList(10), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Event testEvent = new Event(eventId, "org", eventName, "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
         Tasks.await(db.collection("events").document(eventId).set(testEvent));
         testEventIds.add(eventId);
 
@@ -147,7 +147,7 @@ public class TestEventsUIEntrant {
         // 1. Setup: Create a user and a new event to join.
         createAndLoginTestUser();
         String eventId = "details-join-test-" + UUID.randomUUID().toString();
-        Event testEvent = new Event(eventId, "org", "Details Join Test", "desc", new UserList(10), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Event testEvent = new Event(eventId, "org", "Details Join Test", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
         Tasks.await(db.collection("events").document(eventId).set(testEvent));
         testEventIds.add(eventId);
 
@@ -195,7 +195,7 @@ public class TestEventsUIEntrant {
         // 1. Setup: Create an event with specific lottery guidelines in its description.
         String eventId = "guidelines-test-" + UUID.randomUUID().toString();
         String guidelines = "Lottery winners are selected at random from the waiting list.";
-        Event testEvent = new Event(eventId, "org", "Lottery Info Event", guidelines, new UserList(10), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Event testEvent = new Event(eventId, "org", "Lottery Info Event", guidelines, "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
         Tasks.await(db.collection("events").document(eventId).set(testEvent));
         testEventIds.add(eventId);
 
@@ -227,7 +227,7 @@ public class TestEventsUIEntrant {
         createAndLoginTestUser();
         // 1. Setup: Create an event and add 3 dummy users to its waiting list.
         String eventId = "waiting-list-test-" + UUID.randomUUID().toString();
-        Event testEvent = new Event(eventId, "org", "Waiting List Test Event", "desc", new UserList(20), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 20, new Date(), new Date(), "", "", false, "cat");
+        Event testEvent = new Event(eventId, "org", "Waiting List Test Event", "desc", "Criteria", new UserList(20), new UserList(20), new UserList(20), null, "loc", new Date(), 0.0, 0.0, 0.0, 20, new Date(), new Date(), "", "", false, "cat");
         
         for (int i = 0; i < 3; i++) {
             User dummyUser = new User("dummy-id-" + i, "Dummy " + i, User.Role.ENTRANT, "", "", "", "", "", null, null);
@@ -254,7 +254,7 @@ public class TestEventsUIEntrant {
         // 6. Verification on EventsFragment: Navigate and check count is 4.
         onView(withId(R.id.nav_events)).perform(click());
         Thread.sleep(2000);
-        onData(anything()).inAdapterView(withId(R.id.entrant_events)).atPosition(0).onChildView(withId(R.id.eventPrice)).check(matches(withText(containsString("Waiting: 4"))));
+        onData(anything()).inAdapterView(withId(R.id.entrant_events)).atPosition(0).onChildView(withId(R.id.event_details)).check(matches(withText(containsString("Waiting: 4"))));
     }
 
     /**
@@ -330,12 +330,12 @@ public class TestEventsUIEntrant {
     public void testSeesListOfEventsOnHomeFragment() throws Exception {
         createAndLoginTestUser();
         String eventId1 = "test-event-" + UUID.randomUUID().toString();
-        Event testEvent1 = new Event(eventId1, "org", "Test Event 1", "desc", new UserList(10), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Event testEvent1 = new Event(eventId1, "org", "Test Event 1", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
         Tasks.await(db.collection("events").document(eventId1).set(testEvent1));
         testEventIds.add(eventId1);
 
         String eventId2 = "test-event-" + UUID.randomUUID().toString();
-        Event testEvent2 = new Event(eventId2, "org", "Test Event 2", "desc", new UserList(10), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Event testEvent2 = new Event(eventId2, "org", "Test Event 2", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
         Tasks.await(db.collection("events").document(eventId2).set(testEvent2));
         testEventIds.add(eventId2);
 
@@ -356,7 +356,7 @@ public class TestEventsUIEntrant {
         createAndLoginTestUser();
         String eventId = "join-test-event-" + UUID.randomUUID().toString();
         testEventIds.add(eventId);
-        Event testEvent = new Event(eventId, "org", "Joinable Event", "desc", new UserList(10), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
+        Event testEvent = new Event(eventId, "org", "Joinable Event", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "cat");
         Tasks.await(db.collection("events").document(eventId).set(testEvent));
 
         onView(withId(R.id.nav_events)).perform(click());
@@ -395,7 +395,7 @@ public class TestEventsUIEntrant {
         String eventId = "leave-test-event-" + UUID.randomUUID().toString();
         testEventIds.add(eventId); 
         Event testEvent = new Event(eventId, "organizer-id", "Test Event for Leaving",
-                "Desc", new UserList(), null, null, "Location", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), null, "qr", false, "");
+                "Desc", "Criteria", new UserList(), new UserList(), new UserList(), null, "Location", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), null, "qr", false, "");
 
         Entrant entrantUser = new Entrant(testUser.getId(), testUser.getName(), testUser.getRole(), testUser.getEmail(), testUser.getPhone(), testUser.getProfileImageUrl(),testUser.getPassword(), testUser.getNotificationPreferences(), testUser.getDevice(), testUser.getGeoPoint());
         testEvent.addEntrantWaitingList(entrantUser);
@@ -431,12 +431,12 @@ public class TestEventsUIEntrant {
     public void testFilterEventsByCategory() throws Exception {
         createAndLoginTestUser();
         String partyEventId = "filter-test-party-" + UUID.randomUUID().toString();
-        Event partyEvent = new Event(partyEventId, "org", "Party Night", "desc", new UserList(10), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "Party");
+        Event partyEvent = new Event(partyEventId, "org", "Party Night", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "Party");
         Tasks.await(db.collection("events").document(partyEventId).set(partyEvent));
         testEventIds.add(partyEventId);
 
         String concertEventId = "filter-test-concert-" + UUID.randomUUID().toString();
-        Event concertEvent = new Event(concertEventId, "org", "Rock Concert", "desc", new UserList(10), null, null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "Concert");
+        Event concertEvent = new Event(concertEventId, "org", "Rock Concert", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "Concert");
         Tasks.await(db.collection("events").document(concertEventId).set(concertEvent));
         testEventIds.add(concertEventId);
 
@@ -469,12 +469,12 @@ public class TestEventsUIEntrant {
     public void testFilterEventsByLocation() throws Exception {
         createAndLoginTestUser();
         String edmontonEventId = "loc-test-edm-" + UUID.randomUUID().toString();
-        Event edmontonEvent = new Event(edmontonEventId, "org", "Edmonton Expo", "desc", new UserList(10), null, null, "Edmonton", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
+        Event edmontonEvent = new Event(edmontonEventId, "org", "Edmonton Expo", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "Edmonton", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
         Tasks.await(db.collection("events").document(edmontonEventId).set(edmontonEvent));
         testEventIds.add(edmontonEventId);
 
         String calgaryEventId = "loc-test-cal-" + UUID.randomUUID().toString();
-        Event calgaryEvent = new Event(calgaryEventId, "org", "Calgary Stampede", "desc", new UserList(10), null, null, "Calgary", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
+        Event calgaryEvent = new Event(calgaryEventId, "org", "Calgary Stampede", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "Calgary", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
         Tasks.await(db.collection("events").document(calgaryEventId).set(calgaryEvent));
         testEventIds.add(calgaryEventId);
 
@@ -502,12 +502,12 @@ public class TestEventsUIEntrant {
         tomorrow.add(Calendar.DAY_OF_YEAR, 1);
 
         String todayEventId = "date-test-today-" + UUID.randomUUID().toString();
-        Event todayEvent = new Event(todayEventId, "org", "Today's Market", "desc", new UserList(10), null, null, "loc", today.getTime(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
+        Event todayEvent = new Event(todayEventId, "org", "Today's Market", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", today.getTime(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
         Tasks.await(db.collection("events").document(todayEventId).set(todayEvent));
         testEventIds.add(todayEventId);
 
         String tomorrowEventId = "date-test-tmrw-" + UUID.randomUUID().toString();
-        Event tomorrowEvent = new Event(tomorrowEventId, "org", "Tomorrow's Gala", "desc", new UserList(10), null, null, "loc", tomorrow.getTime(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
+        Event tomorrowEvent = new Event(tomorrowEventId, "org", "Tomorrow's Gala", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", tomorrow.getTime(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), "", "", false, "");
         Tasks.await(db.collection("events").document(tomorrowEventId).set(tomorrowEvent));
         testEventIds.add(tomorrowEventId);
 
