@@ -626,6 +626,8 @@ public class Event implements Serializable {
         if (waitingList == null) {
             throw  new NullPointerException("Waiting list is null");
         }
+        // If entrant is returning after cancelling, keep lists mutually exclusive
+        removeUserFromList(cancelledList, entrant.getId());
         if (waitingList.getCapacity()== 0 || waitingList.size() < waitingList.getCapacity()) {
             waitingList.add(entrant);
         } else {
@@ -667,6 +669,24 @@ public class Event implements Serializable {
             }
         }
         return false;
+    }
+
+    /**
+     * Removes a user with matching id from a list if present.
+     * @param list The list to remove from.
+     * @param userId The user id to match.
+     */
+    private void removeUserFromList(UserList list, String userId) {
+        if (list == null || list.getUsers() == null || userId == null) {
+            return;
+        }
+        ArrayList<User> users = list.getUsers();
+        for (int i = users.size() - 1; i >= 0; i--) {
+            User user = users.get(i);
+            if (user != null && userId.equals(user.getId())) {
+                users.remove(i);
+            }
+        }
     }
     /**
      * Cancels an enrollment.

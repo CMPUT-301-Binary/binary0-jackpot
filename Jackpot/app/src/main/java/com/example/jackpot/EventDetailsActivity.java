@@ -51,6 +51,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView eventCategory;
     private TextView eventRegOpen;
     private TextView eventRegClose;
+    private TextView qrHint;
 
     private Button joinButton;
     private ImageButton backButton;
@@ -141,6 +142,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         eventCategory = findViewById(R.id.event_details_category);
         eventRegOpen = findViewById(R.id.event_details_reg_open);
         eventRegClose = findViewById(R.id.event_details_reg_close);
+        qrHint = findViewById(R.id.event_details_qr_hint);
         joinButton = findViewById(R.id.event_details_join_button);
         backButton = findViewById(R.id.event_details_back_button);
         updatePhotoBtn = findViewById(R.id.event_details_update_photo_button);
@@ -156,6 +158,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         deleteButton.setVisibility(View.GONE);
         joinButton.setVisibility(View.GONE);
         updatePhotoBtn.setVisibility(View.GONE);
+        if (qrHint != null) {
+            qrHint.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -377,6 +382,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         String qrCodeId = event.getQrCodeId();
         if (qrCodeId == null || qrCodeId.isEmpty()) {
             // No QR code — finish with only poster image
+            if (qrHint != null) {
+                qrHint.setVisibility(View.GONE);
+            }
             setupOrRefreshPager();
             return;
         }
@@ -405,11 +413,17 @@ public class EventDetailsActivity extends AppCompatActivity {
                         // QR entry missing from Firestore
                         pagerImages.add("default");
                     }
+                    if (qrHint != null) {
+                        qrHint.setVisibility(View.VISIBLE);
+                    }
                     setupOrRefreshPager();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to load QR image metadata", e);
                     pagerImages.add("default");
+                    if (qrHint != null) {
+                        qrHint.setVisibility(View.GONE);
+                    }
                     setupOrRefreshPager();
                 });
     }

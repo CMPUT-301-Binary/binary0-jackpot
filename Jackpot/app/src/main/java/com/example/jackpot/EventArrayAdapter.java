@@ -79,6 +79,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
     private int layoutResource;
     private User currentUser;
     private OnButtonClickListener buttonClickListener;
+    private Map<String, String> interactionLabels = new HashMap<>();
 
     /**
      * Constructor for the adapter.
@@ -111,6 +112,17 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
      */
     public void setOnButtonClickListener(OnButtonClickListener listener) {
         this.buttonClickListener = listener;
+    }
+
+    /**
+     * Labels events with the type of interaction for the current user (e.g., Joined, Invited).
+     */
+    public void setInteractionLabels(Map<String, String> labels) {
+        if (labels == null) {
+            this.interactionLabels = new HashMap<>();
+        } else {
+            this.interactionLabels = new HashMap<>(labels);
+        }
     }
 
     /**
@@ -516,6 +528,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
     private void setupEventListItemView(View view, Event event) {
         TextView eventName = view.findViewById(R.id.event_name);
         ImageView eventImage = view.findViewById(R.id.event_image);
+        TextView interactionLabel = view.findViewById(R.id.event_interaction_label);
 
         if (eventName != null) {
             eventName.setText(event.getName());
@@ -546,6 +559,16 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
             String waiting = (event.getWaitingList() != null) ?
                     String.format(Locale.getDefault(), "%d waiting", event.getWaitingList().size()) : "0 waiting";
             eventWaiting.setText(waiting);
+        }
+
+        if (interactionLabel != null) {
+            String label = interactionLabels.get(event.getEventId());
+            if (label != null && !label.isEmpty()) {
+                interactionLabel.setText(label);
+                interactionLabel.setVisibility(View.VISIBLE);
+            } else {
+                interactionLabel.setVisibility(View.GONE);
+            }
         }
 
         Button joinButton = view.findViewById(R.id.join_button);
