@@ -307,4 +307,9 @@ public class FDatabase {
 
 
     }
+
+    public void queryNotificationsByReceiver(String receiverId, DataCallback<Notification> callback) {
+        queryCollection("notifications", "recipientID", receiverId, Notification.class, callback);
+    }
+
 }

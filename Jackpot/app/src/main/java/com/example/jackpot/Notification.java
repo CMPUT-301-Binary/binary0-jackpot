@@ -40,6 +40,9 @@ public class Notification {
     private String providerMsgID;
     private String error;
     private String organizerID;
+    private boolean viewedByEntrant;
+
+
 
     /**
      * Constructs a new Notification object, initializing it with essential details.
@@ -60,8 +63,14 @@ public class Notification {
             this.sentAt = Instant.now();
         }
         this.deliverStatus = false;
+        this.viewedByEntrant = false;
     }
 
+    /**
+     * Empty constructor for Firebase.
+     */
+    public Notification(){
+    }
 
     /**
      * Gets the unique identifier of the notification.
@@ -238,4 +247,19 @@ public class Notification {
         return true; // placeholder
     };
 
+    public boolean isViewedByEntrant() {
+        return viewedByEntrant;
+    }
+
+    public void setViewedByEntrant(boolean viewedByEntrant) {
+        this.viewedByEntrant = viewedByEntrant;
+    }
+
+    public String getOrganizerID() {
+        return organizerID;
+    }
+
+    public void setOrganizerID(String organizerID) {
+        this.organizerID = organizerID;
+    }
 }

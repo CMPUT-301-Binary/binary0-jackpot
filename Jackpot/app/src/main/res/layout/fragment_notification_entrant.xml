@@ -8,15 +8,10 @@
     android:padding="16dp"
     tools:context=".ui.notification.NotificationFragment">
 
-    <TextView
-        android:id="@+id/text_notification_entrant"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Entrant Notification Page"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <ListView
+        android:id="@+id/notificationListView"
+        android:layout_width="409dp"
+        android:layout_height="729dp"
+        tools:layout_editor_absoluteX="-14dp"
+        tools:layout_editor_absoluteY="36dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

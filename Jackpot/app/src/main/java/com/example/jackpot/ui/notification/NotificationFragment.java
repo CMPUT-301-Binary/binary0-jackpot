@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,9 +14,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.jackpot.FDatabase;
 import com.example.jackpot.MainActivity;
+import com.example.jackpot.Notification;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -25,6 +30,7 @@ import java.util.List;
 /**
  * Notification fragment, which will show the notifications of the user.
  * For ADMIN role, displays all organizers (name and email) from the users collection.
+ * Created with the assistance of ClaudeAI Sonnet 4.5
  */
 public class NotificationFragment extends Fragment {
 
@@ -32,6 +38,14 @@ public class NotificationFragment extends Fragment {
     private RecyclerView recyclerView;
     private AdminNotificationAdapter adapter;
     private FirebaseFirestore db;
+
+    //For entrant notification
+    private ListView notificationListView;
+    private EntrantNotificationAdapter notificationAdapter;
+    private ArrayList<Notification> notificationList;
+    private FDatabase fDatabase;
+    private String currentUserId;
+
 
     /**
      * Called to have the fragment instantiate its user interface view.
@@ -62,12 +76,117 @@ public class NotificationFragment extends Fragment {
                 break;
             default:
                 root = inflater.inflate(R.layout.fragment_notification_entrant, container, false);
+                setupEntrantNotifications(root);
                 break;
         }
 
         return root;
     }
 
+    private void setupEntrantNotifications(View root){
+        //Get current user ID from Firebase
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+        } else {
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        fDatabase = FDatabase.getInstance();
+        notificationListView = root.findViewById(R.id.notificationListView);
+        notificationList = new ArrayList<>();
+        notificationAdapter = new EntrantNotificationAdapter(getContext(), notificationList);
+        notificationListView.setAdapter(notificationAdapter);
+
+        setupLongPressToDismiss();
+        loadUnreadNotifications();
+
+
+        //Query notifications based on the recepient
+//        fDatabase.queryNotificationsByReceiver(currentUserId, new FDatabase.DataCallback<Notification>() {
+//            @Override
+//            public void onSuccess(ArrayList<Notification> data) {
+//                if (isAdded() && !data.isEmpty()) {
+//                    updateNotificationList(data);
+//                }
+//            }
+//            public void onFailure(Exception e) {
+//                Log.d("NotificationFragment", "Failed to fetch notifications.", e);
+//            }
+//        });
+
+    }
+    /**
+     * Loads only unread notifications for the current user.
+     */
+    private void loadUnreadNotifications() {
+        if (currentUserId == null) {
+            Log.e(TAG, "Current user ID is null");
+            return;
+        }
+        Log.d(TAG, "Loading unread notifications for user: " + currentUserId);
+
+        // Query notifications where recipientID matches AND read is false (or doesn't exist)
+        db = FirebaseFirestore.getInstance();
+        db.collection("notifications")
+                .whereEqualTo("recipientID", currentUserId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    ArrayList<Notification> unreadNotifications = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Boolean isRead = document.getBoolean("viewedByEntrant");
+                        // If 'read' field doesn't exist or is false, include it
+                        if (isRead == null || !isRead) {
+                            Notification notification = document.toObject(Notification.class);
+                            if (notification != null) {
+                                notification.setNotificationID(document.getId());
+                                unreadNotifications.add(notification);
+                            }
+                        }
+                    }
+
+                    if (isAdded()) {
+                        updateNotificationList(unreadNotifications);
+
+                        if (unreadNotifications.isEmpty() && getContext() != null) {
+                            Toast.makeText(getContext(), "No new notifications", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to fetch notifications", e);
+                    if (isAdded() && getContext() != null) {
+                        Toast.makeText(getContext(), "Failed to load notifications", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+    }
+
+    private void setupLongPressToDismiss() {
+        notificationListView.setOnItemLongClickListener((parent, view, position, id) -> {
+            // Show confirmation dialog
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Dismiss Notification")
+                    .setMessage("Mark this notification as read?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        notificationAdapter.markNotificationAsRead(position);
+                        Toast.makeText(getContext(), "Notification dismissed", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            return true;
+        });
+    }
+
+    /**
+     * Updates the notification list
+     * @param notifications
+     */
+    private void updateNotificationList(ArrayList<Notification> notifications) {
+        notificationList.clear();
+        notificationList.addAll(notifications);
+        notificationAdapter.notifyDataSetChanged();
+    }
     /**
      * Sets up the RecyclerView and loads organizer data for admin view.
      */
