@@ -120,7 +120,7 @@ public class TestEventsUIOrganizer {
         // 1. Setup: Create an event with an initial poster.
         String eventId = "update-poster-test-" + UUID.randomUUID().toString();
         String initialPosterUri = "initial_uri";
-        Event testEvent = new Event(eventId, organizer.getId(), "Update Poster Test", "desc", new UserList(10), "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), initialPosterUri, "", false, "cat");
+        Event testEvent = new Event(eventId, organizer.getId(), "Update Poster Test", "desc", "Criteria", new UserList(10), new UserList(10), new UserList(10), null, "loc", new Date(), 0.0, 0.0, 0.0, 10, new Date(), new Date(), initialPosterUri, "", false, "cat");
         Tasks.await(db.collection("events").document(eventId).set(testEvent));
         testEventIds.add(eventId);
 
@@ -453,7 +453,7 @@ public class TestEventsUIOrganizer {
         if (currentUser != null) {
             try {
                 // Clean up any events created during the test
-                QuerySnapshot eventsToDelete = Tasks.await(db.collection("events").whereEqualTo("organizerId", currentUser.getUid()).get());
+                QuerySnapshot eventsToDelete = Tasks.await(db.collection("events").whereEqualTo("createdBy", currentUser.getUid()).get());
                 for (int i = 0; i < eventsToDelete.size(); i++) {
                     db.collection("events").document(eventsToDelete.getDocuments().get(i).getId()).delete();
                 }
