@@ -56,7 +56,6 @@ public class EntrantNotificationAdapter extends ArrayAdapter<Notification> {
             holder.eventText = convertView.findViewById(R.id.event_text);
             holder.statusText = convertView.findViewById(R.id.statusText);
             holder.categoryText = convertView.findViewById(R.id.categoryText);
-            holder.eventPrice = convertView.findViewById(R.id.eventPrice);
             holder.eventPic = convertView.findViewById(R.id.event_pic);
             holder.buttonContainer = convertView.findViewById(R.id.button_container);
             convertView.setTag(holder);
@@ -78,9 +77,7 @@ public class EntrantNotificationAdapter extends ArrayAdapter<Notification> {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
                         .withZone(ZoneId.systemDefault());
                 String formattedDate = formatter.format(notification.getSentAt());
-                holder.eventPrice.setText(formattedDate);
-            } else {
-                holder.eventPrice.setText("");
+
             }
 
             // Hide button container for notifications
@@ -177,7 +174,6 @@ public class EntrantNotificationAdapter extends ArrayAdapter<Notification> {
         TextView eventText;
         TextView statusText;
         TextView categoryText;
-        TextView eventPrice;
         ImageView eventPic;
         View buttonContainer;
     }
