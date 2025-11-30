@@ -1,150 +1,114 @@
 package com.example.jackpot;
 
-import org.junit.Test;
-
 import static org.junit.Assert.*;
 
-import com.example.jackpot.ui.image.Image;
 import com.google.firebase.firestore.GeoPoint;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Date;
 import java.util.UUID;
 
 /**
- * Example local unit test, which will execute on the development machine (host).
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ * Unit tests for entrant-centric flows (join/leave/cancel lists).
  */
-
 public class EntrantTest {
 
-    @Test
-    public void testJoinWaitingList() {
-        UUID id = UUID.randomUUID();
-        Entrant entrant1 = new Entrant(
-                "John Doe",
-                id.toString(),
-                User.Role.ENTRANT,
-                "", "", "", "", "", new Device(), new GeoPoint(0,0)
-        );
-        Entrant entrant2 = new Entrant(
-                "John Day",
+    private Entrant entrant;
+    private Event baseEvent;
+    private UserList waitingList;
+    private UserList invitedList;
+    private UserList joinedList;
+    private UserList cancelledList;
+
+    @Before
+    public void setUp() {
+        entrant = new Entrant(
                 UUID.randomUUID().toString(),
+                "Test Entrant",
                 User.Role.ENTRANT,
-                "", "", "", "", "", new Device(), new GeoPoint(0,0)
+                "test@test.com",
+                "555-5555",
+                "",
+                "",
+                "",
+                new Device(),
+                new GeoPoint(53, -113)
         );
 
-        UserList waitingList = new UserList(5);
-        Event event = new Event(
+        waitingList = new UserList(2);
+        invitedList = new UserList();
+        joinedList = new UserList();
+        cancelledList = new UserList();
+
+        baseEvent = new Event(
                 UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(),
-                "Test",
-                "",
+                "org-1",
+                "Test Event",
+                "Desc",
+                "Criteria",
                 waitingList,
-                "",
+                joinedList,
+                invitedList,
+                cancelledList,
+                "Location",
                 new Date(),
                 0.0,
                 0.0,
-                5.5,
-                5,
+                10.0,
+                2,
                 new Date(),
                 new Date(),
-                "",
-                "",
-                true,
-                ""
+                "poster",
+                "qr",
+                false,
+                "Category"
         );
-
-        UserList waitingList2 = new UserList();
-        Event event2 = new Event(
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(),
-                "Test",
-                "",
-                waitingList2,
-                "",
-                new Date(),
-                0.0,
-                0.0,
-                5.5,
-                5,
-                new Date(),
-                new Date(),
-                "",
-                "",
-                true,
-                ""
-        );
-
-        UserList waitingList3 = new UserList(1);
-        Event event3 = new Event(
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(),
-                "Test",
-                "",
-                waitingList3,
-                "",
-                new Date(),
-                0.0,
-                0.0,
-                5.5,
-                5,
-                new Date(),
-                new Date(),
-                "",
-                "",
-                true,
-                ""
-        );
-
-        entrant1.joinWaitingList(event);
-        assertTrue(waitingList.contains(entrant1));
-
-        entrant1.joinWaitingList(event2);
-        assertTrue(waitingList2.contains(entrant1));
-
-        entrant1.joinWaitingList(event3);
-        assertTrue(waitingList3.contains(entrant1));
-        assertThrows(IllegalStateException.class, () -> entrant2.joinWaitingList(event3));
-        assertFalse(waitingList3.contains(entrant2));
     }
 
     @Test
-    public void testLeaveWaitingList() {
-        UUID id = UUID.randomUUID();
-        Entrant entrant = new Entrant(
-                "John Doe",
-                id.toString(),
-                User.Role.ENTRANT,
-                "", "", "", "", "", new Device(), new GeoPoint(0,0)
-        );
+    public void joinWaitingList_addsEntrant() {
+        entrant.joinWaitingList(baseEvent);
+        assertTrue(waitingList.contains(entrant));
+    }
 
-        UserList waitingList = new UserList(5);
-        Event event = new Event(
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(),
-                "Test",
-                "",
-                waitingList,
-                "",
-                new Date(),
-                0.0,
-                0.0,
-                5.5,
-                5,
-                new Date(),
-                new Date(),
-                "",
-                "",
-                true,
-                ""
-        );
+    @Test
+    public void joinWaitingList_preventsDuplicates() {
+        entrant.joinWaitingList(baseEvent);
+        assertThrows(IllegalArgumentException.class, () -> entrant.joinWaitingList(baseEvent));
+    }
 
-        waitingList.add(entrant);
-        entrant.leaveWaitingList(event);
+    @Test
+    public void joinWaitingList_honorsCapacity() {
+        Entrant other = new Entrant(UUID.randomUUID().toString(), "Other", User.Role.ENTRANT, "", "", "", "", "", new Device(), new GeoPoint(0, 0));
+        entrant.joinWaitingList(baseEvent);
+        other.joinWaitingList(baseEvent);
+        Entrant third = new Entrant(UUID.randomUUID().toString(), "Third", User.Role.ENTRANT, "", "", "", "", "", new Device(), new GeoPoint(0, 0));
+        assertThrows(IllegalStateException.class, () -> third.joinWaitingList(baseEvent));
+    }
+
+    @Test
+    public void leaveWaitingList_removesEntrant() {
+        entrant.joinWaitingList(baseEvent);
+        entrant.leaveWaitingList(baseEvent);
         assertFalse(waitingList.contains(entrant));
+    }
 
-        assertThrows(IllegalArgumentException.class, () -> entrant.leaveWaitingList(event));
+    @Test
+    public void leaveWaitingList_throwsWhenNotPresent() {
+        assertThrows(IllegalArgumentException.class, () -> entrant.leaveWaitingList(baseEvent));
+    }
+
+    @Test
+    public void rejoinMovesFromCancelledToWaiting() {
+        entrant.joinWaitingList(baseEvent);
+        waitingList.remove(entrant);
+        cancelledList.add(entrant);
+
+        entrant.joinWaitingList(baseEvent);
+
+        assertTrue(waitingList.contains(entrant));
+        assertFalse(cancelledList.contains(entrant));
     }
 }
-

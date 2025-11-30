@@ -1,110 +1,147 @@
 package com.example.jackpot;
 
+import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.UUID;
 
+/**
+ * Unit tests for Event domain logic (draws, lists, counters).
+ */
 public class EventTest {
 
     private Event event;
     private UserList waitingList;
+    private UserList invitedList;
+    private UserList joinedList;
+    private UserList cancelledList;
 
     @Before
     public void setUp() {
-        // Create a UserList to act as the waiting list
         waitingList = new UserList(10);
-        
-        // Add 5 mock entrants to the waiting list before each test
+        invitedList = new UserList();
+        joinedList = new UserList();
+        cancelledList = new UserList();
+
         for (int i = 0; i < 5; i++) {
-            Entrant entrant = new Entrant("entrant_id_" + i, "Entrant " + i, User.Role.ENTRANT, "e"+i+"@test.com", "", "", "", "", null, null);
-            waitingList.add(entrant);
+            waitingList.add(fakeEntrant("entrant-" + i));
         }
 
-        // Create a new event instance with the pre-populated waiting list
-        // Capacity is initially set to a value larger than waiting list
-        event = new Event("event_id", "organizer_id", "Test Event", "Description", 
-                        waitingList, new UserList(), new UserList(), "Location", new Date(), 0.0, 0.0, 0.0, 10,
-                        new Date(), new Date(), "", "", false, "Category");
+        event = new Event(
+                "event_id",
+                "organizer_id",
+                "Test Event",
+                "Description",
+                "Criteria",
+                waitingList,
+                joinedList,
+                invitedList,
+                cancelledList,
+                "Location",
+                new Date(),
+                0.0,
+                0.0,
+                0.0,
+                10,
+                new Date(),
+                new Date(),
+                "poster",
+                "qr",
+                false,
+                "Category"
+        );
+    }
+
+    private Entrant fakeEntrant(String id) {
+        return new Entrant(id, "Name " + id, User.Role.ENTRANT, id + "@test.com", "", "", "", "", null, null);
     }
 
     @Test
-    public void testDrawEvent_WaitingListLargerThanCapacity() {
-        // Set capacity to be smaller than the waiting list
+    public void drawEvent_waitingListLargerThanCapacity() {
         event.setCapacity(2);
-        
-        // Action: Draw entrants. Should draw 'capacity' number of winners.
+
         ArrayList<User> winners = event.drawEvent();
 
-        // Verification
-        // 1. Check that 'capacity' winners were returned
-        assertEquals("Should return the specified number of winners based on capacity.", 2, winners.size());
-
-        // 2. Check that the original waiting list size has been reduced by 'capacity'
-        assertEquals("Waiting list should be smaller after the draw.", 3, event.getWaitingList().size());
-
-        // 3. Verify that the winners are no longer in the waiting list
+        assertEquals(2, winners.size());
+        assertEquals(3, event.getWaitingList().size());
         for (User winner : winners) {
-            assertFalse("Drawn winner should not be in the waiting list anymore.", event.getWaitingList().contains(winner));
-        }
-        
-        // 4. Verify winners are in the invited list
-        for (User winner : winners) {
-            assertTrue("Drawn winner should be in the invited list.", event.getInvitedList().contains(winner));
+            assertFalse(event.getWaitingList().contains(winner));
+            assertTrue(event.getInvitedList().contains(winner));
         }
     }
 
     @Test
-    public void testDrawEvent_WaitingListSmallerThanCapacity() {
-        // Capacity (10) is larger than waiting list (5) by default from setUp
-        
-        // Action: Draw all entrants
+    public void drawEvent_waitingListSmallerThanCapacity() {
+        event.setCapacity(10);
+
         ArrayList<User> winners = event.drawEvent();
 
-        // Verification
-        // 1. Check that all 5 winners were returned
-        assertEquals("Should return all entrants when waiting list is smaller than capacity.", 5, winners.size());
-
-        // 2. Check that the waiting list is now empty
-        assertTrue("Waiting list should be empty after drawing all entrants.", event.getWaitingList().isEmpty());
-        
-        // 3. Check that all original entrants are now winners
-        assertEquals("All original waiting list members should be winners.", 5, event.getInvitedList().size());
+        assertEquals(5, winners.size());
+        assertTrue(event.getWaitingList().isEmpty());
+        assertEquals(5, event.getInvitedList().size());
     }
 
     @Test
-    public void testDrawEvent_ZeroCapacity() {
-        // Set capacity to 0
+    public void drawEvent_zeroCapacityReturnsEmpty() {
         event.setCapacity(0);
-        
-        // Action: Draw 0 entrants
         ArrayList<User> winners = event.drawEvent();
-
-        // Verification
-        // 1. Check that the returned list is empty
-        assertTrue("Drawing with zero capacity should return an empty list.", winners.isEmpty());
-
-        // 2. Check that the waiting list size is unchanged
-        assertEquals("Waiting list size should not change when capacity is zero.", 5, event.getWaitingList().size());
+        assertTrue(winners.isEmpty());
+        assertEquals(5, event.getWaitingList().size());
     }
 
-    @Test
-    public void testDrawEvent_NullWaitingList_ThrowsException() {
+    @Test(expected = NullPointerException.class)
+    public void drawEvent_nullWaitingListThrows() {
         event.setWaitingList(null);
-        assertThrows(NullPointerException.class, () -> {
-            event.drawEvent();
-        });
+        event.drawEvent();
     }
-    
+
     @Test
-    public void testDrawEvent_EmptyWaitingList() {
-        event.setWaitingList(new UserList(10));
-        
+    public void drawEvent_emptyWaitingListReturnsEmpty() {
+        event.setWaitingList(new UserList(5));
         ArrayList<User> winners = event.drawEvent();
-        
-        assertTrue("Should return empty list when waiting list is empty", winners.isEmpty());
-        assertEquals("Invited list should be empty", 0, event.getInvitedList().size());
+        assertTrue(winners.isEmpty());
+        assertEquals(0, event.getInvitedList().size());
+    }
+
+    @Test
+    public void addEntrantWaitingList_removesCancelledDuplicate() {
+        Entrant entrant = fakeEntrant("dup");
+        cancelledList.add(entrant);
+        event.addEntrantWaitingList(entrant);
+        assertTrue(waitingList.contains(entrant));
+        assertFalse(cancelledList.contains(entrant));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void addEntrantWaitingList_respectsCapacity() {
+        event.setWaitingList(new UserList(1));
+        event.addEntrantWaitingList(fakeEntrant("one"));
+        event.addEntrantWaitingList(fakeEntrant("two"));
+    }
+
+    @Test
+    public void removeEntrantWaitingList_removesOnlyOnce() {
+        Entrant entrant = fakeEntrant("rem");
+        event.addEntrantWaitingList(entrant);
+        event.removeEntrantWaitingList(entrant);
+        assertFalse(event.getWaitingList().contains(entrant));
+    }
+
+    @Test
+    public void entrantInList_handlesNulls() {
+        assertFalse(event.entrantInList("x", null));
+        assertFalse(event.entrantInList(null, waitingList));
+    }
+
+    @Test
+    public void invitedWaitingCountsReflectLists() {
+        assertEquals(5, event.getWaitingCount());
+        assertEquals(0, event.getInvitedCount());
+        invitedList.add(fakeEntrant("invited"));
+        assertEquals(1, event.getInvitedCount());
     }
 }
