@@ -9,6 +9,7 @@
     tools:context=".ui.notification.NotificationFragment">
 
     <ListView
+        android:id="@+id/notificationListView"
         android:layout_width="409dp"
         android:layout_height="729dp"
         tools:layout_editor_absoluteX="-14dp"

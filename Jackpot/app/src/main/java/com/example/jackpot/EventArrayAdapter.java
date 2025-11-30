@@ -55,6 +55,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         notificationDoc.put("notifType", notifType);
         notificationDoc.put("payload", payload);
         notificationDoc.put("organizerID", organizerID);
+        notificationDoc.put("viewedByEntrant", false);
         //TODO: Write this object to the database
         FDatabase.getInstance().addNotification(notificationDoc, notificationID);
 
