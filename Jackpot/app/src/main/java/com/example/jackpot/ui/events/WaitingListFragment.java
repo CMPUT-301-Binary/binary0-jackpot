@@ -96,7 +96,11 @@ public class WaitingListFragment extends Fragment {
             }
 
             // Now pass the correctly typed list to the adapter
-            adapter = new UserArrayAdapter(requireContext(), userList);
+            adapter = new UserArrayAdapter(
+                    requireContext(),
+                    userList,
+                    user -> showCustomMessageDialogForUser(user)
+            );
             recyclerView.setAdapter(adapter);
 
         } else {
@@ -163,6 +167,75 @@ public class WaitingListFragment extends Fragment {
                     "Failed to send notifications",
                     Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private static final int MAX_MESSAGE_WORDS = 15;
+    /**
+     * Shows a dialog for sending a custom message to a single waiting-list user.
+     * Reuses the 15-word limit behavior.
+     */
+    private void showCustomMessageDialogForUser(User user) {
+        if (event == null) {
+            Toast.makeText(requireContext(),
+                    "Event data missing, cannot notify user",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final android.widget.EditText input = new android.widget.EditText(requireContext());
+        input.setHint("Enter message (max " + MAX_MESSAGE_WORDS + " words)");
+        input.setMaxLines(3);
+
+        // Guard to avoid recursion when we modify text ourselves
+        final boolean[] isUpdating = {false};
+
+        android.text.TextWatcher watcher = new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                if (isUpdating[0]) return;
+
+                String text = s.toString();
+                int wordCount = countWords(text);
+
+                if (wordCount <= MAX_MESSAGE_WORDS) {
+                    return;
+                }
+
+                String trimmed = trimToMaxWords(text, MAX_MESSAGE_WORDS);
+
+                isUpdating[0] = true;
+                input.setText(trimmed);
+                input.setSelection(trimmed.length());
+                isUpdating[0] = false;
+
+                Toast.makeText(requireContext(),
+                        "Maximum " + MAX_MESSAGE_WORDS + " words allowed",
+                        Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        input.addTextChangedListener(watcher);
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Notify " + user.getName())
+                .setMessage("Add a custom message for this entrant:")
+                .setView(input)
+                .setPositiveButton("Send", (dialog, which) -> {
+                    String customMessage = input.getText().toString().trim();
+                    // Extra safety trim
+                    if (countWords(customMessage) > MAX_MESSAGE_WORDS) {
+                        customMessage = trimToMaxWords(customMessage, MAX_MESSAGE_WORDS);
+                    }
+                    sendWaitingListNotificationToUser(user, event, customMessage);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     /**
@@ -238,6 +311,32 @@ public class WaitingListFragment extends Fragment {
                 .show();
     }
 
+    /**
+     * Sends a waiting-list notification to a single user.
+     */
+    private void sendWaitingListNotificationToUser(User user, Event event, String customMessage) {
+        if (user == null || user.getId() == null) {
+            Toast.makeText(requireContext(),
+                    "Invalid user, cannot send notification",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String payload = buildWaitingListPayload(event, customMessage);
+
+        createNotification(
+                java.util.UUID.randomUUID().toString(),
+                user.getId(),
+                event.getEventId(),
+                "WAITING_LIST_UPDATE",
+                payload,
+                event.getCreatedBy()
+        );
+
+        Toast.makeText(requireContext(),
+                "Sent notification to " + user.getName(),
+                Toast.LENGTH_SHORT).show();
+    }
 
     /**
      * Builds the notification payload with all required information.
@@ -270,5 +369,29 @@ public class WaitingListFragment extends Fragment {
 
         // Save to Firebase
         com.example.jackpot.FDatabase.getInstance().addNotification(notificationDoc, notificationID);
+    }
+
+    // HELPERS:
+    private int countWords(String text) {
+        String trimmed = text.trim();
+        if (trimmed.isEmpty()) return 0;
+        return trimmed.split("\\s+").length;
+    }
+
+    private String trimToMaxWords(String text, int maxWords) {
+        String trimmed = text.trim();
+        if (trimmed.isEmpty()) return trimmed;
+
+        String[] words = trimmed.split("\\s+");
+        if (words.length <= maxWords) {
+            return trimmed;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < maxWords; i++) {
+            if (i > 0) sb.append(' ');
+            sb.append(words[i]);
+        }
+        return sb.toString();
     }
 }
