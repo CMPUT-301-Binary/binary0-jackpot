@@ -2,6 +2,8 @@ package com.example.jackpot;
 
 import android.os.Build;
 
+import com.google.firebase.Timestamp;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -35,7 +37,7 @@ public class Notification {
     private String eventID;
     private String notifType;
     private String payload;
-    private Instant sentAt;
+    private com.google.firebase.Timestamp sentAt;
     private boolean deliverStatus;
     private String providerMsgID;
     private String error;
@@ -59,9 +61,7 @@ public class Notification {
         this.eventID = eventID;
         this.notifType = notifType;
         this.payload = payload;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            this.sentAt = Instant.now();
-        }
+        this.sentAt = Timestamp.now();
         this.deliverStatus = false;
         this.viewedByEntrant = false;
     }
@@ -154,9 +154,9 @@ public class Notification {
 
     /**
      * Gets the timestamp of when the notification was created/sent.
-     * @return The sent timestamp as an Instant.
+     * @return The sent timestamp as an Timestamp.
      */
-    public Instant getSentAt() {
+    public Timestamp getSentAt() {
         return sentAt;
     }
 
@@ -164,7 +164,7 @@ public class Notification {
      * Sets the timestamp of when the notification was sent.
      * @param sentAt The sent timestamp to set.
      */
-    public void setSentAt(Instant sentAt) {
+    public void setSentAt(Timestamp sentAt) {
         this.sentAt = sentAt;
     }
 

@@ -20,6 +20,7 @@ import com.bumptech.glide.Glide;
 import com.example.jackpot.Event;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
@@ -380,6 +381,7 @@ public class WaitingListFragment extends Fragment {
         notificationDoc.put("payload", payload);
         notificationDoc.put("organizerID", organizerID);
         notificationDoc.put("viewedByEntrant", false);
+        notificationDoc.put("sentAt", FieldValue.serverTimestamp());
 
         // Save to Firebase
         com.example.jackpot.FDatabase.getInstance().addNotification(notificationDoc, notificationID);
