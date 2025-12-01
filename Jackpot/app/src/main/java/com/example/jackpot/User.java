@@ -24,6 +24,7 @@ public class User implements Serializable {
     protected String notificationPreferences;
     protected Device device;
     protected GeoPoint geoPoint;
+    private Boolean notificationsOptOut;
 
 
     /**
@@ -193,6 +194,23 @@ public class User implements Serializable {
      */
     public void setNotificationPreferences(String notificationPreferences) {
         this.notificationPreferences = notificationPreferences;
+    }
+
+    /**
+     * Whether the user has opted out of organizer/admin notifications.
+     * Defaults to false when unset.
+     * @return true if the user opted out, false otherwise.
+     */
+    public boolean isNotificationsOptOut() {
+        return notificationsOptOut != null && notificationsOptOut;
+    }
+
+    /**
+     * Sets whether the user has opted out of organizer/admin notifications.
+     * @param notificationsOptOut opt-out flag to persist.
+     */
+    public void setNotificationsOptOut(Boolean notificationsOptOut) {
+        this.notificationsOptOut = notificationsOptOut;
     }
 
     /**

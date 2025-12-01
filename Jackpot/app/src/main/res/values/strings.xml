@@ -52,4 +52,10 @@
     <string name="users_with_locations">%1$d of %2$d users with locations</string>
     <string name="accept">Accept</string>
     <string name="decline">Decline</string>
+
+    <!-- Settings / notifications -->
+    <string name="entrant_notifications_title">Entrant notifications</string>
+    <string name="entrant_notifications_description">Opt out of messages from organizers and admins. You will still appear in invitation and waiting lists.</string>
+    <string name="opt_out_icon_content_description">Notification preferences</string>
+    <string name="settings_generic_copy">Customize your Jackpot experience. More settings are coming soon.</string>
 </resources>

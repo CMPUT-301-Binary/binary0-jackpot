@@ -566,7 +566,11 @@ public class EventDetailsActivity extends AppCompatActivity {
                 currentUser.getGeoPoint()
         );
 
-        if (event.hasEntrant(entrant.getId())) {
+        boolean inWaiting = event.entrantInList(entrant.getId(), event.getWaitingList());
+        boolean inInvited = event.entrantInList(entrant.getId(), event.getInvitedList());
+        boolean inJoined = event.entrantInList(entrant.getId(), event.getJoinedList());
+
+        if (inWaiting || inInvited || inJoined) {
             Toast.makeText(this, "You are already in this event", Toast.LENGTH_SHORT).show();
             return;
         }

@@ -299,6 +299,38 @@ public class FDatabase {
     }
 
     public void addNotification(Map<String, Object> notificationDoc, String notificationID){
+        Object recipient = notificationDoc.get("recipientID");
+        String recipientId = recipient != null ? recipient.toString() : null;
+
+        if (recipientId == null || recipientId.isEmpty()) {
+            Log.e("FDatabase", "Notification missing recipientID, skipping write");
+            return;
+        }
+
+        // Respect entrant opt-out. If the flag can't be read, default to sending.
+        db.collection("users").document(recipientId).get()
+                .addOnSuccessListener(snapshot -> {
+                    boolean skip = false;
+                    if (snapshot.exists()) {
+                        Object roleObj = snapshot.get("role");
+                        String role = roleObj != null ? roleObj.toString() : null;
+                        Boolean optOut = snapshot.getBoolean("notificationsOptOut");
+                        skip = "ENTRANT".equals(role) && Boolean.TRUE.equals(optOut);
+                    }
+
+                    if (skip) {
+                        Log.d("FDatabase", "Skipping notification for opted-out entrant: " + recipientId);
+                        return;
+                    }
+                    writeNotification(notificationDoc, notificationID);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FDatabase", "Failed to read user for notification opt-out, defaulting to send", e);
+                    writeNotification(notificationDoc, notificationID);
+                });
+    }
+
+    private void writeNotification(Map<String, Object> notificationDoc, String notificationID) {
         db.collection("notifications")
                 .document(notificationID)
                 .set(notificationDoc)
