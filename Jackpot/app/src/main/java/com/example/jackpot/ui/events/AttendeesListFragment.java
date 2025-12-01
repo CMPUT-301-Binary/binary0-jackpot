@@ -25,11 +25,22 @@ import java.util.List;
 
 /**
  * Shows entrants who accepted their invitations (joined list).
+ *
+ * Responsibilities:
+ *  - Inflate the confirmed attendees layout.
+ *  - Read the passed Event argument and extract its joined list.
+ *  - Render attendees in a RecyclerView.
+ *  - Provide back navigation and CSV export of the attendees list.
  */
 public class AttendeesListFragment extends Fragment {
     private Event event;
     private List<User> attendees;
 
+    /**
+     * Factory method to create a fragment instance with the given event.
+     * @param event Event whose attendees should be displayed.
+     * @return configured AttendeesListFragment with arguments set.
+     */
     public static AttendeesListFragment newInstance(Event event) {
         AttendeesListFragment fragment = new AttendeesListFragment();
         Bundle args = new Bundle();
@@ -87,6 +98,10 @@ public class AttendeesListFragment extends Fragment {
     private static class AttendeesListAdapter extends RecyclerView.Adapter<AttendeesListAdapter.AttendeeViewHolder> {
         private final List<User> attendees;
 
+        /**
+         * Adapter for rendering attendees in the confirmed list.
+         * @param attendees the list of attendees to render (null-safe).
+         */
         AttendeesListAdapter(List<User> attendees) {
             this.attendees = attendees != null ? attendees : new ArrayList<>();
         }

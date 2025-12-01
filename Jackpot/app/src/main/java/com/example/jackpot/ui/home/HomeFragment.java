@@ -40,6 +40,11 @@ import java.util.stream.Collectors;
  * This fragment is used to display a list of events.
  * You can filter the events by category, date, or location.
  * You can also click on an event to view its details and join it.
+ *
+ * Responsibilities:
+ *  - Inflate entrant/organizer/admin home layout based on role.
+ *  - Fetch current user, load events, and bind to list with search/filters/history.
+ *  - Provide category/date/location/history filters and search.
  */
 public class HomeFragment extends Fragment {
 
@@ -73,17 +78,10 @@ public class HomeFragment extends Fragment {
     }
 
     /**
-     * Called to have the fragment instantiate its user interface view.
-     * Checks the user's role to inflate the correct fragment.
-     * @param inflater The LayoutInflater object that can be used to inflate
-     * any views in the fragment,
-     * @param container If non-null, this is the parent view that the fragment's
-     * UI should be attached to.  The fragment should not add the view itself,
-     * but this can be used to generate the LayoutParams of the view.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     * from a previous saved state as given here.
-     *
-     * @return Return the View for the fragment's UI, or null.
+     * Inflate the role-specific home layout, bind list/filters/search, and load events.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
      */
     @Nullable
     @Override
@@ -395,6 +393,9 @@ public class HomeFragment extends Fragment {
 
     /**
      * Checks if the given user id exists in the provided list.
+     * @param list user list to search.
+     * @param userId id to match.
+     * @return true if userId is found.
      */
     private boolean userInList(UserList list, String userId) {
         if (list == null || list.getUsers() == null || userId == null) {

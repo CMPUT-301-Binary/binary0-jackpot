@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Displays the cancelled entrant list for a given event and lets organizers view/export it.
+ */
 public class CancelListFragment extends Fragment {
     private Event event;
     private RecyclerView recyclerView;
@@ -29,6 +32,11 @@ public class CancelListFragment extends Fragment {
     private Button backButton;
     private CancelledAdapter adapter;
 
+    /**
+     * Factory to create the fragment with an event argument.
+     * @param event Event whose cancelled list will be shown.
+     * @return configured fragment instance.
+     */
     public static CancelListFragment newInstance(Event event) {
         CancelListFragment fragment = new CancelListFragment();
         Bundle args = new Bundle();
@@ -37,6 +45,12 @@ public class CancelListFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Inflate the UI, load the cancelled list, and wire navigation/export actions.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -72,6 +86,11 @@ public class CancelListFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Converts a UserList (possibly containing map objects from Firestore) into concrete Users.
+     * @param list raw list pulled from Firestore.
+     * @return list of concrete User models.
+     */
     private ArrayList<User> extractUsers(UserList list) {
         ArrayList<User> users = new ArrayList<>();
         if (list == null || list.getUsers() == null) {

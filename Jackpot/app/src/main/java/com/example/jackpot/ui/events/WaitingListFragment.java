@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Displays the waiting list for an event so organizers can view and notify entrants.
+ */
 public class WaitingListFragment extends Fragment {
     private Event event;
     private RecyclerView recyclerView;
@@ -37,6 +40,11 @@ public class WaitingListFragment extends Fragment {
     private UserArrayAdapter adapter;
     private ArrayList<User> waitingListUsers = new ArrayList<>();
 
+    /**
+     * Factory to create the fragment with the target event bundled.
+     * @param event Event whose waiting list will be shown.
+     * @return configured fragment instance.
+     */
     public static WaitingListFragment newInstance(Event event) {
         WaitingListFragment fragment = new WaitingListFragment();
         Bundle args = new Bundle();
@@ -45,6 +53,12 @@ public class WaitingListFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Inflate UI, hydrate waiting list data, and wire navigation/notify actions.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,

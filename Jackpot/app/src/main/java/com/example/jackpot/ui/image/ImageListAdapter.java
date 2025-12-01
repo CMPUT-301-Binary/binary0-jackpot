@@ -26,6 +26,10 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
     private final List<Image> selectedImages = new ArrayList<>();
     private boolean allSelected = false;
 
+    /**
+     * Adapter to render admin image list with selection support.
+     * @param imageList images to render.
+     */
     public ImageListAdapter(List<Image> imageList) {
         this.imageList = imageList;
     }
@@ -106,10 +110,14 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
         return imageList.size();
     }
 
+    /** Returns a copy of currently selected images.
+     * @return selected image list snapshot.
+     */
     public List<Image> getSelectedImages() {
         return new ArrayList<>(selectedImages);
     }
 
+    /** Toggles select-all/clear-all state and updates checkboxes. */
     public void toggleSelectAll() {
         allSelected = !allSelected;
         selectedImages.clear();
@@ -130,4 +138,3 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
         }
     }
 }
-

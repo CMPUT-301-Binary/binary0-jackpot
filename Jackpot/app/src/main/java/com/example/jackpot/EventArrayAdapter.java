@@ -116,6 +116,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
     /**
      * Labels events with the type of interaction for the current user (e.g., Joined, Invited).
+     * @param labels map of eventId -> interaction label.
      */
     public void setInteractionLabels(Map<String, String> labels) {
         if (labels == null) {

@@ -39,16 +39,10 @@ public class ImageListAdmin extends Fragment {
     private final List<Image> allImages = new ArrayList<>();
 
     /**
-     * Loads the images,a nd sets up the list.
-     *
-     * @param inflater           The LayoutInflater object that can be used to inflate
-     *                           any views in the fragment,
-     * @param container          If non-null, this is the parent view that the fragment's
-     *                           UI should be attached to.  The fragment should not add the view itself,
-     *                           but this can be used to generate the LayoutParams of the view.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     *                           from a previous saved state as given here.
-     * @return Return the View for the fragment's UI, or null.
+     * Inflate the admin image list, load images, and wire select/delete actions.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
      */
     @Nullable
     @Override
@@ -75,9 +69,7 @@ public class ImageListAdmin extends Fragment {
         return root;
     }
 
-    /**
-     * Loads the images from the database.
-     */
+    /** Loads non-QR images (and profile images) from Firestore into the adapter. */
     private void loadImages() {
         allImages.clear();  // clear old data
         db.collection("images")

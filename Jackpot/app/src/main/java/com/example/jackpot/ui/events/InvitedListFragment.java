@@ -32,6 +32,11 @@ public class InvitedListFragment extends Fragment {
     private Event event;
     private InvitedManagementAdapter adapter;
 
+    /**
+     * Factory to build a fragment with the event argument set.
+     * @param event Event whose invited users are managed here.
+     * @return configured InvitedListFragment.
+     */
     public static InvitedListFragment newInstance(Event event) {
         InvitedListFragment fragment = new InvitedListFragment();
         Bundle args = new Bundle();
@@ -39,6 +44,12 @@ public class InvitedListFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
+    /**
+     * Inflate UI, hydrate invited/cancelled lists, and wire actions (select-all, replace invites, back).
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -84,6 +95,9 @@ public class InvitedListFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Moves selected invitees to cancelled and backfills with draws from waiting list.
+     */
     private void replaceSelectedInvites() {
         if (adapter == null || event == null) {
             return;
@@ -114,6 +128,11 @@ public class InvitedListFragment extends Fragment {
         Toast.makeText(getContext(), "Invite(s) replaced", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Converts a UserList (which may contain raw map objects from Firestore) into concrete Users.
+     * @param list raw invited/cancelled list.
+     * @return list of concrete User models.
+     */
     private ArrayList<User> extractUsers(UserList list) {
         ArrayList<User> users = new ArrayList<>();
         if (list == null || list.getUsers() == null) {
@@ -135,6 +154,10 @@ public class InvitedListFragment extends Fragment {
         return users;
     }
 
+    /** Removes a user with a matching id from the provided list, if present.
+     * @param list list to mutate.
+     * @param id user id to remove.
+     */
     private void removeById(UserList list, String id) {
         if (list == null || list.getUsers() == null) {
             return;
@@ -148,6 +171,10 @@ public class InvitedListFragment extends Fragment {
         }
     }
 
+    /** Adds a user if not already in the provided list (by id).
+     * @param list list to mutate.
+     * @param user user to add if missing.
+     */
     private void addIfMissing(UserList list, User user) {
         if (list == null || user == null) {
             return;

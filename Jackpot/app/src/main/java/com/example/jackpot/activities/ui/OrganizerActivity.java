@@ -14,6 +14,10 @@ import com.example.jackpot.R;
  */
 
 public class OrganizerActivity extends AppCompatActivity {
+    /**
+     * Lifecycle entry point. Currently unused; UI is not yet attached.
+     * @param savedInstanceState state bundle from Android lifecycle.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

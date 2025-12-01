@@ -22,6 +22,10 @@ import java.util.ArrayList;
 public class EntrantActivity extends AppCompatActivity {
     private DatabaseReference db;
 
+    /**
+     * Lifecycle entry point. Currently a stub; UI wiring is not active.
+     * @param savedInstanceState state bundle from Android lifecycle.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

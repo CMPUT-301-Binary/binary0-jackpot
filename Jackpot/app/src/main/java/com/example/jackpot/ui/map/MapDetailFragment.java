@@ -29,6 +29,11 @@ import java.util.ArrayList;
 
 /**
  * MapDetailFragment using osmdroid to display user locations on OpenStreetMap.
+ *
+ * Responsibilities:
+ *  - Load event details and waiting list user locations.
+ *  - Fetch full user records for geo points and render markers.
+ *  - Provide back navigation and default map fallback when no data.
  */
 public class MapDetailFragment extends Fragment {
 
@@ -59,6 +64,10 @@ public class MapDetailFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Read arguments and prime dependencies/configuration.
+     * @param savedInstanceState saved state bundle.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +83,12 @@ public class MapDetailFragment extends Fragment {
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
     }
 
+    /**
+     * Inflate the map UI, set up osmdroid MapView, and kick off data loading.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -116,9 +131,7 @@ public class MapDetailFragment extends Fragment {
         return root;
     }
 
-    /**
-     * Loads event info, then loads user locations.
-     */
+    /** Loads event info, then loads user locations. */
     private void loadEventAndUserLocations() {
         if (eventId == null || eventId.isEmpty()) {
             Toast.makeText(getContext(), "Invalid event ID", Toast.LENGTH_SHORT).show();
@@ -168,8 +181,8 @@ public class MapDetailFragment extends Fragment {
         });
     }
 
-    /**
-     * Fetches full user data from Firestore for all users in waiting list.
+    /** Fetches full user data from Firestore for all users in waiting list.
+     * @param waitingListUsers users from waiting list to resolve.
      */
     private void loadUsersFromFirestore(ArrayList<User> waitingListUsers) {
         if (waitingListUsers == null || waitingListUsers.isEmpty()) {
@@ -238,6 +251,8 @@ public class MapDetailFragment extends Fragment {
 
     /**
      * Add markers and zoom to bounding box showing all user locations.
+     * @param usersWithLocations users who have valid geo points.
+     * @param totalUsers total users processed from waiting list.
      */
     private void displayUsersOnMap(ArrayList<User> usersWithLocations, int totalUsers) {
         if (mapView == null) {
