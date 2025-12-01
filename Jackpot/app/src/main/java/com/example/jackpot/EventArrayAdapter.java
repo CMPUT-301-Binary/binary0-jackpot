@@ -582,20 +582,24 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
                 joinButton.setVisibility(View.VISIBLE);
 
                 // Check if user is already in waiting list
-                boolean isJoined = event.hasEntrant(currentUser != null ? currentUser.getId() : null);
+                String userId = currentUser != null ? currentUser.getId() : null;
+                boolean isInWaiting = event.entrantInList(userId, event.getWaitingList());
+                boolean isInvited = event.entrantInList(userId, event.getInvitedList());
+                boolean isConfirmed = event.entrantInList(userId, event.getJoinedList());
+                boolean isCancelled = event.entrantInList(userId, event.getCancelledList());
 
-                if (isJoined) {
+                if (isInWaiting) {
                     joinButton.setEnabled(false);
                     joinButton.setText("Joined");
-                } else if (event.entrantInList(currentUser != null ? currentUser.getId() : null, event.getInvitedList())) {
+                } else if (isInvited) {
                     joinButton.setEnabled(false);
                     joinButton.setText("Invited");
-                } else if (event.entrantInList(currentUser != null ? currentUser.getId() : null, event.getJoinedList())) {
+                } else if (isConfirmed) {
                     joinButton.setEnabled(false);
                     joinButton.setText("Confirmed");
                 } else {
                     joinButton.setEnabled(true);
-                    joinButton.setText("Join");
+                    joinButton.setText(isCancelled ? "Rejoin" : "Join");
                 }
 
                 // Stop click propagation so button click doesn't trigger view click
@@ -763,8 +767,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         if (event.getCancelledList() == null) {
             event.setCancelledList(new UserList(event.getCapacity()));
         }
-        event.getInvitedList().remove(invitee);
-        addIfMissing(event.getCancelledList(), invitee);
+        event.moveToCancelled(invitee);
         FDatabase.getInstance().updateEvent(event);
         Toast.makeText(getContext(), "Invitation declined.", Toast.LENGTH_SHORT).show();
         remove(event);

@@ -21,7 +21,8 @@
             android:contentDescription="Event image"
             android:scaleType="centerCrop"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <!--         Event Title -->
 
@@ -34,7 +35,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="8dp"
             android:text="Event Name"
             android:textColor="@android:color/black"
@@ -43,32 +44,37 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/event_pic"
-            app:layout_constraintTop_toTopOf="@+id/event_pic" />
+            app:layout_constraintTop_toBottomOf="@+id/categoryText" />
 
         <TextView
             android:id="@+id/event_details"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:text="Free"
             android:textColor="#666666"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/event_pic"
-            app:layout_constraintTop_toBottomOf="@+id/statusText" />
+            app:layout_constraintTop_toBottomOf="@+id/statusText"
+            app:layout_constraintBottom_toTopOf="@+id/button_container" />
 
         <LinearLayout
             android:id="@+id/button_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="8dp"
             android:gravity="end"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/event_pic" />
+            app:layout_constraintStart_toEndOf="@+id/event_pic"
+            app:layout_constraintTop_toBottomOf="@+id/event_details"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <TextView
             android:id="@+id/statusText"
@@ -83,9 +89,10 @@
 
         <TextView
             android:id="@+id/categoryText"
-            android:layout_width="57dp"
-            android:layout_height="18dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
             android:text="Category"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.126"

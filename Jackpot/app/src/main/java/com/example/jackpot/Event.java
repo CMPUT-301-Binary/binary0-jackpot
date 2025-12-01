@@ -623,8 +623,15 @@ public class Event implements Serializable {
         if (waitingList == null) {
             throw  new NullPointerException("Waiting list is null");
         }
-        // If entrant is returning after cancelling, keep lists mutually exclusive
+        // Keep lists mutually exclusive: clear any previous cancel/invite entries.
         removeUserFromList(cancelledList, entrant.getId());
+        removeUserFromList(invitedList, entrant.getId());
+
+        if (entrantInList(entrant.getId(), joinedList)) {
+            throw new IllegalStateException("Entrant already joined");
+        }
+        // De-dupe before adding
+        removeUserFromList(waitingList, entrant.getId());
         if (waitingList.getCapacity()== 0 || waitingList.size() < waitingList.getCapacity()) {
             waitingList.add(entrant);
         } else {
@@ -684,6 +691,38 @@ public class Event implements Serializable {
                 users.remove(i);
             }
         }
+    }
+
+    /**
+     * Moves a user to the cancelled list, ensuring they are removed from all other lists first.
+     * @param user user to move.
+     */
+    public void moveToCancelled(User user) {
+        if (user == null || user.getId() == null) {
+            throw new IllegalArgumentException("User is null");
+        }
+        if (cancelledList == null) {
+            cancelledList = new UserList(capacity);
+        }
+        removeUserFromList(waitingList, user.getId());
+        removeUserFromList(invitedList, user.getId());
+        removeUserFromList(joinedList, user.getId());
+        addUnique(cancelledList, user);
+    }
+
+    private void addUnique(UserList list, User user) {
+        if (list == null || user == null) {
+            return;
+        }
+        if (list.getUsers() == null) {
+            list.setUsers(new ArrayList<>());
+        }
+        for (User existing : list.getUsers()) {
+            if (existing != null && user.getId().equals(existing.getId())) {
+                return;
+            }
+        }
+        list.add(user);
     }
     /**
      * Cancels an enrollment.
