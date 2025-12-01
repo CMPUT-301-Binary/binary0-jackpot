@@ -186,6 +186,11 @@ public class AdminDetailedNotificationFragment extends Fragment {
 
     /**
      * Fetches the event name for a notification.
+     * @param notification detail entry being updated.
+     * @param eventId id of the related event.
+     * @param notifications collector list for processed notifications.
+     * @param processedCount atomic count of processed items.
+     * @param totalCount expected total items to process.
      */
     private void fetchEventName(NotificationDetail notification, String eventId,
                                 List<NotificationDetail> notifications,
@@ -213,6 +218,9 @@ public class AdminDetailedNotificationFragment extends Fragment {
 
     /**
      * Checks if all notifications have been processed and updates the adapter.
+     * @param notifications processed notification list.
+     * @param processed current processed count.
+     * @param total total to process.
      */
     private void checkIfAllProcessed(List<NotificationDetail> notifications, int processed, int total) {
         Log.d(TAG, "Processed " + processed + " of " + total + " notifications");

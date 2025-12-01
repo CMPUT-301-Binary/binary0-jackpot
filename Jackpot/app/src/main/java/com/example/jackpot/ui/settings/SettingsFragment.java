@@ -11,9 +11,18 @@ import com.example.jackpot.R;
 
 /**
  * The fragment which will display the settings page.
+ *
+ * Responsibilities:
+ *  - Inflate the settings layout (currently static placeholder).
  */
 public class SettingsFragment extends Fragment {
 
+    /**
+     * Inflate the settings UI.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,

@@ -219,6 +219,7 @@ public class User implements Serializable {
 
     /**
      * get location of user.
+     * @return stored {@link GeoPoint} or null if unset.
      */
     public GeoPoint getGeoPoint() {
         return geoPoint;

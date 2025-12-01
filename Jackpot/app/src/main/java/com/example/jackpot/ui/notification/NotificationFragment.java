@@ -31,6 +31,11 @@ import java.util.List;
  * Notification fragment, which will show the notifications of the user.
  * For ADMIN role, displays all organizers (name and email) from the users collection.
  * Created with the assistance of ClaudeAI Sonnet 4.5
+ *
+ * Responsibilities:
+ *  - Inflate role-specific notification UIs (entrant/organizer/admin).
+ *  - Entrant: load unread notifications, long-press dismiss.
+ *  - Admin: list organizers with contact info.
  */
 public class NotificationFragment extends Fragment {
 
@@ -48,8 +53,10 @@ public class NotificationFragment extends Fragment {
 
 
     /**
-     * Called to have the fragment instantiate its user interface view.
-     * This checks the role of the user, to determine what the page should look like.
+     * Inflate the role-specific layout and initialize role-specific controllers.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
      */
     @Nullable
     @Override
@@ -116,9 +123,7 @@ public class NotificationFragment extends Fragment {
 //        });
 
     }
-    /**
-     * Loads only unread notifications for the current user.
-     */
+    /** Loads only unread notifications for the current entrant. */
     private void loadUnreadNotifications() {
         if (currentUserId == null) {
             Log.e(TAG, "Current user ID is null");
@@ -178,17 +183,16 @@ public class NotificationFragment extends Fragment {
         });
     }
 
-    /**
-     * Updates the notification list
-     * @param notifications
+    /** Updates the entrant notification list in the adapter.
+     * @param notifications unread notifications to display.
      */
     private void updateNotificationList(ArrayList<Notification> notifications) {
         notificationList.clear();
         notificationList.addAll(notifications);
         notificationAdapter.notifyDataSetChanged();
     }
-    /**
-     * Sets up the RecyclerView and loads organizer data for admin view.
+    /** Sets up the RecyclerView and loads organizer data for admin view.
+     * @param root inflated admin layout.
      */
     private void setupAdminNotifications(View root) {
         db = FirebaseFirestore.getInstance();

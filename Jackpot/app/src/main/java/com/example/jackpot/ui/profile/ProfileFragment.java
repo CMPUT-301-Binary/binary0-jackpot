@@ -39,6 +39,11 @@ import java.util.Map;
 /**
  * ProfileFragment, which actually displays the profile information, and has functionalities.
  * These functionalities include delete account, logout button, image picker, and showing the profile details
+ *
+ * Responsibilities:
+ *  - Load and display current user profile fields.
+ *  - Allow editing/saving profile data and profile image upload.
+ *  - Support logout and delete-account actions.
  */
 public class ProfileFragment extends Fragment {
 
@@ -53,17 +58,10 @@ public class ProfileFragment extends Fragment {
     private Uri imageUri;
 
     /**
-     * Called to have the fragment instantiate its user interface view.
-     * Authenticates the firebase instance and loads the info to the view
-     * @param inflater The LayoutInflater object that can be used to inflate
-     * any views in the fragment,
-     * @param container If non-null, this is the parent view that the fragment's
-     * UI should be attached to.  The fragment should not add the view itself,
-     * but this can be used to generate the LayoutParams of the view.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     * from a previous saved state as given here.
-     *
-     * @return Return the View for the fragment's UI, or null.
+     * Inflate profile UI, wire image picker/save/logout/delete, and load profile data.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
      */
     @Nullable
     @Override
@@ -235,6 +233,11 @@ public class ProfileFragment extends Fragment {
 
     /**
      * Helper method to update Firestore profile data.
+     * @param uid user id to update.
+     * @param name display name to store.
+     * @param email immutable auth email.
+     * @param phone phone number to store.
+     * @param bio notification preferences/bio text.
      */
     private void updateFirestoreProfile(String uid, String name, String email, String phone, String bio) {
         Map<String, Object> updates = new HashMap<>();

@@ -363,6 +363,7 @@ public class EventDetailsActivity extends AppCompatActivity {
      * Populate ViewPager2 with:
      *  - Index 0: Poster image (event.posterUri, if present)
      *  - Index 1: QR code image (from 'images' collection, if present)
+     * @param event event to render images for.
      */
     private void loadEventImages(Event event) {
         pagerImages.clear();
@@ -523,6 +524,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     /**
      * Entrant joins waiting list.
+     * @param event target event to join.
      */
     private void joinWaitingList(Event event) {
         if (currentUser == null) {
@@ -581,6 +583,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     /**
      * Delete the current event.
+     * @param id event identifier to delete.
      */
     private void deleteEvent(String id) {
         FDatabase.getInstance().deleteEvent(id, new FDatabase.StatusCallback() {
@@ -614,6 +617,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     /**
      * Upload selected image to Storage and update event.posterUri, then refresh the pager.
+     * @param fileUri uri of the picked poster image.
      */
     private void uploadPosterAndSaveUrl(Uri fileUri) {
         if (eventId == null || eventId.isEmpty()) {

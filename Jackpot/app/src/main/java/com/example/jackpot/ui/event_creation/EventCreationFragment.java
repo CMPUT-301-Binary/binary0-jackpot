@@ -54,6 +54,12 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
  * The form has multiple fields which accept the input of various details, and uploading of an image.
  * The details entered are saved to the database upon the pressing of "Submit"
  * Modified to require poster upload and create separate Image documents in Firestore.
+ *
+ * Responsibilities:
+ *  - Render the event creation form with validation.
+ *  - Support date/time pickers and registration window pickers.
+ *  - Handle poster image selection/upload and QR code generation when enabled.
+ *  - Persist event, poster image, and optional QR image to Firestore/Storage.
  */
 public class EventCreationFragment extends Fragment {
 
@@ -93,8 +99,10 @@ public class EventCreationFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Called to have the fragment instantiate its user interface view.
+    /** Inflate the event creation form layout.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
      */
     @Nullable
     @Override
@@ -105,7 +113,9 @@ public class EventCreationFragment extends Fragment {
     }
 
     /**
-     * The main logic of the form. The fields are initialized and the photopicker is written.
+     * Initialize UI references, wire pickers and submit/upload actions.
+     * @param view inflated fragment view.
+     * @param savedInstanceState saved state bundle.
      */
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState){
@@ -373,6 +383,10 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Uploads the poster image and creates separate Image documents in Firestore.
+     * @param eventId ID of the event being created.
+     * @param eventDoc event fields to persist.
+     * @param userId organizer user ID.
+     * @param generateQR true to generate QR code image.
      */
     private void uploadPosterAndCreateEvent(String eventId, Map<String, Object> eventDoc, String userId, boolean generateQR) {
         String imageName = "posters/" + UUID.randomUUID().toString() + ".png";
@@ -405,6 +419,11 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Saves the poster Image document to Firestore.
+     * @param eventId ID of the event being created.
+     * @param posterImage poster image model.
+     * @param eventDoc event fields to persist.
+     * @param userId organizer user ID.
+     * @param generateQR true to generate QR code image.
      */
     private void savePosterImageDocument(String eventId, Image posterImage, Map<String, Object> eventDoc, String userId, boolean generateQR) {
         Map<String, Object> posterDoc = new HashMap<>();
@@ -438,6 +457,9 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Generates a QR code and saves it as a separate Image document.
+     * @param eventId ID of the event being created.
+     * @param eventDoc event fields to persist.
+     * @param userId organizer user ID.
      */
     private void generateQRAndSaveEvent(String eventId, Map<String, Object> eventDoc, String userId) {
         String qrContent = "jackpot://event/" + eventId;
@@ -497,6 +519,9 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Saves the QR code Image document to Firestore.
+     * @param eventId ID of the event being created.
+     * @param qrImage QR image model.
+     * @param eventDoc event fields to persist.
      */
     private void saveQRImageDocument(String eventId, Image qrImage, Map<String, Object> eventDoc) {
         Map<String, Object> qrDoc = new HashMap<>();
@@ -527,6 +552,8 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Saves the event to Firestore.
+     * @param eventId ID of the event being created.
+     * @param eventDoc event fields to persist.
      */
     private void saveEventToFirestore(String eventId, Map<String, Object> eventDoc) {
         db.collection("events")
@@ -578,6 +605,7 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Opens the date picker for registration.
+     * @param isOpen true when configuring open date, false for close date.
      */
     private void openRegDatePicker(boolean isOpen) {
         MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
@@ -599,6 +627,7 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Opens the time picker for registration.
+     * @param isOpen true when configuring open time, false for close time.
      */
     private void openRegTimePicker(boolean isOpen) {
         int defHour = isOpen ? (regOpenHour  == null ? 9  : regOpenHour)  : (regCloseHour  == null ? 17 : regCloseHour);
@@ -628,6 +657,9 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Checks if a field has text.
+     * @param et edit text to validate.
+     * @param msg error message when empty.
+     * @return true if text is present.
      */
     private boolean requireText(EditText et, String msg) {
         if (et.getText().toString().trim().isEmpty()) {
@@ -641,6 +673,8 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Parses a string to an integer.
+     * @param s string to parse.
+     * @return parsed integer or null when invalid/empty.
      */
     @Nullable
     private Integer parseIntOrNull(String s) {
@@ -650,6 +684,8 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Parses a string to a double.
+     * @param s string to parse.
+     * @return parsed double or null when invalid/empty.
      */
     @Nullable
     private Double parseDoubleOrNull(String s) {
@@ -659,6 +695,9 @@ public class EventCreationFragment extends Fragment {
 
     /**
      * Converts date and time picker values to a Firestore Timestamp.
+     * @param dateUtcMs UTC milliseconds picked from date chooser.
+     * @param hour hour of day in 24h format.
+     * @param minute minute of hour.
      */
     @Nullable
     private com.google.firebase.Timestamp toTimestamp(@Nullable Long dateUtcMs,
