@@ -17,6 +17,7 @@ import com.example.jackpot.Event;
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.Notification;
 import com.example.jackpot.R;
+import com.google.firebase.Timestamp;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -51,96 +52,40 @@ public class EntrantNotificationAdapter extends ArrayAdapter<Notification> {
         ViewHolder holder;
 
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.notification_event_item, parent, false);
+            convertView = LayoutInflater.from(context)
+                    .inflate(R.layout.item_event_notification, parent, false);
+
             holder = new ViewHolder();
-            holder.eventText = convertView.findViewById(R.id.event_text);
-            holder.statusText = convertView.findViewById(R.id.statusText);
-            holder.categoryText = convertView.findViewById(R.id.categoryText);
-            holder.eventPic = convertView.findViewById(R.id.event_pic);
-            holder.buttonContainer = convertView.findViewById(R.id.button_container);
+            holder.dateText = convertView.findViewById(R.id.dateText);
+            holder.messageText = convertView.findViewById(R.id.notif_message);
+
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        Notification notification = notifications.get(position);
+        Notification notif = notifications.get(position);
 
-        if (notification != null) {
-            // Set notification type as category
-            holder.categoryText.setText(notification.getNotifType() != null ? notification.getNotifType() : "Notification");
-
-            // Set notification payload/message as status
-            holder.statusText.setText(notification.getPayload() != null ? notification.getPayload() : "");
-
-            // Format and show the sent time
-            if (notification.getSentAt() != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
-                        .withZone(ZoneId.systemDefault());
-                String formattedDate = formatter.format(notification.getSentAt());
-
-            }
-
-            // Hide button container for notifications
-            if (holder.buttonContainer != null) {
-                holder.buttonContainer.setVisibility(View.GONE);
-            }
-
-            // Fetch and display event details if eventID exists
-            String eventId = notification.getEventID();
-            if (eventId != null && !eventId.isEmpty()) {
-                loadEventDetails(holder, eventId);
-            } else {
-                // No event associated, show generic notification info
-                holder.eventText.setText("General Notification");
-                holder.eventPic.setImageResource(R.drawable.ic_launcher_background);
-            }
+        // ---------- DATE ----------
+        Timestamp ts = notif.getSentAt();
+        if (ts != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
+                            .withZone(ZoneId.systemDefault());
+            holder.dateText.setText(formatter.format(ts.toDate().toInstant()));
+        } else {
+            holder.dateText.setText("");
         }
+
+        // ---------- MESSAGE ----------
+        holder.messageText.setText(
+                notif.getPayload() != null ? notif.getPayload() : "Notification"
+        );
 
         return convertView;
     }
 
-    /**
-     * Loads event details from Firebase and populates the view.
-     * @param holder The ViewHolder containing the views to populate
-     * @param eventId The ID of the event to fetch
-     */
-    private void loadEventDetails(ViewHolder holder, String eventId) {
-        fDatabase.getEventById(eventId, new FDatabase.EventCallback() {
-            @Override
-            public void onSuccess(Event event) {
-                if (event != null) {
-                    // Set event name
-                    holder.eventText.setText(event.getName() != null ? event.getName() : "Event");
-                    // Set event category
-                    holder.categoryText.setText(event.getCategory() != null ? event.getCategory() : "Category");
 
-
-                    // Load event image using Glide
-                    if (event.getPosterUri() != null && !event.getPosterUri().isEmpty()) {
-                        Glide.with(context)
-                                .load(event.getPosterUri())
-                                .placeholder(R.drawable.ic_launcher_background)
-                                .error(R.drawable.ic_launcher_background)
-                                .into(holder.eventPic);
-                    } else {
-                        holder.eventPic.setImageResource(R.drawable.ic_launcher_background);
-                    }
-                } else {
-                    Log.w(TAG, "Event is null for eventId: " + eventId);
-                    holder.eventText.setText("Event Details Unavailable");
-                    holder.eventPic.setImageResource(R.drawable.ic_launcher_background);
-                }
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Log.e(TAG, "Failed to load event: " + error);
-                // Show placeholder if event can't be loaded
-                holder.eventText.setText("Event Details Unavailable");
-                holder.eventPic.setImageResource(R.drawable.ic_launcher_background);
-            }
-        });
-    }
 
     /**
      * Marks a notification as read and removes it from the display.
@@ -148,22 +93,20 @@ public class EntrantNotificationAdapter extends ArrayAdapter<Notification> {
      * @param position The position of the notification to mark as read
      */
     public void markNotificationAsRead(int position) {
-        if (position >= 0 && position < notifications.size()) {
-            Notification notification = notifications.get(position);
-            String notificationId = notification.getNotificationID();
+        if (position < 0 || position >= notifications.size()) return;
 
-            // Remove from local list immediately for responsive UI
-            notifications.remove(position);
-            notifyDataSetChanged();
+        Notification notif = notifications.get(position);
+        String id = notif.getNotificationID();
 
-            // Mark as read in Firebase (keeps the notification in database)
-            if (notificationId != null && !notificationId.isEmpty()) {
-                fDatabase.getDb().collection("notifications")
-                        .document(notificationId)
-                        .update("viewedByEntrant", true)
-                        .addOnSuccessListener(aVoid -> Log.d(TAG, "Notification marked as read"))
-                        .addOnFailureListener(e -> Log.e(TAG, "Error marking notification as read", e));
-            }
+        notifications.remove(position);
+        notifyDataSetChanged();
+
+        if (id != null && !id.isEmpty()) {
+            fDatabase.getDb().collection("notifications")
+                    .document(id)
+                    .update("viewedByEntrant", true)
+                    .addOnSuccessListener(a -> Log.d(TAG, "Marked read"))
+                    .addOnFailureListener(e -> Log.e(TAG, "Failed mark read", e));
         }
     }
 
@@ -171,10 +114,7 @@ public class EntrantNotificationAdapter extends ArrayAdapter<Notification> {
      * ViewHolder pattern to improve ListView performance by caching view references.
      */
     private static class ViewHolder {
-        TextView eventText;
-        TextView statusText;
-        TextView categoryText;
-        ImageView eventPic;
-        View buttonContainer;
+        TextView dateText;
+        TextView messageText;
     }
 }

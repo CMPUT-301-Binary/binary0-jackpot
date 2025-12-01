@@ -14,11 +14,14 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.jackpot.Event;
+
 import com.example.jackpot.FDatabase;
 import com.example.jackpot.MainActivity;
 import com.example.jackpot.Notification;
 import com.example.jackpot.R;
 import com.example.jackpot.User;
+import com.example.jackpot.ui.map.OrganizerEventAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -40,6 +43,7 @@ import java.util.List;
 public class NotificationFragment extends Fragment {
 
     private static final String TAG = "NotificationFragment";
+    private OrganizerEventAdapter organizerEventAdapter;
     private RecyclerView recyclerView;
     private AdminNotificationAdapter adapter;
     private FirebaseFirestore db;
@@ -76,6 +80,7 @@ public class NotificationFragment extends Fragment {
         switch (role) {
             case ORGANIZER:
                 root = inflater.inflate(R.layout.fragment_notification_organizer, container, false);
+                setupOrganizerNotifications(root);
                 break;
             case ADMIN:
                 root = inflater.inflate(R.layout.fragment_notification_admin, container, false);
@@ -99,6 +104,7 @@ public class NotificationFragment extends Fragment {
             Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
+        currentUserId = currentUser.getUid();
         fDatabase = FDatabase.getInstance();
         notificationListView = root.findViewById(R.id.notificationListView);
         notificationList = new ArrayList<>();
@@ -321,5 +327,49 @@ public class NotificationFragment extends Fragment {
         public String getEmail() {
             return email;
         }
+    }
+
+    private void setupOrganizerNotifications(View root) {
+        recyclerView = root.findViewById(R.id.organizer_notification_recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        organizerEventAdapter = new OrganizerEventAdapter(event -> {
+            OrganizerEventNotificationFragment fragment =
+                    OrganizerEventNotificationFragment.newInstance(
+                            event.getEventId(),
+                            event.getName()
+                    );
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.nav_host_fragment_content_main, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+        recyclerView.setAdapter(organizerEventAdapter);
+        loadEventsForOrganizer();
+    }
+
+    private void loadEventsForOrganizer() {
+        fDatabase = FDatabase.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String organizerId = auth.getCurrentUser().getUid();
+        fDatabase.queryEventsByCreator(organizerId, new FDatabase.DataCallback<Event>() {
+            @Override
+            public void onSuccess(ArrayList<Event> events) {
+                if (isAdded()) {
+                    organizerEventAdapter.setEvents(events);
+                }
+            }
+            @Override
+            public void onFailure(Exception e) {
+                if (isAdded())
+                    Toast.makeText(getContext(), "Failed to load events", Toast.LENGTH_SHORT).show();
+
+            }
+        });
     }
 }

@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.firestore.FieldValue;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         notificationDoc.put("payload", payload);
         notificationDoc.put("organizerID", organizerID);
         notificationDoc.put("viewedByEntrant", false);
+        notificationDoc.put("sentAt", FieldValue.serverTimestamp());
         //TODO: Write this object to the database
         FDatabase.getInstance().addNotification(notificationDoc, notificationID);
 
