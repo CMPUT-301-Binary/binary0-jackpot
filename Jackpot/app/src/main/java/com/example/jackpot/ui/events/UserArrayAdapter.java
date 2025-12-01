@@ -24,17 +24,25 @@ import java.util.List;
  */
 public class UserArrayAdapter extends RecyclerView.Adapter<UserArrayAdapter.UserViewHolder> {
 
+    public interface OnUserNotifyClickListener {
+        void onNotifyClick(User user);
+    }
+
     private final ArrayList<User> userList;
     private final Context context;
+    private final OnUserNotifyClickListener notifyClickListener;
 
     /**
      * Constructs a UserArrayAdapter.
      * @param context The context from the calling fragment or activity.
      * @param userList The list of users to display.
      */
-    public UserArrayAdapter(Context context, ArrayList<User> userList) {
+    public UserArrayAdapter(Context context,
+                            ArrayList<User> userList,
+                            OnUserNotifyClickListener notifyClickListener) {
         this.context = context;
         this.userList = userList;
+        this.notifyClickListener = notifyClickListener;
     }
 
     /**
@@ -64,8 +72,9 @@ public class UserArrayAdapter extends RecyclerView.Adapter<UserArrayAdapter.User
         if (user != null) {
             holder.attendeeName.setText(user.getName());
             holder.notifyButton.setOnClickListener(v -> {
-                // TODO: Implement actual notification logic for a single user
-                Toast.makeText(context, "Notifying " + user.getName(), Toast.LENGTH_SHORT).show();
+                if (notifyClickListener != null) {
+                    notifyClickListener.onNotifyClick(user);
+                }
             });
         }
     }
