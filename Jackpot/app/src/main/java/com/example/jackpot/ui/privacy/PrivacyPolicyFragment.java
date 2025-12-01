@@ -12,9 +12,18 @@ import com.example.jackpot.R;
 
 /**
  * Fragment which opens a page, showing a short summary of the privacy policy.
+ *
+ * Responsibilities:
+ *  - Inflate privacy policy layout and display static summary text.
  */
 public class PrivacyPolicyFragment extends Fragment {
 
+    /**
+     * Inflate the privacy UI and set the policy text.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -26,5 +35,3 @@ public class PrivacyPolicyFragment extends Fragment {
         return root;
     }
 }
-
-

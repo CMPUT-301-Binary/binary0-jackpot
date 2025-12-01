@@ -22,6 +22,11 @@ import com.google.firebase.firestore.GeoPoint;
 
 /**
  * The fragment which prompts the user to allow location access to their device.
+ *
+ * Responsibilities:
+ *  - Load current stored geoPoint and toggle state.
+ *  - Request/enable location and persist to Firestore.
+ *  - Disable location by zeroing geoPoint.
  */
 public class LocationFragment extends Fragment {
 
@@ -36,17 +41,10 @@ public class LocationFragment extends Fragment {
     private boolean locationEnabled = false; // True if user has real GPS saved
 
     /**
-     * Called to have the fragment instantiate its user interface view.
-     * Triggers a pop-up window for the user to select whether or not they want to allow location shared from their device.
-     * @param inflater The LayoutInflater object that can be used to inflate
-     * any views in the fragment,
-     * @param container If non-null, this is the parent view that the fragment's
-     * UI should be attached to.  The fragment should not add the view itself,
-     * but this can be used to generate the LayoutParams of the view.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     * from a previous saved state as given here.
-     *
-     * @return Return the View for the fragment's UI, or null.
+     * Inflate the UI, load current location status, and wire the enable/disable switch.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
      */
     @Nullable
     @Override
@@ -76,7 +74,7 @@ public class LocationFragment extends Fragment {
         return root;
     }
 
-    // Load current Firestore (0,0)
+    /** Loads the current geoPoint from Firestore and updates the switch state. */
     private void loadCurrentLocationStatus() {
         db.collection("users").document(uid).get()
                 .addOnSuccessListener(doc -> {
@@ -96,7 +94,7 @@ public class LocationFragment extends Fragment {
                         Toast.makeText(requireContext(), "Failed to load location", Toast.LENGTH_SHORT).show());
     }
 
-    // Enable Location
+    /** Enable location: request permission, fetch last location, and persist to Firestore. */
     private void enableLocation() {
 
         // Check permission
@@ -138,7 +136,7 @@ public class LocationFragment extends Fragment {
         });
     }
 
-    // Disable Location (set to 0,0)
+    /** Disable location by writing (0,0) geoPoint to Firestore. */
     private void disableLocation() {
         GeoPoint disabled = new GeoPoint(0.0, 0.0);
 
@@ -154,4 +152,3 @@ public class LocationFragment extends Fragment {
                 });
     }
 }
-

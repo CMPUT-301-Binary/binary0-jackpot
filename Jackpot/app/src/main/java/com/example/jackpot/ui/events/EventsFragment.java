@@ -52,6 +52,11 @@ public class EventsFragment extends Fragment {
         // Required empty public constructor
     }
 
+    /**
+     * Factory to build an EventsFragment configured for the given role.
+     * @param role User role (ENTRANT/ORGANIZER/ADMIN) to tailor UI.
+     * @return configured EventsFragment.
+     */
     public static EventsFragment newInstance(String role) {
         EventsFragment fragment = new EventsFragment();
         Bundle args = new Bundle();
@@ -60,6 +65,12 @@ public class EventsFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Inflate the role-appropriate layout, set up adapters/tabs, and load events.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,

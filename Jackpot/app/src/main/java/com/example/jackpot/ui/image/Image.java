@@ -144,6 +144,7 @@ public class Image {
 
     /**
      * Gets the display order of the image.
+     * @return display order value.
     */
     public int getDisplayOrder() {
         return displayOrder;
@@ -160,6 +161,7 @@ public class Image {
 
     /**
      * Check if this is the poster image.
+     * @return true when image is poster.
      */
     public boolean isPoster() {
         return TYPE_POSTER.equals(imageType) && displayOrder == ORDER_POSTER;
@@ -167,6 +169,7 @@ public class Image {
 
     /**
      * Check if this is a QR code image.
+     * @return true when image is QR code.
      */
     public boolean isQrCode() {
         return TYPE_QR_CODE.equals(imageType) && displayOrder == ORDER_QR_CODE;
@@ -174,6 +177,7 @@ public class Image {
 
     /**
      * Validates that the image type is one of the allowed types.
+     * @return true when imageType is poster or QR code.
      */
     public boolean isValidType() {
         return TYPE_POSTER.equals(imageType) || TYPE_QR_CODE.equals(imageType);
@@ -181,6 +185,7 @@ public class Image {
 
     /**
      * Gets the identifier of the event associated with the image.
+     * @return event id or null.
      */
     public String getEventId() {
         return eventId;
@@ -188,6 +193,7 @@ public class Image {
 
     /**
      * Sets the identifier of the event associated with the image.
+     * @param eventId event identifier to associate.
      */
     public void setEventId(String eventId) {
         this.eventId = eventId;

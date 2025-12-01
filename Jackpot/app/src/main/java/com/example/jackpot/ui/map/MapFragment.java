@@ -23,6 +23,11 @@ import java.util.ArrayList;
 /**
  * Map fragment that displays the list of events created by the current organizer.
  * Each event can be clicked to navigate to a detailed map view showing user locations.
+ *
+ * Responsibilities:
+ *  - Fetch organizer-owned events.
+ *  - Render them in a RecyclerView.
+ *  - Navigate to MapDetailFragment on item click.
  */
 public class MapFragment extends Fragment implements OrganizerEventAdapter.OnEventClickListener {
 
@@ -34,6 +39,12 @@ public class MapFragment extends Fragment implements OrganizerEventAdapter.OnEve
     private FirebaseAuth auth;
     private EventList eventList;
 
+    /**
+     * Inflate UI, initialize adapters, and kick off event loading.
+     * @param inflater layout inflater.
+     * @param container optional parent container.
+     * @param savedInstanceState saved state bundle.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -169,9 +180,7 @@ public class MapFragment extends Fragment implements OrganizerEventAdapter.OnEve
         }
     }
 
-    /**
-     * Refresh the event list when the fragment becomes visible.
-     */
+    /** Refresh the event list when the fragment becomes visible. */
     @Override
     public void onResume() {
         super.onResume();
