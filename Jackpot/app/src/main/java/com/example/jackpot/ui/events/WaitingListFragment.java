@@ -169,45 +169,62 @@ public class WaitingListFragment extends Fragment {
      * Shows a dialog for the organizer to input a custom message.
      * Implements US 02.07.01 with custom message capability.
      * Enforces 15-word limit in real-time while typing.
+     *  * AI Assistance:
+     *  *   The structure of this method and the TextWatcher-based 15-word limit logic
+     *  *   were created with help from ChatGPT (OpenAI) and then reviewed/modified.
      */
-// TODO: Cite AI usage for this function.
     private void showCustomMessageDialog(Event event) {
-        // Create an EditText for the dialog
-        final android.widget.EditText input = new android.widget.EditText(getContext());
+        final android.widget.EditText input = new android.widget.EditText(requireContext());
         input.setHint("Enter message (max 15 words)");
         input.setMaxLines(3);
 
-        // Add TextWatcher to enforce 15-word limit in real-time
-        input.addTextChangedListener(new android.text.TextWatcher() {
-            private String previousText = "";
+        // We'll store the watcher in an array so we can reference it inside itself
+        final android.text.TextWatcher[] watcherHolder = new android.text.TextWatcher[1];
 
+        android.text.TextWatcher watcher = new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                previousText = s.toString();
+                // Not needed
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Count words
-                String text = s.toString().trim();
-                if (!text.isEmpty()) {
-                    String[] words = text.split("\\s+");
-                    if (words.length > 15) {
-                        // Revert to previous text if word limit exceeded
-                        input.setText(previousText);
-                        input.setSelection(previousText.length()); // Keep cursor at end
-                        Toast.makeText(getContext(),
-                                "Maximum 15 words allowed",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
+                // Not needed; we enforce the limit in afterTextChanged
             }
 
             @Override
             public void afterTextChanged(android.text.Editable s) {
-                // Not needed for this implementation
+                String text = s.toString().trim();
+                if (text.isEmpty()) {
+                    return;
+                }
+
+                String[] words = text.split("\\s+");
+                if (words.length > 15) {
+                    // Build a trimmed version with only the first 15 words
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < 15; i++) {
+                        if (i > 0) sb.append(' ');
+                        sb.append(words[i]);
+                    }
+
+                    // Temporarily remove the watcher to avoid recursion
+                    input.removeTextChangedListener(watcherHolder[0]);
+                    input.setText(sb.toString());
+                    // Move cursor to the end safely
+                    input.setSelection(input.getText().length());
+                    // Re-attach the watcher
+                    input.addTextChangedListener(watcherHolder[0]);
+
+                    Toast.makeText(requireContext(),
+                            "Maximum 15 words allowed",
+                            Toast.LENGTH_SHORT).show();
+                }
             }
-        });
+        };
+
+        watcherHolder[0] = watcher;
+        input.addTextChangedListener(watcher);
 
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Notify Waiting List")
@@ -215,12 +232,12 @@ public class WaitingListFragment extends Fragment {
                 .setView(input)
                 .setPositiveButton("Send", (dialog, which) -> {
                     String customMessage = input.getText().toString().trim();
-                    // Send notifications with custom message
                     sendWaitingListNotifications(event, customMessage);
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
 
     /**
      * Builds the notification payload with all required information.
