@@ -35,6 +35,7 @@ public class WaitingListFragment extends Fragment {
     private Button backButton;
     private Button notifyAllButton;
     private UserArrayAdapter adapter;
+    private ArrayList<User> waitingListUsers = new ArrayList<>();
 
     public static WaitingListFragment newInstance(Event event) {
         WaitingListFragment fragment = new WaitingListFragment();
@@ -74,7 +75,7 @@ public class WaitingListFragment extends Fragment {
 //            }
 
             // Manually convert Firestore's list of HashMaps into a list of User objects
-            ArrayList<User> userList = new ArrayList<>();
+            waitingListUsers = new ArrayList<>();
             if (event.getWaitingList() != null && event.getWaitingList().getUsers() != null) {
                 for (Object obj : event.getWaitingList().getUsers()) {
                     if (obj instanceof HashMap) {
@@ -85,12 +86,12 @@ public class WaitingListFragment extends Fragment {
                             user.setName((String) map.get("name"));
                             user.setEmail((String) map.get("email"));
                             // Add any other fields you need for the User object here
-                            userList.add(user);
+                            waitingListUsers.add(user);
                         } catch (Exception e) {
                             Log.e("WaitingListFragment", "Failed to convert HashMap to User", e);
                         }
                     } else if (obj instanceof User) {
-                        userList.add((User) obj);
+                        waitingListUsers.add((User) obj);
                     }
                 }
             }
@@ -98,7 +99,7 @@ public class WaitingListFragment extends Fragment {
             // Now pass the correctly typed list to the adapter
             adapter = new UserArrayAdapter(
                     requireContext(),
-                    userList,
+                    waitingListUsers,
                     user -> showCustomMessageDialogForUser(user)
             );
             recyclerView.setAdapter(adapter);
@@ -114,11 +115,12 @@ public class WaitingListFragment extends Fragment {
 
         // Notify all button
         notifyAllButton.setOnClickListener(v -> {
-            if (event == null || event.getWaitingList() == null || event.getWaitingList().getUsers().isEmpty()) {
-                Toast.makeText(getContext(), "No entrants on the waiting list", Toast.LENGTH_SHORT).show();
+            if (waitingListUsers == null || waitingListUsers.isEmpty()) {
+                Toast.makeText(requireContext(),
+                        "No entrants on the waiting list",
+                        Toast.LENGTH_SHORT).show();
                 return;
             }
-
             showCustomMessageDialog(event);
         });
 
@@ -130,8 +132,6 @@ public class WaitingListFragment extends Fragment {
      * Implements US 02.07.01
      */
     private void sendWaitingListNotifications(Event event, String customMessage) {
-        ArrayList<User> waitingListUsers = event.getWaitingList().getUsers();
-
         if (waitingListUsers == null || waitingListUsers.isEmpty()) {
             Toast.makeText(getContext(), "No entrants to notify", Toast.LENGTH_SHORT).show();
             return;
@@ -248,7 +248,7 @@ public class WaitingListFragment extends Fragment {
      */
     private void showCustomMessageDialog(Event event) {
         final android.widget.EditText input = new android.widget.EditText(requireContext());
-        input.setHint("Enter message (max 15 words)");
+        input.setHint("Enter message (max " + MAX_MESSAGE_WORDS + " words)");
         input.setMaxLines(3);
 
         // We'll store the watcher in an array so we can reference it inside itself
@@ -273,10 +273,10 @@ public class WaitingListFragment extends Fragment {
                 }
 
                 String[] words = text.split("\\s+");
-                if (words.length > 15) {
-                    // Build a trimmed version with only the first 15 words
+                if (words.length > MAX_MESSAGE_WORDS) {
+                    // Build a trimmed version with only the first MAX_MESSAGE_WORDS words
                     StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < 15; i++) {
+                    for (int i = 0; i < MAX_MESSAGE_WORDS; i++) {
                         if (i > 0) sb.append(' ');
                         sb.append(words[i]);
                     }
@@ -290,7 +290,7 @@ public class WaitingListFragment extends Fragment {
                     input.addTextChangedListener(watcherHolder[0]);
 
                     Toast.makeText(requireContext(),
-                            "Maximum 15 words allowed",
+                            "Maximum " + MAX_MESSAGE_WORDS + " words allowed",
                             Toast.LENGTH_SHORT).show();
                 }
             }
