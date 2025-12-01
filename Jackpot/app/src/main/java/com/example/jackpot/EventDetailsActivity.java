@@ -373,12 +373,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         }
         // Poster at index 0
         String posterUri = event.getPosterUri();
-        if (posterUri == null || posterUri.isEmpty() || posterUri.equals("default")) {
-            // Load placeholder for deleted/missing poster
-            pagerImages.add("default");
-        } else {
-            pagerImages.add(posterUri);
-        }
+        pagerImages.add(normalizeImageUrl(posterUri));
         // QR code at index 1 (lookup via QR Code ID)
         String qrCodeId = event.getQrCodeId();
         if (qrCodeId == null || qrCodeId.isEmpty()) {
@@ -389,6 +384,7 @@ public class EventDetailsActivity extends AppCompatActivity {
             setupOrRefreshPager();
             return;
         }
+        updateQrHintVisibility(true);
         FirebaseFirestore.getInstance()
                 .collection("images")
                 .whereEqualTo("imageType", Image.TYPE_QR_CODE)
@@ -396,35 +392,26 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .limit(1)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
+                    updateQrHintVisibility(true);
                     if (!querySnapshot.isEmpty()) {
                         Image img = querySnapshot.getDocuments()
                                 .get(0)
                                 .toObject(Image.class);
                         if (img != null) {
-                            String qrUrl = img.getImageUrl();
-                            if (qrUrl == null || qrUrl.isEmpty() || qrUrl.equals("default")) {
-                                pagerImages.add("default"); // default placeholder image
-                            } else {
-                                pagerImages.add(qrUrl);
-                            }
+                            addQrIfNew(img.getImageUrl());
                         } else {
-                            pagerImages.add("default");
+                            addQrIfNew(null);
                         }
                     } else {
                         // QR entry missing from Firestore
-                        pagerImages.add("default");
-                    }
-                    if (qrHint != null) {
-                        qrHint.setVisibility(View.VISIBLE);
+                        addQrIfNew(null);
                     }
                     setupOrRefreshPager();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to load QR image metadata", e);
-                    pagerImages.add("default");
-                    if (qrHint != null) {
-                        qrHint.setVisibility(View.GONE);
-                    }
+                    addQrIfNew(null);
+                    updateQrHintVisibility(true);
                     setupOrRefreshPager();
                 });
     }
@@ -438,6 +425,35 @@ public class EventDetailsActivity extends AppCompatActivity {
             eventPager.setAdapter(imagePagerAdapter);
         } else {
             imagePagerAdapter.notifyDataSetChanged();
+        }
+    }
+
+    /**
+     * Add QR image if it isn't already present (prevents duplicate QR pages).
+     */
+    private void addQrIfNew(String qrUrl) {
+        String normalized = normalizeImageUrl(qrUrl);
+        if (!pagerImages.contains(normalized)) {
+            pagerImages.add(normalized);
+        }
+    }
+
+    /**
+     * Normalize missing/placeholder URLs.
+     */
+    private String normalizeImageUrl(String url) {
+        if (url == null || url.isEmpty() || "default".equals(url)) {
+            return "default";
+        }
+        return url;
+    }
+
+    /**
+     * Toggle QR hint visibility based on whether a QR exists for this event.
+     */
+    private void updateQrHintVisibility(boolean hasQr) {
+        if (qrHint != null) {
+            qrHint.setVisibility(hasQr ? View.VISIBLE : View.GONE);
         }
     }
 
