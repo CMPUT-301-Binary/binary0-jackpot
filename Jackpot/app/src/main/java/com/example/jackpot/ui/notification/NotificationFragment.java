@@ -114,20 +114,6 @@ public class NotificationFragment extends Fragment {
         setupLongPressToDismiss();
         loadUnreadNotifications();
 
-
-        //Query notifications based on the recepient
-//        fDatabase.queryNotificationsByReceiver(currentUserId, new FDatabase.DataCallback<Notification>() {
-//            @Override
-//            public void onSuccess(ArrayList<Notification> data) {
-//                if (isAdded() && !data.isEmpty()) {
-//                    updateNotificationList(data);
-//                }
-//            }
-//            public void onFailure(Exception e) {
-//                Log.d("NotificationFragment", "Failed to fetch notifications.", e);
-//            }
-//        });
-
     }
     /** Loads only unread notifications for the current entrant. */
     private void loadUnreadNotifications() {

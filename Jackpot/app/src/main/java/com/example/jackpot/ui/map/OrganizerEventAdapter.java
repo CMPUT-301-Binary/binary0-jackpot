@@ -15,7 +15,7 @@ import java.util.ArrayList;
 
 /**
  * Adapter for displaying organizer's events in a RecyclerView.
- * Shows event poster, name, joined count, and free spots.
+ * Shows event poster, name, waiting list count, and free spots.
  */
 public class OrganizerEventAdapter extends RecyclerView.Adapter<OrganizerEventAdapter.EventViewHolder> {
 
@@ -109,18 +109,30 @@ public class OrganizerEventAdapter extends RecyclerView.Adapter<OrganizerEventAd
             // Set event name
             eventName.setText(event.getName() != null ? event.getName() : "Unnamed Event");
 
-            // Get waiting list size
-            int joinedCount = 0;
+            // Get counts for waiting list and joined list
+            int waitingCount = 0;
             if (event.getWaitingList() != null) {
-                joinedCount = event.getWaitingList().size();
+                waitingCount = event.getWaitingList().size();
             }
 
-            int capacity = event.getCapacity();
-            eventJoined.setText(joinedCount + "/" + capacity + " joined lottery");
+            int waitingCapacity = 0;
+            if (event.getWaitingList() != null) {
+                waitingCapacity = event.getWaitingList().getCapacity();
+            }
 
-            // Calculate free spots
-            int freeSpots = Math.max(0, capacity - joinedCount);
-            eventFreeSpots.setText(freeSpots + "/" + capacity + " spots free");
+            int joinedCount = 0;
+            if (event.getJoinedList() != null) {
+                joinedCount = event.getJoinedList().size();
+            }
+
+            int totalCapacity = event.getCapacity();
+
+            // Display: X/Y in waiting list
+            eventJoined.setText(waitingCount + "/" + waitingCapacity + " in waiting list");
+
+            // Calculate free spots based on joined list
+            int freeSpots = Math.max(0, totalCapacity - joinedCount);
+            eventFreeSpots.setText(freeSpots + "/" + totalCapacity + " spots free");
 
             // Load poster image using Glide
             String imageUri = event.getPosterUri();
