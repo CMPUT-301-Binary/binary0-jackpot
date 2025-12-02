@@ -72,7 +72,7 @@ dependencies {
     implementation("androidx.annotation:annotation:1.7.1")
 
     // Use the Firebase BOM to manage all Firebase library versions.
-    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
     androidTestImplementation(platform("com.google.firebase:firebase-bom:34.6.0"))
 
     // Declare Firebase dependencies WITHOUT specifying versions.
@@ -85,6 +85,6 @@ dependencies {
     androidTestImplementation("com.google.firebase:firebase-firestore")
     androidTestImplementation("com.google.firebase:firebase-auth")
 
-    
+    implementation(files("/Users/stellarhesk/Library/Android/sdk/platforms/android-36/android.jar"))
     implementation("org.osmdroid:osmdroid-android:6.1.18")
 }
