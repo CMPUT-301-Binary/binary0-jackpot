@@ -695,12 +695,23 @@ public class EventCreationFragment extends Fragment {
         return true;
     }
 
+    /**
+     * Shows a field error in a toast and sets the error on the field.
+     * @param field The field to show the error on.
+     * @param message The error message.
+     */
     private void showFieldError(EditText field, String message) {
         field.setError(message);
         field.requestFocus();
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Shows a field error in a toast and sets the error on two fields.
+     * @param primary The primary field to show the error on.
+     * @param secondary The secondary field to show the error on.
+     * @param message The error message.
+     */
     private void showTwoFieldError(EditText primary, EditText secondary, String message) {
         primary.setError(message);
         secondary.setError(message);
@@ -735,6 +746,7 @@ public class EventCreationFragment extends Fragment {
      * @param dateUtcMs UTC milliseconds picked from date chooser.
      * @param hour hour of day in 24h format.
      * @param minute minute of hour.
+     * @return A Timestamp object or null if any of the inputs are null.
      */
     @Nullable
     private com.google.firebase.Timestamp toTimestamp(@Nullable Long dateUtcMs,
