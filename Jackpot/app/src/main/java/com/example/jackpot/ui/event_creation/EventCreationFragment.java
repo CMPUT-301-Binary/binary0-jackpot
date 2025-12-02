@@ -221,19 +221,37 @@ public class EventCreationFragment extends Fragment {
 
         // region checking for Numerical fields
         Double priceVal = parseDoubleOrNull(editTextEventPrice.getText().toString());
-        if (priceVal == null) { editTextEventPrice.setError("Enter a number"); editTextEventPrice.requestFocus(); return; }
-        if (priceVal < 0)      { editTextEventPrice.setError("Must be ≥ 0");   editTextEventPrice.requestFocus(); return; }
+        if (priceVal == null) {
+            showFieldError(editTextEventPrice, "Enter a number");
+            return;
+        }
+        if (priceVal < 0) {
+            showFieldError(editTextEventPrice, "Must be ≥ 0");
+            return;
+        }
 
         Integer capacityVal = parseIntOrNull(editTextEventCapacity.getText().toString());
-        if (capacityVal == null) { editTextEventCapacity.setError("Enter an integer"); editTextEventCapacity.requestFocus(); return; }
-        if (capacityVal < 1)     { editTextEventCapacity.setError("Must be ≥ 1");       editTextEventCapacity.requestFocus(); return; }
+        if (capacityVal == null) {
+            showFieldError(editTextEventCapacity, "Enter an integer");
+            return;
+        }
+        if (capacityVal < 1) {
+            showFieldError(editTextEventCapacity, "Must be ≥ 1");
+            return;
+        }
 
         final Integer[] waitLimitVal = {null};
         String waitStr = editWaitingListLimit.getText().toString().trim();
         if (!waitStr.isEmpty()) {
             waitLimitVal[0] = parseIntOrNull(waitStr);
-            if (waitLimitVal[0] == null) { editWaitingListLimit.setError("Enter an integer"); editWaitingListLimit.requestFocus(); return; }
-            if (waitLimitVal[0] < 0)     { editWaitingListLimit.setError("Must be ≥ 0");      editWaitingListLimit.requestFocus(); return; }
+            if (waitLimitVal[0] == null) {
+                showFieldError(editWaitingListLimit, "Enter an integer");
+                return;
+            }
+            if (waitLimitVal[0] < 0) {
+                showFieldError(editWaitingListLimit, "Must be ≥ 0");
+                return;
+            }
         } else {
             editWaitingListLimit.setError(null);
         }
@@ -247,9 +265,9 @@ public class EventCreationFragment extends Fragment {
         com.google.firebase.Timestamp regCloseTs =
                 toTimestamp(regCloseDateUtcMs, regCloseHour, regCloseMinute);
 
-        int catPos = spinnerCategory.getSelectedItemPosition();
-
         // region Validation for category and also canonical timestamps
+
+        int catPos = spinnerCategory.getSelectedItemPosition();
         if (catPos <= 0) {
             View selectedView = spinnerCategory.getSelectedView();
             if (selectedView instanceof TextView) {
@@ -261,6 +279,7 @@ public class EventCreationFragment extends Fragment {
         }
         String category = (String) spinnerCategory.getSelectedItem();
 
+        // 1) Event date/time present
         if (eventTs == null) {
             editTextEventDate.setError("Pick event date");
             editTextEventTime.setError("Pick event time");
@@ -271,47 +290,51 @@ public class EventCreationFragment extends Fragment {
             editTextEventTime.setError(null);
         }
 
+        // 2) Event must be in the future
         if (eventTs.compareTo(com.google.firebase.Timestamp.now()) <= 0) {
-            editTextEventDate.setError("Event must be in the future");
-            editTextEventTime.setError("Event must be in the future");
-            editTextEventDate.requestFocus();
+            showTwoFieldError(editTextEventDate, editTextEventTime,
+                    "Event must be in the future");
             return;
         }
 
+        // 3) Registration open present
         if (regOpenTs == null) {
-            editRegOpenDate.setError("Pick open date");
-            editRegOpenTime.setError("Pick open time");
-            editRegOpenDate.requestFocus();
+            showTwoFieldError(editRegOpenDate, editRegOpenTime,
+                    "Pick registration open date & time");
             return;
         } else {
             editRegOpenDate.setError(null);
             editRegOpenTime.setError(null);
         }
 
+        // 4) Registration close present
         if (regCloseTs == null) {
-            editRegCloseDate.setError("Pick close date");
-            editRegCloseTime.setError("Pick close time");
-            editRegCloseDate.requestFocus();
+            showTwoFieldError(editRegCloseDate, editRegCloseTime,
+                    "Pick registration close date & time");
             return;
         } else {
             editRegCloseDate.setError(null);
             editRegCloseTime.setError(null);
         }
 
+
+        // 5) Registration close AFTER registration open
         if (regOpenTs.compareTo(regCloseTs) >= 0) {
-            editRegCloseDate.setError("Close must be after open");
-            editRegCloseTime.setError("Close must be after open");
-            editRegCloseDate.requestFocus();
+            showTwoFieldError(editRegCloseDate, editRegCloseTime,
+                    "Close must be after open");
             return;
         }
 
+
+        // 6) Registration deadline must be BEFORE event start
         if (eventTs.compareTo(regCloseTs) <= 0) {
-            editRegCloseDate.setError("Must end before event starts");
-            editRegCloseTime.setError("Must end before event starts");
-            editRegCloseDate.requestFocus();
+            showTwoFieldError(editRegCloseDate, editRegCloseTime,
+                    "Registration must end before event starts");
             return;
         }
+
         // endregion
+
 
         // endregion
 
@@ -665,10 +688,35 @@ public class EventCreationFragment extends Fragment {
         if (et.getText().toString().trim().isEmpty()) {
             et.setError(msg);
             et.requestFocus();
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
             return false;
         }
         et.setError(null);
         return true;
+    }
+
+    /**
+     * Shows a field error in a toast and sets the error on the field.
+     * @param field The field to show the error on.
+     * @param message The error message.
+     */
+    private void showFieldError(EditText field, String message) {
+        field.setError(message);
+        field.requestFocus();
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Shows a field error in a toast and sets the error on two fields.
+     * @param primary The primary field to show the error on.
+     * @param secondary The secondary field to show the error on.
+     * @param message The error message.
+     */
+    private void showTwoFieldError(EditText primary, EditText secondary, String message) {
+        primary.setError(message);
+        secondary.setError(message);
+        primary.requestFocus();
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -698,6 +746,7 @@ public class EventCreationFragment extends Fragment {
      * @param dateUtcMs UTC milliseconds picked from date chooser.
      * @param hour hour of day in 24h format.
      * @param minute minute of hour.
+     * @return A Timestamp object or null if any of the inputs are null.
      */
     @Nullable
     private com.google.firebase.Timestamp toTimestamp(@Nullable Long dateUtcMs,
