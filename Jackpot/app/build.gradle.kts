@@ -85,6 +85,6 @@ dependencies {
     androidTestImplementation("com.google.firebase:firebase-firestore")
     androidTestImplementation("com.google.firebase:firebase-auth")
 
-    implementation(files("/Users/stellarhesk/Library/Android/sdk/platforms/android-36/android.jar"))
+
     implementation("org.osmdroid:osmdroid-android:6.1.18")
 }
